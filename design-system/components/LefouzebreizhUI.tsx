@@ -39,8 +39,8 @@ type BrandMarkProps = {
 
 export function BrandMark({ compact = false, tagline = 'Des horizons plus grands' }: BrandMarkProps) {
   return (
-    <div className={`lfb-brand ${compact ? 'lfb-brand--compact' : ''}`.trim()} aria-label="Lefouzebreizh">
-      <span className="lfb-brand__name">Lefouze<span>breizh</span></span>
+    <div className={`lfb-brand ${compact ? 'lfb-brand--compact' : ''}`.trim()} aria-label="Lefouzèbreizh">
+      <span className="lfb-brand__name">Lefouzè<span>breizh</span></span>
       {!compact ? <span className="lfb-brand__tagline">{tagline}</span> : null}
     </div>
   );

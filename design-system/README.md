@@ -1,10 +1,10 @@
-# Lefouzebreizh Design System V1
+# Lefouzèbreizh Design System V1
 
 ## Mission
 Créer une signature visuelle reconnaissable sur tous les sites et applications : premium, moderne, immersive, performante et accessible.
 
 ## ADN visuel
-- Marque mère : Lefouzebreizh
+- Marque mère : Lefouzèbreizh
 - Emblème : zèbre double exposition Bretagne
 - Symboles : hermine bretonne fidèle, phare, mer, falaises, mégalithes, oiseaux marins, bruyère, granit et lichens
 - Palette : noir profond, turquoise #40E0D0, violet #7C3AED, ambre #F4B850, blanc cassé #F8F8F8
@@ -36,4 +36,4 @@ Même ADN, personnalité différente.
 - Signature : Allura, avec parcimonie
 
 ## Références
-Les références visuelles validées sont conservées dans la Library ChatGPT, dossier Marque Lefouzebreizh.
+Les références visuelles validées sont conservées dans la Library ChatGPT, dossier Marque Lefouzèbreizh.

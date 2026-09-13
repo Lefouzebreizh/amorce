@@ -5,6 +5,15 @@
 .univers-section::before { content: ''; position: absolute; width: 34rem; height: 34rem; border-radius: 50%; filter: blur(90px); opacity: .12; pointer-events: none; }
 .univers-signature { background: radial-gradient(circle at 78% 30%, rgb(124 58 237 / .12), transparent 32%), linear-gradient(180deg, #03070e, #07111b); }
 .univers-signature::before { right: -16rem; bottom: -18rem; background: var(--lfb-violet); }
+.univers-master { position: relative; padding: clamp(4rem, 8vw, 7rem) max(1rem, calc((100vw - 1380px) / 2)); background: radial-gradient(circle at 50% 0, rgb(64 224 208 / .1), transparent 32%), #02060c; }
+.univers-master__heading { width: min(1180px, 100%); margin: 0 auto clamp(2rem, 4vw, 3.5rem); }
+.univers-master__heading h2 { max-width: 11ch; margin: .5rem 0 1rem; color: #fff; font: 600 clamp(2.5rem, 6vw, 5rem)/.95 var(--lfb-font-display); letter-spacing: -.05em; }
+.univers-master__heading > p:last-child { max-width: 64ch; color: rgb(248 248 248 / .68); font: 400 clamp(1rem, 1.8vw, 1.15rem)/1.65 var(--lfb-font-ui); }
+.univers-master__frame { position: relative; width: 100%; margin: 0; overflow: hidden; border: 1px solid rgb(64 224 208 / .34); border-radius: clamp(1rem, 2vw, 1.75rem); background: #050a12; box-shadow: 0 40px 120px rgb(0 0 0 / .5), 0 0 70px rgb(64 224 208 / .08); }
+.univers-master__frame + .univers-master__frame { margin-top: clamp(1.25rem, 3vw, 2.5rem); }
+.univers-master__frame img { display: block; width: 100%; height: auto; }
+.univers-master__frame figcaption { position: absolute; right: 1rem; bottom: 1rem; padding: .5rem .75rem; border: 1px solid rgb(255 255 255 / .14); border-radius: 999px; color: rgb(255 255 255 / .78); background: rgb(2 6 12 / .78); backdrop-filter: blur(12px); font: 600 .65rem/1 var(--lfb-font-ui); letter-spacing: .12em; text-transform: uppercase; }
+.univers-master__frame--ecosystem { width: min(1180px, 100%); margin-inline: auto; }
 .univers-pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: clamp(2rem, 5vw, 4.5rem); }
 .univers-pillars .lfb-glass-card:nth-child(2) { transform: translateY(2rem); }
 
@@ -40,6 +49,10 @@
 }
 
 @media (max-width: 480px) {
+  .univers-master { padding-inline: .65rem; }
+  .univers-master__heading { padding-inline: .35rem; }
+  .univers-master__frame { border-radius: .8rem; }
+  .univers-master__frame figcaption { position: static; display: block; border: 0; border-radius: 0; background: #07111b; }
   .univers-quality-list li { grid-template-columns: 2rem 1fr; gap: .65rem; }
   .univers-project-grid { gap: .9rem; }
 }

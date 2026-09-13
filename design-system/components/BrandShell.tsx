@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { BrandMark } from './LefouzebreizhUI';
 import { BrandErmine } from './BrandErmine';
 import './brand-shell.css';
@@ -8,7 +9,7 @@ export type BrandNavItem = { label: string; href: string };
 export function BrandNavigation({ items }: { items: BrandNavItem[] }) {
   return (
     <header className="lfb-nav">
-      <a className="lfb-nav__brand" href="/" aria-label="Lefouzebreizh — accueil"><BrandMark /></a>
+      <Link className="lfb-nav__brand" href="/" aria-label="Lefouzèbreizh — accueil"><BrandMark /></Link>
       <nav aria-label="Navigation principale"><ul>{items.map((item) => <li key={item.href}><a href={item.href}>{item.label}</a></li>)}</ul></nav>
       <a className="lfb-nav__cta" href="#univers">Explorer l’univers <span aria-hidden="true">→</span></a>
     </header>

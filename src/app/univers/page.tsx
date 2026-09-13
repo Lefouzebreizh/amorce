@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { BrandFooter, BrandNavigation } from '../../../design-system/components/BrandShell';
 import { ImmersiveHero } from '../../../design-system/components/ImmersiveHero';
 import { GlassCard, ProjectCard, SectionHeading } from '../../../design-system/components/LefouzebreizhUI';
@@ -56,9 +57,38 @@ export default function UniversPage() {
         onSecondary={() => scrollTo('signature')}
       />
 
+      <section className="univers-master" aria-labelledby="univers-master-title">
+        <div className="univers-master__heading">
+          <p className="lfb-eyebrow">Direction artistique validée</p>
+          <h2 id="univers-master-title">Le master qui donne le cap.</h2>
+          <p>Cette planche devient la référence visuelle du réseau : zèbre double exposition, côte bretonne, phare, mégalithes et lumière d’horizon.</p>
+        </div>
+        <figure className="univers-master__frame">
+          <Image
+            src="/brand/lefouzebreizh-hero-master.jpg"
+            alt="Direction artistique Lefouzèbreizh : zèbre en double exposition dans un paysage côtier breton, avec phare, mégalithes et lumière turquoise, violette et ambrée."
+            width={1536}
+            height={640}
+            priority
+            sizes="100vw"
+          />
+          <figcaption>Hero Master · Référence canonique</figcaption>
+        </figure>
+        <figure className="univers-master__frame univers-master__frame--ecosystem">
+          <Image
+            src="/brand/lefouzebreizh-ecosystem-master.jpg"
+            alt="Vue d’ensemble de l’écosystème Lefouzèbreizh et de ses univers : OmniRoute, Ensemble, Mon Tiroir Secret, Le Phare, créations, bien-être, oiseaux, solutions professionnelles et communauté."
+            width={1536}
+            height={1024}
+            sizes="(max-width: 800px) 100vw, 1180px"
+          />
+          <figcaption>Écosystème Master · Déclinaisons de référence</figcaption>
+        </figure>
+      </section>
+
       <section id="signature" className="univers-section univers-signature">
         <SectionHeading
-          eyebrow="La signature Lefouzebreizh"
+          eyebrow="La signature Lefouzèbreizh"
           title="Une identité qui ne ressemble à aucune autre."
           copy="Le zèbre incarne la singularité HPI et hypersensible. La Bretagne apporte la matière, l’horizon et l’ancrage. La lumière relie chaque projet à une même promesse : rendre le numérique plus beau, plus clair et plus humain."
         />
