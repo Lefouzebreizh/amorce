@@ -8,6 +8,13 @@
   --lfz-off-white: #f8f8f8;
   --lfz-mist: #c9d8e8;
 
+  /* Text accents are distinct from the saturated decorative palette. */
+  --lfz-text-primary: #f5f7fb;
+  --lfz-text-secondary: #b8c9d9;
+  --lfz-text-turquoise: #98e9dd;
+  --lfz-text-violet: #d3bef9;
+  --lfz-gradient-text: linear-gradient(100deg, var(--lfz-text-turquoise), var(--lfz-text-violet));
+
   /* Signature gradients */
   --lfz-gradient-signature: linear-gradient(90deg, var(--lfz-turquoise) 0%, #3b82f6 45%, var(--lfz-violet) 100%);
   --lfz-gradient-beacon: radial-gradient(circle at center, rgba(244,184,80,.46) 0%, rgba(244,184,80,.16) 34%, transparent 72%);
