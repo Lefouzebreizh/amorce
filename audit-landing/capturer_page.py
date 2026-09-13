@@ -13,7 +13,9 @@ génération du rapport et la page de vente du produit viennent après.
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import re
+import socket
 import sys
 import time
 from dataclasses import dataclass
@@ -21,6 +23,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from playwright.sync_api import (
+    BrowserContext,
     Error as ErreurPlaywright,
     Page,
     TimeoutError as DelaiDepassePlaywright,
@@ -164,6 +167,50 @@ class Segment:
     nom: str
     y_debut_px: int
     y_fin_px: int
+
+
+def verifier_url_publique(url: str) -> None:
+    """Refuse les destinations locales/privées avant qu'un navigateur les charge.
+
+    Une URL de commande est une entrée non fiable. Sans ce contrôle, le moteur
+    de capture hébergé pourrait servir de relais vers localhost, le réseau du
+    VPS ou une adresse de métadonnées cloud.
+    """
+    decoupee = urlparse(url)
+    if decoupee.scheme not in ("http", "https") or not decoupee.hostname:
+        raise ValueError("URL publique HTTP(S) requise")
+    if decoupee.username or decoupee.password:
+        raise ValueError("Identifiants interdits dans l'URL")
+    try:
+        resultats = socket.getaddrinfo(decoupee.hostname, decoupee.port, type=socket.SOCK_STREAM)
+    except socket.gaierror as erreur:
+        raise ValueError("Nom de domaine introuvable") from erreur
+    adresses = {ipaddress.ip_address(resultat[4][0]) for resultat in resultats}
+    if not adresses or any(not adresse.is_global for adresse in adresses):
+        raise ValueError("Destination locale ou privée interdite")
+
+
+def installer_filtre_reseau(contexte: BrowserContext) -> None:
+    """Contrôle aussi les redirections et sous-ressources avant leur requête."""
+    autorises: set[tuple[str, int | None]] = set()
+
+    def filtrer(route) -> None:
+        url = route.request.url
+        decoupee = urlparse(url)
+        if decoupee.scheme not in ("http", "https"):
+            route.continue_()
+            return
+        destination = (decoupee.hostname or "", decoupee.port)
+        try:
+            if destination not in autorises:
+                verifier_url_publique(url)
+                autorises.add(destination)
+        except ValueError:
+            route.abort("blockedbyclient")
+            return
+        route.continue_()
+
+    contexte.route("**/*", filtrer)
 
 
 def calculer_segments(
@@ -379,6 +426,7 @@ def capturer_et_decouper(
 
 def capturer_url(page: Page, url: str, dossier_sortie: Path) -> list[Path]:
     """Le parcours complet pour une URL : ouvrir, nettoyer, charger, découper."""
+    verifier_url_publique(url)
     page.goto(url, timeout=DELAI_NAVIGATION_MS, wait_until="domcontentloaded")
     attendre_stabilite(page)
 
@@ -430,6 +478,7 @@ def main() -> int:
             viewport={"width": LARGEUR_VIEWPORT, "height": HAUTEUR_VIEWPORT},
             device_scale_factor=FACTEUR_ECHELLE,
         )
+        installer_filtre_reseau(contexte)
         page = contexte.new_page()
 
         echec = 0
