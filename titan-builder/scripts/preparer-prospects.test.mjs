@@ -7,6 +7,18 @@ import { selectionner, preparer } from './preparer-prospects.mjs';
 
 const p = { id: 'atelier-test', name: 'Atelier TEST fictif', city: 'Rennes', observation: 'Votre fiche de test présente la menuiserie.', sources: ['https://example.com'], phone: '02 99 00 00 00', phone_source: 'https://example.com', services: 'Menuiserie', metier: 'menuisier' };
 const input = prospects => ({ prospects, exclusions: [], signature: 'Équipe de test' });
+test('les oppositions couvrent les formats français et internationaux', () => {
+  for (const phone of ['+33 2 99 00 00 00', '0033 2 99 00 00 00', '+33 (0)2 99 00 00 00']) {
+    assert.equal(selectionner({ ...input([{ ...p, phone }]), exclusions: [{ phone: p.phone }] })[0].reason, 'exclusion');
+    assert.equal(selectionner({ ...input([p]), exclusions: [phone] })[0].reason, 'exclusion');
+  }
+});
+test('une opposition se propage aux alias indirects indépendamment de leur ordre', () => {
+  const a = { ...p, id: 'a', name: 'Atelier Alpha', email: 'alpha@example.com', phone: '', opposition: true };
+  const b = { ...p, id: 'b', name: 'Atelier Beta', email: a.email };
+  const c = { ...p, id: 'c', name: 'Atelier Gamma', phone: '+33 2 99 00 00 00' };
+  assert(selectionner(input([c, b, a])).every(x => x.reason === 'exclusion'));
+});
 test('opposition ultérieure et contacts déjà envoyés bloquent tous leurs doublons', () => {
   assert(selectionner(input([p, { ...p, opposition: true }])).every(x => x.reason === 'exclusion'));
   assert.equal(selectionner(input([{ ...p, sent: true }]))[0].reason, 'exclusion');
