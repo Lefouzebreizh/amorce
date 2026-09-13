@@ -714,6 +714,7 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   `/site-web` porte la **méthode** pour un client qui n'est pas artisan, en
   citant l'autre plutôt qu'en la recopiant.
 - **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
+- **audit-radar/** — radar d’acquisition semi-automatique en Python standard. Il découvre ou importe des signaux publics, refuse les hôtes privés, qualifie avec un score explicable et prépare des brouillons soumis à validation humaine. Il n’envoie aucun message. Se vérifie avec `python3 -m unittest discover -s audit-radar/tests`.
 - **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
 - **moteur-administratif/** — le moteur partagé d'une famille de produits
   personnels (Le Coffre, Le Dossier, Le Recours, Le Classeur, La Relève), Python.

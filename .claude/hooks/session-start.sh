@@ -64,6 +64,7 @@ commandes=(
   "Bibliothèque visuelle : cd visual_library && python3 -m unittest discover -s tests"
   "Kits (index des sons) : cd kits && python3 -m unittest discover -s tests"
   "Audit de page de vente : (dans audit-landing/) python3 -m unittest discover -s tests"
+  "Radar Reprise IA : python3 -m unittest discover -s audit-radar/tests"
 )
 
 echo "── Amorce : dépendances npm"

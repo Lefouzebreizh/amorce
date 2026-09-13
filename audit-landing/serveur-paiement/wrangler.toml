@@ -1,0 +1,20 @@
+name = "audit-landing-paiement"
+main = "src/worker.ts"
+compatibility_date = "2026-09-13"
+
+# Ces valeurs décrivent le raccord ; les secrets restent hors du dépôt.
+[vars]
+DEPOT_DECLENCHEMENT = "Lefouzebreizh/amorce"
+ORIGINES = ""
+URL_SUCCES = ""
+URL_ANNULATION = ""
+ID_PRIX_STRIPE = ""
+
+# À poser dans Cloudflare, jamais ici :
+#   wrangler secret put CLE_SECRETE_STRIPE
+#   wrangler secret put SECRET_WEBHOOK
+#   wrangler secret put JETON_DECLENCHEMENT
+#
+# Avant `wrangler deploy`, renseigner aussi ORIGINES, URL_SUCCES,
+# URL_ANNULATION et ID_PRIX_STRIPE. Tant que le prix est vide, la route
+# /creer-session répond 503 : aucun paiement ne peut être créé par erreur.

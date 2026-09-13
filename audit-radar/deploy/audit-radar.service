@@ -1,0 +1,17 @@
+[Unit]
+Description=Radar Reprise IA — tableau de validation local
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/amorce/audit-radar
+ExecStart=/usr/bin/python3 /opt/amorce/audit-radar/radar.py serve --host 127.0.0.1 --port 8787
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/amorce/audit-radar/data
+
+[Install]
+WantedBy=multi-user.target
