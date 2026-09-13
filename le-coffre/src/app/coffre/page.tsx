@@ -1252,8 +1252,8 @@ export default function PageCoffre() {
             porte déjà l'eyebrow « Bonjour » juste en dessous. */}
         <p className="text-sm font-semibold tracking-widest text-violet uppercase">Le Tiroir Secret</p>
         {/* En-tête */}
-        <header className="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-line bg-paper-raised bg-gradient-to-br from-paper-raised via-violet/10 to-vert/10 p-6 sm:p-8">
-          <div>
+        <header className="coffre-hero flex flex-wrap items-start justify-between gap-6 rounded-3xl border border-line bg-paper-raised p-6 sm:p-8">
+          <div className="coffre-hero__content">
             <p className="text-sm font-semibold tracking-widest text-accent uppercase">
               Bonjour {prenom || 'toi'}
             </p>
@@ -1265,10 +1265,16 @@ export default function PageCoffre() {
               <ShieldCheck size={16} /> Personne d&apos;autre ne peut voir tes papiers. Même nous.
             </p>
           </div>
-          <button onClick={seDeconnecter}
-            className="flex shrink-0 items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm text-ink-soft transition hover:border-wine/60 hover:text-wine">
-            <LogOut size={16} /> Se déconnecter
-          </button>
+          <div className="flex flex-col items-end gap-5">
+            <button onClick={seDeconnecter}
+              className="flex shrink-0 items-center gap-2 rounded-lg border border-line bg-paper-raised/70 px-3 py-2 text-sm text-ink-soft transition hover:border-wine/60 hover:text-wine">
+              <LogOut size={16} /> Se déconnecter
+            </button>
+            <dl className="coffre-reperes">
+              <div className="coffre-repere"><dt>Documents</dt><dd>{tousLesNoms.length} rangés</dd></div>
+              <div className="coffre-repere"><dt>Prochain repère</dt><dd>{rendezVousTries[0] ? rendezVousTries[0].date : 'Aucun rendez-vous'}</dd></div>
+            </dl>
+          </div>
         </header>
 
         {/* Barre « pose ta question » — hors de la grille et juste sous
@@ -1279,8 +1285,8 @@ export default function PageCoffre() {
             moment où avoir un point d'entrée pour demander de l'aide compte
             le plus. Elle est désormais toujours affichée, centrée dans son
             propre bloc plutôt que collée au bord supérieur de l'écran. */}
-        <div className="rounded-3xl border border-line bg-paper-raised p-6 sm:p-10">
-          <p className="text-center font-affiche text-xl texte-degrade sm:text-2xl">
+        <div className="coffre-question rounded-3xl border border-line bg-paper-raised p-6 sm:p-7">
+          <p className="coffre-question__title font-affiche text-xl texte-degrade sm:text-2xl">
             Qu&apos;est-ce que je cherche pour toi ?
           </p>
           <form
@@ -1288,7 +1294,7 @@ export default function PageCoffre() {
               e.preventDefault();
               if (recherche.trim()) demanderAAssistant(recherche.trim());
             }}
-            className="relative mx-auto mt-5 max-w-xl"
+            className="relative"
           >
             {/* Bulle de discussion plutôt qu'une loupe (10/09/2026) : cette
                 barre interroge un assistant en langage naturel, elle ne
