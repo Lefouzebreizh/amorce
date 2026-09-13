@@ -54,7 +54,13 @@ function urlPlausible(valeur: unknown): valeur is string {
   if (typeof valeur !== 'string') return false;
   try {
     const u = new URL(valeur);
-    return u.protocol === 'http:' || u.protocol === 'https:';
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+    const hote = u.hostname.toLowerCase();
+    // Le contrôle DNS complet appartient au moteur de capture. Ici, avant
+    // encaissement, on refuse déjà les noms locaux et toutes les IP littérales.
+    if (hote === 'localhost' || hote.endsWith('.localhost')) return false;
+    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hote) || hote.startsWith('[')) return false;
+    return hote.includes('.');
   } catch {
     return false;
   }
