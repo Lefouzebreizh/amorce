@@ -8,8 +8,8 @@ import styles from './accueil.module.css';
 export default function PageAccueil() {
   const routeur = useRouter();
   const [email, setEmail] = useState('');
+  const [motDePasse, setMotDePasse] = useState('');
   const [enCours, setEnCours] = useState(false);
-  const [envoye, setEnvoye] = useState(false);
   const [erreur, setErreur] = useState('');
 
   useEffect(() => {
@@ -18,20 +18,17 @@ export default function PageAccueil() {
     });
   }, [routeur]);
 
-  async function envoyerLien(e: React.FormEvent) {
+  async function seConnecter(e: React.FormEvent) {
     e.preventDefault();
     setErreur('');
     setEnCours(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/coffre` : undefined },
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password: motDePasse });
     setEnCours(false);
     if (error) {
-      setErreur(error.message);
+      setErreur('Adresse e-mail ou mot de passe incorrect.');
       return;
     }
-    setEnvoye(true);
+    routeur.replace('/coffre');
   }
 
   return (
@@ -74,21 +71,11 @@ export default function PageAccueil() {
             <p className={styles.eyebrow}>Accès personnel</p>
             <h2 id="titre-connexion">Entre quand tu es prêt.</h2>
           </div>
-          <p className={styles.accessIntro}>Un lien arrive dans ta boîte mail. Pas de mot de passe à mémoriser.</p>
+          <p className={styles.accessIntro}>Entre directement dans ton espace. Aucun lien à attendre dans ta boîte mail.</p>
 
-      {envoye ? (
-        <div className={styles.sent} role="status">
-          <p className="font-semibold">Lien envoyé.</p>
-          <p className="mt-2 text-sm text-ink-soft">
-            Regarde ta boîte mail (« {email} ») et clique sur le lien pour entrer — pas de mot de
-            passe à retenir pour ton compte. Ta phrase secrète du coffre, elle, se choisit à
-            l&apos;étape suivante et reste toujours entre toi et ton navigateur.
-          </p>
-        </div>
-      ) : (
-        <form onSubmit={envoyerLien} className={styles.form} aria-busy={enCours}>
+        <form onSubmit={seConnecter} className={styles.form} aria-busy={enCours}>
           <label htmlFor="email" className="text-sm text-ink-soft">
-            Ton adresse e-mail
+            Ton identifiant
           </label>
           <input
             id="email"
@@ -102,16 +89,25 @@ export default function PageAccueil() {
             aria-describedby={erreur ? 'erreur-connexion' : undefined}
             placeholder="toi@exemple.fr"
           />
+          <label htmlFor="mot-de-passe" className="text-sm text-ink-soft">Ton mot de passe</label>
+          <input
+            id="mot-de-passe"
+            type="password"
+            required
+            autoComplete="current-password"
+            value={motDePasse}
+            onChange={(e) => setMotDePasse(e.target.value)}
+            className={styles.input}
+          />
           {erreur && <p id="erreur-connexion" role="alert" className={styles.error}>{erreur}</p>}
           <button
             type="submit"
             disabled={enCours}
             className={styles.submit}
           >
-            {enCours ? 'Envoi…' : 'Recevoir un lien de connexion'}
+            {enCours ? 'Connexion…' : 'Entrer dans mon espace'}
           </button>
         </form>
-      )}
 
           <div className={styles.privacy}>
             <h3>Ta phrase secrète protège le stockage.</h3>
