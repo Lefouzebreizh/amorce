@@ -60,3 +60,43 @@
 @media (max-width: 1100px) { .content { gap: 32px; padding: 36px 32px; } .access { padding: 26px; } .header { padding: 24px 32px; } }
 @media (max-width: 900px) { .content { grid-template-columns: 1fr; max-width: 720px; } .header { flex-wrap: wrap; } .intro h1 { font-size: clamp(46px, 9vw, 68px); } .scene { margin-bottom: 28px; } .access { margin-top: 8px; } .footer { max-width: 720px; padding-inline: 32px; } }
 @media (max-width: 440px) { .header { padding: 22px 20px; gap: 8px; } .content { padding: 24px 20px; gap: 28px; } .scene { margin-inline: -20px; border-radius: 0; } .access { padding: 22px 18px; } .access h2 { font-size: 36px; } .footer { padding-inline: 20px; } }
+
+/* Consigne Studio du 13/09/2026 : quatre couleurs sur tous les textes. */
+.page {
+  --text-gradient: linear-gradient(100deg,#40e0d0 0%,#68b5ff 32%,#65e4a0 64%,#bd91ff 100%);
+  --text-gradient-dark: linear-gradient(100deg,#04332e 0%,#102e62 32%,#103921 64%,#341951 100%);
+}
+@supports ((background-clip:text) or (-webkit-background-clip:text)) {
+  .page :is(h1,h2,h3,p,label,summary), .signature, .accessLink, .steps li, .footer {
+    background-image: var(--text-gradient);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+  }
+  .steps span, .input, .accessLink:hover {
+    background-image: var(--text-gradient), linear-gradient(var(--slab),var(--slab));
+    background-clip: text,padding-box;
+    -webkit-background-clip: text,padding-box;
+    -webkit-text-fill-color: transparent;
+    caret-color: var(--turquoise);
+  }
+  .input::placeholder {-webkit-text-fill-color: var(--secondary);opacity:1}
+  .submit, .submit:hover {
+    background-image: var(--text-gradient-dark),linear-gradient(var(--turquoise),var(--turquoise));
+    background-clip:text,padding-box;
+    -webkit-background-clip:text,padding-box;
+    -webkit-text-fill-color:transparent;
+  }
+  .error {border-left:3px solid #ffb1c4;padding-left:12px}
+}
+@media(forced-colors:active) {
+  .page :is(h1,h2,h3,p,label,summary), .signature, .accessLink, .steps li, .steps span, .footer, .input, .submit, .submit:hover {
+    background-image:none;color:CanvasText;-webkit-text-fill-color:CanvasText;
+  }
+}
+@media print {
+  .page :is(h1,h2,h3,p,label,summary), .signature, .accessLink, .steps li, .steps span, .footer, .input, .submit {
+    background-image:none;color:#111;-webkit-text-fill-color:#111;
+  }
+}

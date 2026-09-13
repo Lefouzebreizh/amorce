@@ -34,3 +34,12 @@ Le statut ci-dessus décrit le premier lot à sa rédaction. La PR #970 a depuis
 - Cadre mobile Chromium 393 × 873 : bouton présent dès le premier écran, clic réel dans la frame puis formulaire entièrement visible. Après navigation, le panneau commence à 24,4 px du haut ; largeur de contenu 378 px et largeur déroulante 378 px, donc aucun débordement horizontal. Il s’agit d’un cadre navigateur, pas d’un téléphone physique.
 - Manifeste de ce même aperçu : HTTP 200, nom `Mon Tiroir Secret`, description actualisée ; icônes et identifiant de démarrage conservés. Vérification visuelle du complément terminée dans ce périmètre. La CI « Le Coffre » et la cohérence du dépôt sont également réussies au commit contrôlé.
 - Limites : aucun courriel envoyé ni session privée ouverte ; le parcours de connexion réel, le chiffrement en usage, l’installation sur un téléphone physique et les fonctions IA ne sont pas validés par ce lot visuel.
+
+
+## Palette quatre couleurs — PR980
+
+Base actuelle conservée, y compris le lien Mon espace ajouté après PR970. Correctif limité à accueil.module.css : turquoise #40e0d0, bleu #68b5ff, vert #65e4a0 et violet #bd91ff sur titres, paragraphes, navigation, libellés, valeurs saisies, messages et bouton. Rampe sombre adaptée au bouton clair. Aucun JavaScript, contrôle de connexion ou document modifié.
+
+Typage local réussi ; build Next webpack réussi avec configuration fictive, avertissement pdf-lib préexistant. Analyse PostCSS de la CSS finale réussie. Le build Vercel du commit c0521718955aa6a54672954c8f7bb9c93b76e867 est READY (dpl_8DL1qiZECN1sNptFtSrUJaGaGEiv). Aperçu exact : https://coffre-jp5eiozo6-erwannchevallier-6916s-projects.vercel.app/ . Deux ouvertures par le navigateur officiel ont renvoyé «502 Bad Gateway — connection closed». Rendu réel non inspecté dans cette passe ; le statut READY ne remplace pas la recette. Aucun courriel envoyé ni session ouverte.
+
+Statut du complément palette : À VÉRIFIER VISUELLEMENT, PR en brouillon. Ne pas reprendre les captures de l’ancien déploiement pour valider cette nouvelle CSS.
