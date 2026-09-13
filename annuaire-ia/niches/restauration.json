@@ -4,6 +4,7 @@
     "nom": "IA Restauration",
     "emoji": "🍽️",
     "actif": false,
+    "activation_automatique": true,
     "domaine": "https://lefouzebreizh.github.io/amorce/restauration/",
     "metier": "restaurateurs et gérants d'établissement",
     "h1_accent": "L'IA en salle",
