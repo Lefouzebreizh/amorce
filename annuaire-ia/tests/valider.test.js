@@ -243,9 +243,9 @@ test('l’absence du champ vaut « active »', () => {
   assert.equal(nicheActive({ niche: { id: 'x', actif: false } }), false);
 });
 
-test('un seul site est actif, et c’est la Boîte à Outils IA', () => {
+test('les deux sites monétisables sont actifs', () => {
   const actives = lireBasesActives();
-  assert.deepEqual(actives.map(({ base: b }) => b.niche.id), ['generaliste']);
+  assert.deepEqual(actives.map(({ base: b }) => b.niche.id), ['education', 'generaliste']);
 });
 
 test('les niches en pause restent lisibles et valides', () => {
@@ -254,7 +254,7 @@ test('les niches en pause restent lisibles et valides', () => {
   // dégrade sans être vue rendrait ce retour impossible.
   const toutes = lireBases();
   const enPause = toutes.filter(({ base: b }) => !nicheActive(b));
-  assert.equal(enPause.length, 10, `${enPause.length} niche(s) en pause`);
+  assert.equal(enPause.length, 9, `${enPause.length} niche(s) en pause`);
   const releve = creerReleve();
   for (const { fichier, base: b } of enPause) validerBase(b, fichier, releve);
   assert.deepEqual(releve.erreurs, []);

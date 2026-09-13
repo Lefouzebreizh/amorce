@@ -3,7 +3,7 @@
     "id": "education",
     "nom": "IA Éducation",
     "emoji": "🎓",
-    "actif": false,
+    "actif": true,
     "domaine": "https://lefouzebreizh.github.io/amorce/education/",
     "metier": "enseignants et formateurs",
     "h1_accent": "L'IA des profs",

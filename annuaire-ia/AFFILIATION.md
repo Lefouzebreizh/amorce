@@ -96,11 +96,12 @@ affiliation » remonte d'ailleurs d'abord **MyLead**, un intermédiaire qui
 revend l'accès : sa commission n'est pas celle de Gamma, ses conditions et son
 seuil de versement non plus. Quand le programme direct existe, il gagne.
 
-**Et la leçon qui vaut pour les 41 programmes suivants** : `education` porte
-`actif: false`, comme neuf autres niches. Poser un lien réel dans une niche en
-pause ne rapporte rien — il ne s'affiche nulle part. C'est pour ça que la fiche
-a été créée dans `generaliste`, la seule niche servie aujourd'hui. Vérifier
-`niche.actif` **avant** de se réjouir d'un lien posé.
+**Et la leçon qui vaut pour les programmes suivants** : une niche en pause ne
+rapporte rien — elle n'est ni construite ni servie. `education` est désormais
+active avec `generaliste`, parce que Gamma y possède déjà un lien rémunérateur
+réel. Les neuf autres niches restent en pause tant qu'elles ne disposent pas
+d'au moins une offre monétisable. Vérifier `niche.actif` **avant** de se réjouir
+d'un lien posé.
 
 ## À ne pas chercher — c'est déjà tranché
 
