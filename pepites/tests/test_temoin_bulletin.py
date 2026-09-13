@@ -227,14 +227,13 @@ class BaseDejaVecue(unittest.TestCase):
             connexion.commit()
             connexion.close()
 
-            memoire = Memoire(chemin)
-            self.addCleanup(memoire.fermer)
-            colonnes = {l["name"] for l in
-                        memoire.connexion.execute("PRAGMA table_info(releves)")}
-            self.assertIn("temoin", colonnes)
-            # Et la base reste utilisable, ce qu'une migration bancale casse.
-            memoire.enregistrer(candidat(), METRIQUES, 50.0, MAINTENANT, temoin=True)
-            self.assertEqual(len(bilan.parcours(memoire, temoins=True)), 1)
+            with Memoire(chemin) as memoire:
+                colonnes = {l["name"] for l in
+                            memoire.connexion.execute("PRAGMA table_info(releves)")}
+                self.assertIn("temoin", colonnes)
+                # Et la base reste utilisable, ce qu'une migration bancale casse.
+                memoire.enregistrer(candidat(), METRIQUES, 50.0, MAINTENANT, temoin=True)
+                self.assertEqual(len(bilan.parcours(memoire, temoins=True)), 1)
 
 
 class LeBulletinCompare(unittest.TestCase):
