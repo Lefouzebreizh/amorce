@@ -63,3 +63,24 @@ class TestCommandes(unittest.TestCase):
         self.base = Commandes(self.fichier)
         self.assertIsNone(self.base.preparer_envoi('cs_test'))
         self.assertEqual(self.base.a_traiter()[0]['etat'], 'envoi')
+
+
+    def test_echec_analyse_explicite_et_reprise_manuelle(self):
+        self.base.prendre('cs_test')
+        self.assertTrue(self.base.signaler_echec_analyse('cs_test', 'capture impossible'))
+        commande = self.base.lire('cs_test')
+        self.assertEqual(commande['etat'], 'echec_analyse')
+        self.assertEqual(commande['erreur'], 'capture impossible')
+        self.assertTrue(self.base.reprendre_analyse('cs_test'))
+        self.assertEqual(self.base.lire('cs_test')['etat'], 'attente')
+
+    def test_migration_ajoute_erreur_a_un_registre_existant(self):
+        self.base.fermer()
+        import sqlite3
+        self.fichier.unlink()
+        brut = sqlite3.connect(self.fichier)
+        brut.execute('CREATE TABLE commandes (session TEXT PRIMARY KEY, url TEXT, email TEXT, etat TEXT, rapport TEXT, empreinte TEXT, relecteur TEXT, message_id TEXT, modifie TEXT)')
+        brut.close()
+        self.base = Commandes(self.fichier)
+        colonnes = {row['name'] for row in self.base.db.execute('PRAGMA table_info(commandes)')}
+        self.assertIn('erreur', colonnes)
