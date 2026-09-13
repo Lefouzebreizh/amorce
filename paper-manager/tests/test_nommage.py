@@ -90,8 +90,8 @@ class Rangement(unittest.TestCase):
     def test_un_nom_deja_pris_se_decale_plutot_que_d_ecraser(self):
         # Deux factures du même jour et du même montant existent — un avoir, un
         # double prélèvement — et la seconde ne doit pas effacer la première.
-        pris = {"/c/a.pdf", "/c/a-2.pdf"}
-        self.assertEqual(libre(Path("/c/a.pdf"), existe=lambda p: str(p) in pris),
+        pris = {Path("/c/a.pdf"), Path("/c/a-2.pdf")}
+        self.assertEqual(libre(Path("/c/a.pdf"), existe=lambda p: p in pris),
                          Path("/c/a-3.pdf"))
 
     def test_un_nom_libre_ne_bouge_pas(self):

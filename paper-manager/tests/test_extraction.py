@@ -181,7 +181,7 @@ class DepuisUneLecture(unittest.TestCase):
         document = extraire(self.lecture(FACTURE), CONNUS, LE_JOUR)
         self.assertEqual(document.emetteur, "EDF")
         self.assertEqual(document.montant, Decimal("78.42"))
-        self.assertEqual(document.chemin, "coffre/entree/f.pdf")
+        self.assertEqual(Path(document.chemin), Path("coffre/entree/f.pdf"))
 
     def test_ce_qui_manque_est_dit_champ_par_champ(self):
         # « Il manque la date d'émission » se corrige ; « à relire » non.

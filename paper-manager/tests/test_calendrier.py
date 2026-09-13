@@ -48,6 +48,21 @@ class Echappement(unittest.TestCase):
     def test_un_retour_a_la_ligne_devient_sa_sequence(self):
         self.assertEqual(echapper("deux\nlignes"), "deux\\nlignes")
 
+    def test_retours_windows_et_mac_ne_laissent_pas_de_caractere_brut(self):
+        for separateur in ("\r\n", "\r", "\n"):
+            with self.subTest(separateur=repr(separateur)):
+                self.assertEqual(echapper(f"Premiere{separateur}Deuxieme"),
+                                 "Premiere\\nDeuxieme")
+
+    def test_une_consigne_multiligne_reste_dans_un_seul_evenement(self):
+        from core.calendrier import Evenement
+        evenement = Evenement("test@paper-manager", datetime(2026, 9, 20, 8),
+                              "Rappel\r\nimportant", "Appeler\rPuis envoyer\r\nle dossier", (1,))
+        contenu = rendre([evenement], LE_JOUR)
+        self.assertNotIn("\r", contenu.replace("\r\n", ""))
+        self.assertIn("DESCRIPTION:Appeler\\nPuis envoyer\\nle dossier", lignes(contenu))
+        self.assertEqual(lignes(contenu).count("BEGIN:VEVENT"), 1)
+
 
 class Pliage(unittest.TestCase):
     def test_une_ligne_courte_ne_bouge_pas(self):
