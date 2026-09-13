@@ -74,11 +74,15 @@ jobs:
           retention-days: 30
 
       - name: Livrer le rapport par e-mail
-        if: ${{ env.EMAIL_CLIENT != '' && secrets.RESEND_API_KEY != '' && secrets.RESEND_EXPEDITEUR != '' }}
+        if: ${{ env.EMAIL_CLIENT != '' }}
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_EXPEDITEUR: ${{ secrets.RESEND_EXPEDITEUR }}
         run: |
+          if [ -z "$RESEND_API_KEY" ] || [ -z "$RESEND_EXPEDITEUR" ]; then
+            echo "Rapport créé, mais livraison e-mail non configurée." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           python3 - <<'PY'
           import base64
           import json
@@ -108,7 +112,3 @@ jobs:
               if not 200 <= reponse.status < 300:
                   raise RuntimeError(f'Livraison refusée : HTTP {reponse.status}')
           PY
-
-      - name: Signaler une livraison e-mail non configurée
-        if: ${{ env.EMAIL_CLIENT != '' && (secrets.RESEND_API_KEY == '' || secrets.RESEND_EXPEDITEUR == '') }}
-        run: echo "Rapport créé, mais livraison e-mail non configurée." >> "$GITHUB_STEP_SUMMARY"
