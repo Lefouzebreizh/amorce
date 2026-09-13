@@ -54,7 +54,10 @@ test('refuse de créer une session si le prix n\'est pas configuré', async () =
 
 test('refuse une adresse absente, malformée ou non http(s)', async () => {
   const r = reglages();
-  for (const corps of [{}, { url: 'pas-une-url' }, { url: 'ftp://exemple.com' }, { url: 42 }]) {
+  for (const corps of [
+    {}, { url: 'pas-une-url' }, { url: 'ftp://exemple.com' }, { url: 42 },
+    { url: 'http://localhost/admin' }, { url: 'http://127.0.0.1' }, { url: 'http://[::1]' },
+  ]) {
     const requete = new Request('https://x/creer-session', { method: 'POST', body: JSON.stringify(corps) });
     const reponse = await traiter(requete, r);
     assert.equal(reponse.status, 400, JSON.stringify(corps));
