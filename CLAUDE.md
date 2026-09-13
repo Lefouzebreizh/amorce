@@ -366,6 +366,10 @@ et dit ce qui vaut désormais partout. Le détail des jetons reste dans
 `/usine-a-themes`, celui des écrans dans `/custom-frontend-designer`, celui du
 pouce dans `/tailwind-mobile-ux`. Ici, seulement ce qui traverse les projets.
 
+Le socle canonique propre à Lefouzèbreizh vit dans `design-system/` : jetons,
+règles de marque, composants et actifs maîtres réutilisables par les pages du
+site, dont `/univers` constitue la première vitrine intégrée.
+
 ### Les cinq invariants
 
 **1. Cinq rôles de surface, et les mêmes noms partout.** Du fond de page à la
