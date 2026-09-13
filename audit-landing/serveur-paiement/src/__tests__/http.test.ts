@@ -7,6 +7,7 @@ import { chargerReglages, creerServeur, LIMITE_CORPS } from '../http.ts';
 import type { Reglages } from '../index.ts';
 
 const envTest = (): NodeJS.ProcessEnv => ({
+  NODE_ENV: 'test',
   STRIPE_SECRET_KEY: 'rk_test_factice',
   STRIPE_PRICE_ID: 'price_factice',
   STRIPE_WEBHOOK_SECRET: 'whsec_factice',
@@ -50,7 +51,7 @@ test('charge les réglages test et refuse chaque variable absente sans afficher 
   const reglages = chargerReglages(envTest());
   assert.equal(reglages.idPrixStripe, 'price_factice');
   assert.deepEqual(reglages.origines, ['https://audit.example', 'https://preview.example']);
-  for (const nom of Object.keys(envTest())) {
+  for (const nom of Object.keys(envTest()).filter((nom) => nom !== 'NODE_ENV')) {
     const env = envTest();
     delete env[nom];
     assert.throws(() => chargerReglages(env), new RegExp(nom));
