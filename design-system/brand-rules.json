@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "masterDirection": "DA-Master-Lefouzebreizh-VALIDATED",
+  "palette": {
+    "black": "#05000A",
+    "turquoise": "#40E0D0",
+    "violet": "#7C3AED",
+    "amber": "#F4B850",
+    "offWhite": "#F8F8F8"
+  },
+  "requiredDNA": [
+    "dark cinematic depth",
+    "turquoise-violet signature light",
+    "controlled amber focal light",
+    "Breton visual authenticity",
+    "premium readable interface"
+  ],
+  "bretonLibrary": [
+    "coast and ocean",
+    "lighthouses",
+    "seabirds",
+    "menhirs and dolmens",
+    "heather granite and lichen",
+    "Gwenn-ha-Du",
+    "canonical ermine"
+  ],
+  "heroOnly": ["full zebra double exposure", "high-density cinematic scenery"],
+  "forbidden": [
+    "AI-invented ermine geometry",
+    "generic fake Breton flag",
+    "visual overload in task interfaces",
+    "autoplay sound",
+    "motion without reduced-motion fallback"
+  ],
+  "qualityGate": {
+    "responsive": true,
+    "keyboardAccessible": true,
+    "reducedMotion": true,
+    "mobileFallback": true,
+    "performanceBudgetRequired": true
+  }
+}
