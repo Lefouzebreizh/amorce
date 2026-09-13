@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://reseau-annuaires.vercel.app/education/sitemap.xml
+Sitemap: https://lefouzebreizh.github.io/amorce/education/sitemap.xml
