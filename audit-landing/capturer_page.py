@@ -341,6 +341,14 @@ def forcer_chargement_complet(page: Page) -> None:
         if position_actuelle >= hauteur_actuelle and hauteur_actuelle == hauteur_precedente:
             break
         hauteur_precedente = hauteur_actuelle
+    else:
+        # Atteindre la limite ne prouve pas que le bas a été chargé. Continuer
+        # ferait analyser des sections encore vides sur une page longue ou à
+        # défilement infini. L'opérateur conserve cet échec pour examen/reprise.
+        raise ValueError(
+            "Chargement incomplet : bas de page stable non atteint "
+            f"après {MAX_PAS_SCROLL} pas de défilement"
+        )
 
     # Les images déclenchées par le dernier pas de scroll ont besoin d'un
     # instant pour finir de télécharger avant la capture.
