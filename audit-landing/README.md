@@ -1,6 +1,6 @@
-# Audit de page de vente en 24h — capture, analyse, rapport et vente
+# Audit visuel de page de vente — capture, analyse, rapport et vente
 
-Cinq briques du produit « Audit de page de vente en 24h », dans l'ordre où
+Cinq briques du produit « Audit visuel de page de vente », dans l'ordre où
 elles s'enchaînent :
 
 1. `capturer_page.py` — transforme une URL en une poignée d'images nettes,
@@ -12,11 +12,29 @@ elles s'enchaînent :
 3. `rapport_html.py` — transforme ce rapport structuré en une page HTML
    autonome, prête à être envoyée à un client.
 4. `site/index.html` — la page de vente du produit lui-même : proposition de
-   valeur, comment ça marche, ce que contient le rapport, un exemple réel
+   valeur, comment ça marche, ce que contient le rapport, un exemple fictif
    (`site/exemple-rapport.html`, produit par la brique 3 ci-dessus), et un
    bouton d'achat.
 5. `serveur-paiement/` — le serveur Stripe qui reçoit la commande et
    déclenche l'analyse une fois le paiement confirmé.
+
+## État de validation de la PR #953
+
+Les tests locaux et GitHub Actions vérifient le code. Ils ne constituent pas
+une preuve d'achat, de livraison ou de capture réelle sur le commit courant.
+Le moteur produit actuellement des captures **ordinateur (1440 × 900)**.
+La capture mobile d'une URL commandée n'est pas implémentée ; elle doit rester
+hors de l'offre pilote tant qu'elle n'est pas ajoutée et vérifiée.
+
+L'aperçu Vercel montré par le propriétaire le 13/09/2026 affiche du Base64.
+Les deux fichiers de `site/` contiennent pourtant du HTML brut. Une tentative
+d'envoi UTF-8 explicite en Preview a été refusée par Vercel (403, permission de
+créer un aperçu du projet dédié). Aucun aperçu corrigé n'a été validé ici.
+
+La feuille [VALIDATION-ACHAT-TEST.md](VALIDATION-ACHAT-TEST.md) distingue les
+contrôles automatisés des preuves externes à obtenir avant ouverture.
+Les observations de navigation des 11 et 12 septembre ci-dessous sont des
+mesures historiques ; elles n'ont pas été rejouées sur la version courante.
 
 ## La page de vente (`site/`)
 
@@ -25,19 +43,20 @@ dans un navigateur, sans serveur ni build. `site/exemple-rapport.html` est un
 vrai rapport produit par `rapport_html.py` sur un site fictif
 (`exemple-saas.com`) — pas une maquette, le même rendu qu'un client recevrait.
 
-Le formulaire de commande (adresse de la page à auditer + bouton) appelle
-`serveur-paiement/` — voir son README pour ce qui est vérifié et ce qui reste
-à déployer. **Tant que ce serveur n'est pas déployé et configuré**, le
-formulaire échoue proprement et affiche « Paiement en ligne sécurisé —
-bientôt disponible » plutôt que de laisser croire qu'un paiement est
-possible — même principe que `artisan-express/` : ce qui n'est pas réglé (ici,
-le prix et l'adresse du serveur) ne s'invente pas, il se dit absent.
+Les commandes sont fermées par défaut : bouton désactivé et indisponibilité
+annoncée avant toute saisie. Aucun appel ne part vers un serveur fictif.
+Avant ouverture : valider le prix, afficher le tarif et un contact réel,
+renseigner le serveur de paiement, puis tester paiement, déclenchement,
+relecture et livraison. Aucun délai réel de livraison n'a été vérifié ici.
 
-Vérifié à l'œil, dans un vrai Chromium, plein format et largeur téléphone
-(393 px) : aucun débordement horizontal, aucune erreur console, le lien vers
-l'exemple de rapport navigue bien, et les deux chemins du formulaire ont été
-exercés — sans backend (message honnête affiché) et avec un backend simulé
-(redirection réelle vers l'adresse de paiement rendue).
+Contrôle qualité ajouté le 12/09/2026 : les constats doivent référencer une
+capture effectivement envoyée au modèle ; notes non entières et observations
+vides sont refusées. Le prompt distingue hypothèses et observations et interdit
+les preuves commerciales inventées. Cela ne remplace pas une relecture humaine.
+
+La page source est contrôlée automatiquement : fichiers HTML bruts, absence
+de promesse de livraison en 24 h, commandes fermées et exemple fictif identifié.
+Le contrôle visuel du contenu effectivement servi reste à faire.
 
 ## Défaut corrigé : tranches blanches sur `qonto.com/fr`
 
@@ -259,6 +278,11 @@ Chaque URL produit un dossier (`captures/<domaine-nettoyé>/`) contenant :
   hauteur d'écran chacune plutôt qu'un unique bloc géant (voir plus bas) ;
 - `NN-bas.png` — la dernière tranche.
 
+Une recapture refuse un dossier qui contient déjà des PNG, sans supprimer ni
+remplacer les anciennes images. Choisir une nouvelle valeur de `--sortie` pour
+une nouvelle tentative. La console opérateur crée automatiquement un dossier
+distinct par commande et par tentative.
+
 ## Ce que le script fait, dans l'ordre
 
 1. **Viewport 1440×900, `device_scale_factor=2`** — rendu net, comme un écran
@@ -312,7 +336,10 @@ d'écran, et nomme la première `hero`, la dernière `bas`, et numérote le
 reste `milieu-1`, `milieu-2`… Sur une page qui tient en une ou deux tranches,
 le résultat correspond exactement aux trois segments demandés.
 
-## Ce qui a été vérifié, et comment
+## Historique des essais de navigation antérieurs
+
+Cette section conserve les résultats d'une session antérieure. Les fixtures
+ne sont pas versionnées et ne font pas partie de la validation actuelle.
 
 **Les quatre URLs réelles n'ont pas pu être testées depuis cette session** —
 et ce n'est pas propre à ces quatre sites. La politique réseau de cet
@@ -349,8 +376,9 @@ en direct) :
   attente) ;
 - le reliquat du bandeau de cookies (`position: fixed`) est bien masqué,
   absent de toutes les tranches ; un en-tête collant (`position: sticky`),
-  lui, reste visible sur chaque tranche où il apparaît réellement au scroll —
-  c'est le comportement voulu depuis le correctif ci-dessous, pas un oubli ;
+  lui, restait visible dans cette ancienne version. Ce comportement a ensuite
+  été remplacé par `visibility:hidden` pour préserver la place du sticky tout
+  en évitant qu'il masque le texte (voir le correctif décrit plus haut) ;
 - le script ne reste pas bloqué par le trafic réseau perpétuel : il capture
   en une dizaine de secondes grâce au délai de secours de 5 s, jamais au
   timeout par défaut de Playwright (30 s) ;
@@ -373,9 +401,89 @@ dans l'historique de cette session si besoin de les rejouer.
 python3 -m unittest discover -s tests --verbose
 ```
 
-Couvre uniquement la logique pure — `calculer_segments()` (découpage,
-bornes, cas limites) et `nom_dossier_pour_url()` — sans navigateur ni réseau,
-donc exécutable sur n'importe quel runner. La partie qui pilote réellement
-Chromium (fermeture des bandeaux, scroll, capture) n'est pas testée
-unitairement : c'est un parcours d'intégration, vérifié à l'œil ci-dessus
-plutôt que simulé.
+Les tests couvrent la logique des segments, les noms, les contrôles réseau
+simulés, les fichiers de capture, l'analyse, le rendu, le registre, l'opérateur,
+la livraison simulée et la page source. Ils ne lancent pas Chromium. La
+fermeture réelle des bandeaux, le lazy-loading, les animations au scroll et la
+lisibilité des images doivent encore être vérifiés par une suite navigateur
+reproductible sur un environnement autorisé.
+
+## Registre durable des commandes (`commandes.py`)
+
+Module préparatoire pour un processus hébergé sur disque persistant (VPS, par
+exemple). SQLite est fourni par Python : aucune base de production existante
+n'a été modifiée. La session Stripe identifie une seule commande ; une session
+rejouée avec une autre URL ou un autre destinataire est refusée. Une transition
+atomique réserve le traitement à un processus. Le rapport doit passer par
+relecture puis approbation nominative ; son empreinte est contrôlée avant
+préparation de l'envoi, qui retourne exactement les octets approuvés.
+
+Un envoi incertain reste en état `envoi`, visible via `a_traiter()` : vérifier
+le journal du fournisseur avant toute reprise. `envoye` signifie accepté par
+le fournisseur avec identifiant, pas livré dans la boîte du client.
+
+**Portée : raccordement logiciel via `reception.py`, `operateur.py` et
+`livraison.py`, testé localement, sans parcours externe complet vérifié.**
+SQLite et les rapports nécessitent un disque persistant ; le disque éphémère
+d'un runner GitHub ne convient pas à la conservation des commandes. Restent
+le déploiement, la protection des opérations de relecture et la vérification
+de reprise sur l'hébergement retenu. Aucune vente n'est ouverte par ce module.
+
+### Console opérateur du pilote (`operateur.py`)
+
+Le chaînon entre la réception et les modules existants est désormais explicite.
+Sur l'hébergement persistant, l'opérateur peut lister les commandes, produire
+les captures et le rapport, l'approuver nominativement après lecture, puis le
+livrer. Chaque étape vérifie l'état du registre ; relancer `produire` sur une
+session déjà prise est refusé.
+
+```bash
+python audit-landing/operateur.py --base /donnees/commandes.sqlite lister
+python audit-landing/operateur.py --base /donnees/commandes.sqlite produire cs_test_... --captures /donnees/captures
+python audit-landing/operateur.py --base /donnees/commandes.sqlite approuver cs_test_... --relecteur "Nom"
+RESEND_API_KEY=... AUDIT_EXPEDITEUR=... python audit-landing/operateur.py --base /donnees/commandes.sqlite livrer cs_test_...
+```
+
+Cette console prépare un pilote avec relecture humaine ; son exploitation
+réelle reste à valider. Une erreur après la prise reste
+visible à l'état `echec_analyse`, avec un message borné. Après examen, la
+commande peut être replacée volontairement en attente avec `reprendre` ; aucune
+relance automatique ne risque de dupliquer le travail.
+
+Les URLs commandées sont contrôlées avant navigation : seuls HTTP/HTTPS sans
+identifiants sont acceptés et toute résolution vers localhost, une adresse
+privée, locale, réservée ou de métadonnées cloud est refusée. Le filtre couvre
+aussi les redirections et sous-ressources et revalide chaque requête. Ces tests
+ne prouvent pas l'isolation réseau de Chromium : sa résolution DNS est distincte
+de celle du contrôle Python. L'isolation effective du processus de capture
+doit être vérifiée avant de traiter des URLs clients sur un VPS connecté au
+réseau interne.
+
+Le registre est testé pour le redémarrage, la concurrence, la relecture,
+l'intégrité du rapport et l'envoi interrompu. Chaque commande et chaque
+tentative disposent de leur propre dossier, pour conserver les captures et
+les rapports antérieurs.
+
+### Adaptateur Resend (`livraison.py`)
+
+`livrer(base, session, cle_resend=..., expediteur=...)` raccorde le registre
+à l'API Resend. Il joint les octets exacts du rapport HTML approuvé, adresse
+le courriel au destinataire enregistré et conserve l'identifiant fournisseur.
+Aucun envoi n'a lieu à l'import. Clé et expéditeur vérifié sont obligatoires ;
+ils ne sont ni inventés ni enregistrés dans Git.
+
+La pièce jointe permet de remettre le rapport sans exposer un artefact GitHub
+privé au client. Le brouillon Resend à lien créé précédemment n'est pas utilisé
+par cet adaptateur. L'acceptation de pièces jointes HTML par les boîtes clientes
+reste à vérifier par un essai réel avant ouverture.
+
+L'appel possède une clé d'idempotence stable ; la documentation Resend indique
+une conservation de 24 heures. La prévention durable des réémissions repose
+sur le registre, pas sur cette durée. Toute panne ou réponse sans identifiant
+laisse `envoi` visible et nécessite rapprochement avec les journaux Resend.
+Source : https://resend.com/docs/api-reference/emails/send-email .
+
+Cinq scénarios de livraison sont vérifiés avec transport simulé. Aucun courriel
+réel n'a été envoyé ici. Restent le déploiement du registre persistant, la
+configuration des services, la reprise opérateur et la validation du parcours
+externe complet. Le module d'envoi seul ne résout pas ces étapes.

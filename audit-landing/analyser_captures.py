@@ -163,6 +163,11 @@ défiler la page en continu. Ne signale donc jamais qu'un élément est « coup�
 segments voisins, qui se suivent, et juge-le entier. Ne signale une coupure \
 que si elle est visible *à l'intérieur* d'un même segment, loin de ses bords.
 
+Distingue observation visible et hypothèse. Une capture ne mesure ni les abandons,
+ni la conversion, ni le fonctionnement d’un bouton. Ne présente pas ces points
+comme vérifiés. Ne recommande jamais d’inventer des témoignages, logos, chiffres
+ou garanties. L’absence de témoignages ne constitue pas à elle seule un blocage.
+
 Rends ton jugement sur ces six catégories, toujours dans cet ordre :
 {categories_listees}
 
@@ -262,7 +267,7 @@ class Rapport:
     priorites: list[str]
 
 
-def analyser_reponse_json(texte: str) -> Rapport:
+def analyser_reponse_json(texte: str, segments_autorises: set[str] | None = None) -> Rapport:
     """Parse et valide la réponse du modèle en un `Rapport` structuré.
 
     Lève `ValueError` sur tout JSON absent, malformé ou incomplet — jamais un
@@ -274,6 +279,9 @@ def analyser_reponse_json(texte: str) -> Rapport:
         donnees = json.loads(texte)
     except json.JSONDecodeError as erreur:
         raise ValueError(f"Réponse du modèle non JSON : {erreur}") from erreur
+
+    if not isinstance(donnees, dict):
+        raise ValueError("Le rapport doit être un objet JSON.")
 
     for champ in ("verdict_global", "resume", "categories", "priorites"):
         if champ not in donnees:
@@ -287,11 +295,18 @@ def analyser_reponse_json(texte: str) -> Rapport:
         for champ in ("nom", "note", "constats"):
             if champ not in brute:
                 raise ValueError(f"Catégorie incomplète, champ manquant : {champ}")
+        if brute["nom"] not in CATEGORIES:
+            raise ValueError(f"Catégorie inconnue : {brute['nom']}")
         constats = []
         for constat_brut in brute["constats"]:
             for champ in ("segment", "severite", "observation", "recommandation"):
                 if champ not in constat_brut:
                     raise ValueError(f"Constat incomplet, champ manquant : {champ}")
+            for champ in ("segment", "observation", "recommandation"):
+                if not isinstance(constat_brut[champ], str) or not constat_brut[champ].strip():
+                    raise ValueError(f"Constat vide ou non textuel : {champ}")
+            if segments_autorises is not None and constat_brut["segment"] not in segments_autorises:
+                raise ValueError(f"Capture inconnue : {constat_brut['segment']}")
             if constat_brut["severite"] not in SEVERITES:
                 raise ValueError(f"Sévérité inattendue : {constat_brut['severite']!r}")
             constats.append(
@@ -302,7 +317,9 @@ def analyser_reponse_json(texte: str) -> Rapport:
                     recommandation=constat_brut["recommandation"],
                 )
             )
-        note = int(brute["note"])
+        note = brute["note"]
+        if type(note) is not int:
+            raise ValueError("La note doit être un entier.")
         if not 0 <= note <= 10:
             raise ValueError(f"Note hors de l'échelle 0–10 : {note} ({brute['nom']})")
         categories.append(Categorie(nom=brute["nom"], note=note, constats=constats))
@@ -453,7 +470,7 @@ def analyser_page(dossier_page: Path, modele: str = MODELE_PAR_DEFAUT) -> Rappor
             f"Aucun bloc de texte dans la réponse du modèle (blocs reçus : {types_recus})."
         )
 
-    return analyser_reponse_json(textes[0])
+    return analyser_reponse_json(textes[0], {segment.name for segment in segments})
 
 
 def main() -> None:

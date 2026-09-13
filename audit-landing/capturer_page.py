@@ -13,7 +13,9 @@ génération du rapport et la page de vente du produit viennent après.
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import re
+import socket
 import sys
 import time
 from dataclasses import dataclass
@@ -21,6 +23,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from playwright.sync_api import (
+    BrowserContext,
     Error as ErreurPlaywright,
     Page,
     TimeoutError as DelaiDepassePlaywright,
@@ -166,6 +169,49 @@ class Segment:
     y_fin_px: int
 
 
+def verifier_url_publique(url: str) -> None:
+    """Refuse les destinations locales/privées avant qu'un navigateur les charge.
+
+    Une URL de commande est une entrée non fiable. Sans ce contrôle, le moteur
+    de capture hébergé pourrait servir de relais vers localhost, le réseau du
+    VPS ou une adresse de métadonnées cloud.
+    """
+    decoupee = urlparse(url)
+    if decoupee.scheme not in ("http", "https") or not decoupee.hostname:
+        raise ValueError("URL publique HTTP(S) requise")
+    if decoupee.username or decoupee.password:
+        raise ValueError("Identifiants interdits dans l'URL")
+    try:
+        resultats = socket.getaddrinfo(decoupee.hostname, decoupee.port, type=socket.SOCK_STREAM)
+    except socket.gaierror as erreur:
+        raise ValueError("Nom de domaine introuvable") from erreur
+    adresses = {ipaddress.ip_address(resultat[4][0]) for resultat in resultats}
+    if not adresses or any(not adresse.is_global for adresse in adresses):
+        raise ValueError("Destination locale ou privée interdite")
+
+
+def installer_filtre_reseau(contexte: BrowserContext) -> None:
+    """Contrôle aussi chaque sous-ressource HTTP(S) avant sa requête.
+
+    Ne pas mémoriser un domaine comme autorisé : sa résolution peut changer
+    au cours d'une capture. Ce contrôle applicatif ne remplace pas l'isolation
+    réseau du navigateur, qui doit aussi interdire les destinations internes.
+    """
+
+    def filtrer(route) -> None:
+        url = route.request.url
+        try:
+            decoupee = urlparse(url)
+            if decoupee.scheme in ("http", "https"):
+                verifier_url_publique(url)
+        except ValueError:
+            route.abort("blockedbyclient")
+            return
+        route.continue_()
+
+    contexte.route("**/*", filtrer)
+
+
 def calculer_segments(
     hauteur_totale_px: int,
     hauteur_segment_px: int = HAUTEUR_VIEWPORT * FACTEUR_ECHELLE,
@@ -217,6 +263,20 @@ def nom_dossier_pour_url(url: str) -> str:
     brut = brut or decoupee.netloc
     nettoye = re.sub(r"[^a-zA-Z0-9]+", "-", brut).strip("-").lower()
     return nettoye or "page"
+
+
+def verifier_dossier_capture(dossier_page: Path) -> None:
+    """Évite de mêler une nouvelle capture aux images d'une ancienne tentative.
+
+    L'analyse consomme tous les PNG de ce dossier, y compris ceux dont le nom
+    n'est pas produit par ce script. Ne rien effacer : la nouvelle tentative
+    doit recevoir un dossier de sortie distinct.
+    """
+    if any(dossier_page.glob("*.png")):
+        raise ValueError(
+            f"Des images PNG existent déjà dans {dossier_page} ; "
+            "choisissez un nouveau dossier de sortie pour cette capture."
+        )
 
 
 def fermer_bandeaux_cookies(page: Page) -> bool:
@@ -281,6 +341,14 @@ def forcer_chargement_complet(page: Page) -> None:
         if position_actuelle >= hauteur_actuelle and hauteur_actuelle == hauteur_precedente:
             break
         hauteur_precedente = hauteur_actuelle
+    else:
+        # Atteindre la limite ne prouve pas que le bas a été chargé. Continuer
+        # ferait analyser des sections encore vides sur une page longue ou à
+        # défilement infini. L'opérateur conserve cet échec pour examen/reprise.
+        raise ValueError(
+            "Chargement incomplet : bas de page stable non atteint "
+            f"après {MAX_PAS_SCROLL} pas de défilement"
+        )
 
     # Les images déclenchées par le dernier pas de scroll ont besoin d'un
     # instant pour finir de télécharger avant la capture.
@@ -331,6 +399,7 @@ def capturer_et_decouper(
     qu'à l'écran : c'est aussi exactement ce qu'un utilisateur réel verrait.
     """
     dossier_page = dossier_sortie / nom_dossier_pour_url(url)
+    verifier_dossier_capture(dossier_page)
     dossier_page.mkdir(parents=True, exist_ok=True)
 
     hauteur_totale_logique = page.evaluate("document.documentElement.scrollHeight")
@@ -379,7 +448,13 @@ def capturer_et_decouper(
 
 def capturer_url(page: Page, url: str, dossier_sortie: Path) -> list[Path]:
     """Le parcours complet pour une URL : ouvrir, nettoyer, charger, découper."""
-    page.goto(url, timeout=DELAI_NAVIGATION_MS, wait_until="domcontentloaded")
+    verifier_dossier_capture(dossier_sortie / nom_dossier_pour_url(url))
+    verifier_url_publique(url)
+    reponse = page.goto(url, timeout=DELAI_NAVIGATION_MS, wait_until="domcontentloaded")
+    if reponse is None:
+        raise ValueError("Aucune réponse HTTP à capturer")
+    if reponse.status >= 400:
+        raise ValueError(f"Document principal indisponible : HTTP {reponse.status}")
     attendre_stabilite(page)
 
     a_ferme_un_bandeau = fermer_bandeaux_cookies(page)
@@ -429,7 +504,9 @@ def main() -> int:
         contexte = navigateur.new_context(
             viewport={"width": LARGEUR_VIEWPORT, "height": HAUTEUR_VIEWPORT},
             device_scale_factor=FACTEUR_ECHELLE,
+            service_workers="block",  # Les requêtes doivent rester visibles au filtre.
         )
+        installer_filtre_reseau(contexte)
         page = contexte.new_page()
 
         echec = 0
@@ -437,7 +514,7 @@ def main() -> int:
             print(f"→ {url}", file=sys.stderr)
             try:
                 fichiers = capturer_url(page, url, arguments.sortie)
-            except (ErreurPlaywright, DelaiDepassePlaywright) as erreur:
+            except (ErreurPlaywright, DelaiDepassePlaywright, ValueError) as erreur:
                 print(f"  ÉCHEC : {erreur}", file=sys.stderr)
                 echec = 1
                 continue
