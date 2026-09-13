@@ -54,7 +54,14 @@ def importer(db, catalogue):
             attente.append({'radar_id': r['id'], 'url': key, 'titre_source': r['product'], 'extrait_source': r['snippet'], 'status': 'a_documenter'})
             continue
         sortie['prospects'].append({**p, 'radar_id': r['id'], 'approved': False})
-    presents = {url_cle(r['url']) for r in db.execute('SELECT url FROM leads') if r['url'].startswith(('http://', 'https://'))}
+    presents = set()
+    for r in db.execute('SELECT url FROM leads'):
+        try:
+            presents.add(url_cle(r['url']))
+        except (TypeError, ValueError):
+            # La ligne a déjà été classée comme URL invalide plus haut. Elle ne
+            # doit pas faire tomber le rapport des profils valides ou absents.
+            continue
     for key, p in profils.items():
         if key not in presents:
             attente.append({'id': p['id'], 'url': key, 'status': 'absent_du_radar'})

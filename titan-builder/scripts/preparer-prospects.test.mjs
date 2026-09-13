@@ -5,7 +5,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { selectionner, preparer } from './preparer-prospects.mjs';
 
-const p = { id: 'atelier-test', name: 'Atelier TEST fictif', city: 'Rennes', observation: 'Votre fiche de test présente la menuiserie.', sources: ['https://example.com'], phone: '02 99 00 00 00', phone_source: 'https://example.com', services: 'Menuiserie', metier: 'menuisier' };
+const verificationRecente = { status: 'absent', checked_at: new Date().toISOString().slice(0, 10), sources: ['https://example.com/recherche'] };
+const p = { id: 'atelier-test', name: 'Atelier TEST fictif', city: 'Rennes', observation: 'Votre fiche de test présente la menuiserie.', sources: ['https://example.com'], phone: '02 99 00 00 00', phone_source: 'https://example.com', services: 'Menuiserie', metier: 'menuisier', site_check: verificationRecente };
 const input = prospects => ({ prospects, exclusions: [], signature: 'Équipe de test' });
 test('les oppositions couvrent les formats français et internationaux', () => {
   for (const phone of ['+33 2 99 00 00 00', '0033 2 99 00 00 00', '+33 (0)2 99 00 00 00']) {
@@ -27,6 +28,26 @@ test('opposition ultérieure et contacts déjà envoyés bloquent tous leurs dou
 test('déduplication et refus des chemins injectés', () => {
   assert.equal(selectionner(input([p, { ...p, id: 'autre' }]))[1].reason, 'doublon');
   assert.equal(selectionner(input([{ ...p, id: '../../ailleurs' }]))[0].reason, 'identifiant invalide');
+});
+test('un site existant, une absence non sourcée ou une vérification ancienne bloquent la préparation', () => {
+  const maintenant = new Date('2026-09-13T12:00:00Z');
+  assert.equal(selectionner(input([{ ...p, site_check: { ...verificationRecente, status: 'present' } }]), maintenant)[0].reason, 'site existant');
+  assert.equal(selectionner(input([{ ...p, site_check: undefined }]), maintenant)[0].reason, 'absence de site non vérifiée');
+  assert.equal(selectionner(input([{ ...p, site_check: { status: 'absent', checked_at: '2026-09-13', sources: [] } }]), maintenant)[0].reason, 'source de vérification du site manquante');
+  assert.equal(selectionner(input([{ ...p, site_check: { status: 'absent', checked_at: '2026-02-30', sources: ['https://example.com'] } }]), maintenant)[0].reason, 'date de vérification du site invalide');
+  assert.equal(selectionner(input([{ ...p, site_check: { status: 'absent', checked_at: '2026-09-14', sources: ['https://example.com'] } }]), maintenant)[0].reason, 'vérification du site périmée');
+  assert.equal(selectionner(input([{ ...p, site_check: { status: 'absent', checked_at: '2026-08-13', sources: ['https://example.com'] } }]), maintenant)[0].reason, 'vérification du site périmée');
+  assert.equal(selectionner(input([{ ...p, site_check: { status: 'absent', checked_at: '2026-08-14', sources: ['https://example.com'] } }]), maintenant)[0].reason, '');
+  assert.equal(selectionner(input([{ ...p, site_check: { status: 'absent', checked_at: '2026-09-13', sources: ['https://example.com'] } }]), maintenant)[0].reason, '');
+});
+test('un profil avec site existant ne produit ni message ni démo', async () => {
+  const temp = await mkdtemp(path.join(tmpdir(), 'prospects-site-'));
+  try {
+    const out = path.join(temp, 'lot');
+    const result = await preparer(input([{ ...p, site_check: { ...verificationRecente, status: 'present' } }]), out);
+    assert.deepEqual(result, [{ id: p.id, status: 'exclu', reason: 'site existant' }]);
+    await assert.rejects(readFile(path.join(out, p.id, 'message.txt')), /ENOENT/);
+  } finally { await rm(temp, { recursive: true, force: true }); }
 });
 test('parcours réel, dossier incomplet, plafond et conservation du lot existant', async () => {
   const temp = await mkdtemp(path.join(tmpdir(), 'prospects-'));

@@ -7,6 +7,8 @@ import path from 'node:path';
 
 const cle = x => String(x ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 const texte = x => typeof x === 'string' && x.trim().length > 0;
+const JOUR_MS = 24 * 60 * 60 * 1000;
+const VALIDITE_VERIFICATION_SITE_JOURS = 30;
 function telephoneCle(value) {
   const raw = String(value ?? '').replace(/[\s().-]/g, '');
   const local = raw.replace(/^(?:\+33|0033)0?([1-9]\d{8})$/, '0$1');
@@ -15,7 +17,23 @@ function telephoneCle(value) {
 const identites = p => [...[p.id, p.name, p.email].map(cle), telephoneCle(p.phone)].filter(Boolean);
 const sourceValide = x => { try { return ['https:', 'http:'].includes(new URL(Array.isArray(x) ? x[1] : x).protocol); } catch { return false; } };
 
-export function selectionner(input) {
+function raisonVerificationSite(p, maintenant) {
+  const verification = p.site_check;
+  if (!verification || typeof verification !== 'object' || Array.isArray(verification)) return 'absence de site non vérifiée';
+  if (verification.status === 'present') return 'site existant';
+  if (verification.status !== 'absent') return 'absence de site non vérifiée';
+  if (!Array.isArray(verification.sources) || !verification.sources.some(sourceValide)) return 'source de vérification du site manquante';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(verification.checked_at ?? '')) return 'date de vérification du site invalide';
+  const date = new Date(`${verification.checked_at}T00:00:00Z`);
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== verification.checked_at) return 'date de vérification du site invalide';
+  const aujourdHui = Date.UTC(maintenant.getUTCFullYear(), maintenant.getUTCMonth(), maintenant.getUTCDate());
+  const age = aujourdHui - date.getTime();
+  if (age < 0 || age > VALIDITE_VERIFICATION_SITE_JOURS * JOUR_MS) return 'vérification du site périmée';
+  return '';
+}
+
+export function selectionner(input, maintenant = new Date()) {
+  if (!(maintenant instanceof Date) || Number.isNaN(maintenant.getTime())) throw Error('date de référence invalide');
   if (!input || !Array.isArray(input.prospects) || !Array.isArray(input.exclusions)) throw Error('prospects et exclusions doivent être des tableaux.');
   if (input.prospects.some(p => !p || typeof p !== 'object') || input.exclusions.some(p => !p || !['string', 'object'].includes(typeof p))) throw Error('Entrée invalide.');
   const refuses = new Set(input.exclusions.flatMap(p => typeof p === 'string' ? [cle(p), telephoneCle(p)] : identites(p)));
@@ -41,6 +59,7 @@ export function selectionner(input) {
     ids.forEach(k => vus.add(k));
     if (!reason && (!texte(p.id) || !/^[a-z0-9][a-z0-9-]{0,79}$/.test(p.id))) reason = 'identifiant invalide';
     if (!reason && (!texte(p.name) || !texte(p.city) || !texte(p.observation) || !Array.isArray(p.sources) || !p.sources.some(sourceValide))) reason = 'sources ou faits incomplets';
+    if (!reason) reason = raisonVerificationSite(p, maintenant);
     return { ...p, reason };
   });
 }
