@@ -7,7 +7,7 @@ import styles from './accueil.module.css';
 
 export default function PageAccueil() {
   const routeur = useRouter();
-  const [email, setEmail] = useState('');
+  const [identifiant, setIdentifiant] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState('');
@@ -22,10 +22,24 @@ export default function PageAccueil() {
     e.preventDefault();
     setErreur('');
     setEnCours(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password: motDePasse });
+    const { data, error: erreurFonction } = await supabase.functions.invoke('connexion-coffre', {
+      body: { identifiant, motDePasse },
+    });
+    const error = erreurFonction || (data?.error ? new Error(data.error) : null);
+    if (!error && data?.access_token && data?.refresh_token) {
+      const { error: erreurSession } = await supabase.auth.setSession({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+      });
+      if (erreurSession) {
+        setEnCours(false);
+        setErreur('Connexion indisponible. Réessaie.');
+        return;
+      }
+    }
     setEnCours(false);
     if (error) {
-      setErreur('Adresse e-mail ou mot de passe incorrect.');
+      setErreur(error.message === 'Trop de tentatives. Réessaie dans quelques minutes.' ? error.message : 'Identifiant ou mot de passe incorrect.');
       return;
     }
     routeur.replace('/coffre');
@@ -74,20 +88,20 @@ export default function PageAccueil() {
           <p className={styles.accessIntro}>Entre directement dans ton espace. Aucun lien à attendre dans ta boîte mail.</p>
 
         <form onSubmit={seConnecter} className={styles.form} aria-busy={enCours}>
-          <label htmlFor="email" className="text-sm text-ink-soft">
+          <label htmlFor="identifiant" className="text-sm text-ink-soft">
             Ton identifiant
           </label>
           <input
-            id="email"
-            type="email"
+            id="identifiant"
+            type="text"
             required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="username"
+            value={identifiant}
+            onChange={(e) => setIdentifiant(e.target.value)}
             className={styles.input}
             aria-invalid={!!erreur}
             aria-describedby={erreur ? 'erreur-connexion' : undefined}
-            placeholder="toi@exemple.fr"
+            placeholder="lefouzebreizh"
           />
           <label htmlFor="mot-de-passe" className="text-sm text-ink-soft">Ton mot de passe</label>
           <input
