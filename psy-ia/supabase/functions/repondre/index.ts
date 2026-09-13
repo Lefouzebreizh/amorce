@@ -18,6 +18,7 @@ import { detecterCrise } from '../../../src/lib/crisisDetection.ts';
 import { construireMessageCrise } from '../../../src/lib/crisisMessage.ts';
 import { PROMPT_SYSTEME } from '../../../src/lib/systemPrompt.ts';
 import { evaluerLimitesSession, type EtatSession } from '../../../src/lib/sessionLimits.ts';
+import { validerCleAnthropic } from '../../../src/lib/secrets.ts';
 
 const CLE_ANTHROPIC = Deno.env.get('ANTHROPIC_API_KEY');
 const MODELE = 'claude-sonnet-4-5-20250929';
@@ -89,18 +90,23 @@ Deno.serve(async (requete: Request) => {
   // --- Couche 3 : limites structurelles de session. ---
   const limites = session ? evaluerLimitesSession(session) : { rappelDiscret: false, redirectionFerme: false };
 
-  if (!CLE_ANTHROPIC) {
+  const validationCle = validerCleAnthropic(CLE_ANTHROPIC);
+  if (!validationCle.valide && validationCle.raison === 'absent') {
     // Échec explicite plutôt qu'une réponse simulée : le choix du
     // fournisseur LLM n'est pas encore arrêté (TODO.md), et faire semblant
     // de répondre coûterait plus cher qu'un message d'erreur honnête.
     return reponseJson({ erreur: 'Fournisseur LLM non configuré côté serveur (ANTHROPIC_API_KEY absente).' }, 500);
   }
 
+  if (!validationCle.valide) {
+    return reponseJson({ erreur: "ANTHROPIC_API_KEY contient un espace, un saut de ligne ou une valeur dupliquée. Revoir la variable d'environnement côté serveur." }, 500);
+  }
+
   // --- Couche 2 : prompt système anti-sycophancie, puis appel au modèle. ---
   const reponseAnthropic = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
-      'x-api-key': CLE_ANTHROPIC,
+      'x-api-key': validationCle.valeur,
       'anthropic-version': '2023-06-01',
       'content-type': 'application/json',
     },
