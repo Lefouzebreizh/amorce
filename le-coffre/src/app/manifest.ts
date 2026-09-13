@@ -6,10 +6,10 @@ import type { MetadataRoute } from 'next';
 // (`--color-accent`) en theme-color, comme demandé le 10/09/2026.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Le Tiroir Secret',
+    name: 'Mon Tiroir Secret',
     short_name: 'Tiroir Secret',
     description:
-      'Tes papiers administratifs, chiffrés entièrement dans ton navigateur avant d’être envoyés.',
+      'Tes documents chiffrés avant stockage, tes papiers et tes échéances au même endroit.',
     start_url: '/',
     scope: '/',
     display: 'standalone',

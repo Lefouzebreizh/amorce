@@ -38,8 +38,11 @@ export default function PageAccueil() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <p className={styles.brand}>Mon Tiroir Secret</p>
-        <span className={styles.signature}>Un abri signé Lefouzèbreizh</span>
+        <div>
+          <p className={styles.brand}>Mon Tiroir Secret</p>
+          <span className={styles.signature}>Un abri signé Lefouzèbreizh</span>
+        </div>
+        <a href="#connexion" className={styles.accessLink}>Mon espace</a>
       </header>
       <div className={styles.content}>
         <section className={styles.intro} aria-labelledby="titre-accueil">
@@ -57,7 +60,7 @@ export default function PageAccueil() {
             <li><span>03</span> Avancer sereinement</li>
           </ul>
         </section>
-        <section className={styles.access} aria-labelledby="titre-connexion">
+        <section id="connexion" tabIndex={-1} className={styles.access} aria-labelledby="titre-connexion">
           <p className={styles.eyebrow}>Ton espace personnel</p>
           <h2 id="titre-connexion">Ouvre ton tiroir.</h2>
           <p className={styles.accessIntro}>Reçois un lien de connexion par e-mail. Aucun mot de passe de compte à retenir.</p>

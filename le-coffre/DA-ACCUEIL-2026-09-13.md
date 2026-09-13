@@ -21,3 +21,14 @@ Responsable : session MVP privé, sous-agent tiroir_da. Base de travail : `29e39
 - Aucun courriel envoyé, compte créé, document transmis, secret lu ou paiement effectué. Authentification réelle, clavier, états rendus et Safari restent à vérifier sur un aperçu autorisé.
 
 **Statut : brouillon à vérifier visuellement avant intégration. Aucun déploiement ni fusion.** Le correctif global de confidentialité déjà préparé pour les autres écrans du coffre reste un lot distinct. La PR design-system #969 a été intégrée pendant le lot ; ses règles nouvelles ont été relues. Elle ne touche pas le-coffre, sous-projet Next.js autonome ; aucun import vers une autre racine npm n’est ajouté.
+
+## Reprise après intégration — session portail, 13 septembre 2026
+
+Le statut ci-dessus décrit le premier lot à sa rédaction. La PR #970 a depuis été fusionnée dans `main` au commit `1260ba33e1e072344bb108d35e2336c120b0b950`. Cette reprise complète le lot existant ; aucune seconde refonte.
+
+- Aperçu exact de #970 examiné dans Chromium : `https://coffre-k9p2utftp-erwannchevallier-6916s-projects.vercel.app/`, déploiement Vercel `dpl_3bFxqbTZkSzCaz3vqJQ24FaySgAF`, source `88edb468daaba70a96c927e939c77baa89cfe3d2`. Le dernier déploiement du projet appartenait à une branche OmniRoute plus ancienne pour le coffre : il ne constituait pas une preuve de la nouvelle DA.
+- Rendu bureau inspecté : scène et titres visibles, formulaire distinct, textes de commande à 18 px, champ/bouton/volet de 56 à 59 px, pas de débordement horizontal. Volet IA ouvert et contenu affiché. Les erreurs de console observées provenaient de l’extension du navigateur, pas de l’application.
+- Finitions : accès direct « Mon espace » vers le formulaire avec cible de focus ; nom complet du manifeste et de l’installation Apple harmonisé avec l’accueil ; version de cache augmentée pour renouveler le manifeste et la coquille. La description du manifeste dit « avant stockage » pour ne pas laisser croire que les fonctions IA ne transmettent jamais de contenu en clair.
+- Contrôles locaux du complément : TypeScript réussi, ESLint sans erreur (avertissement de police existant), 127 tests existants réussis, build Next.js 16.3.3 webpack réussi avec configuration Supabase fictive `example.invalid`. Avertissement pdf-lib existant hors lot.
+- Contrôle du nouvel accès et du cadre mobile : à compléter sur l’aperçu du complément avant intégration.
+- Limites : aucun courriel envoyé ni session privée ouverte ; le parcours de connexion réel, le chiffrement en usage, l’installation sur un téléphone physique et les fonctions IA ne sont pas validés par ce lot visuel.
