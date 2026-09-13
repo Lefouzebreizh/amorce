@@ -131,5 +131,56 @@ class TestPretPourProduction(unittest.TestCase):
         self.assertTrue(pret)
 
 
+class TestValidationMalformee(unittest.TestCase):
+    def test_champs_invalides_ne_valent_jamais_un_accord(self):
+        cas = {
+            "backtest_multi_regimes_fait": ["false", "true", 1, [True]],
+            "paper_trading_concluant": ["false", "true", 1, {"oui": True}],
+            "paper_trading_jours": [float("nan"), float("inf"), -float("inf"), -1, True, "invalide"],
+            "valide_par": ["  ", 123, True, ["Erwann"]],
+        }
+        with TemporaryDirectory() as dossier:
+            for champ, valeurs in cas.items():
+                for valeur in valeurs:
+                    with self.subTest(champ=champ, valeur=valeur):
+                        chemin = _ecrire(Path(dossier), {**ETAT_COMPLET, champ: valeur})
+                        self.assertFalse(pret_pour_production(charger(chemin))[0])
+
+    def test_nan_et_inf_refuses_meme_sans_yaml(self):
+        for jours in (float("nan"), float("inf"), -float("inf")):
+            with self.subTest(jours=jours):
+                etat = EtatValidation(**{**ETAT_COMPLET, "paper_trading_jours": jours})
+                self.assertFalse(pret_pour_production(etat)[0])
+
+    def test_yaml_invalide_ou_non_utf8_refuse(self):
+        with TemporaryDirectory() as dossier:
+            chemin = Path(dossier) / "validation.yaml"
+            for contenu in (b"invalide: [", b"\xff\xfe", b"- liste", b""):
+                with self.subTest(contenu=contenu):
+                    chemin.write_bytes(contenu)
+                    self.assertEqual(charger(chemin), EtatValidation())
+
+    def test_production_refuse_avant_configuration_et_courtier(self):
+        from contextlib import redirect_stderr
+        from io import StringIO
+        from unittest.mock import patch
+        import main
+
+        with TemporaryDirectory() as dossier:
+            for champ, valeur in (("backtest_multi_regimes_fait", "false"),
+                                  ("paper_trading_jours", float("nan")),
+                                  ("paper_trading_jours", float("inf")),
+                                  ("valide_par", " ")):
+                with self.subTest(champ=champ, valeur=valeur):
+                    chemin = _ecrire(Path(dossier), {**ETAT_COMPLET, champ: valeur})
+                    with patch.object(main, "charger") as config, \
+                         patch.object(main, "_lancer") as lancer, \
+                         redirect_stderr(StringIO()):
+                        code = main.main(["--validation", str(chemin), "production", "--je-confirme"])
+                    self.assertEqual(code, 2)
+                    config.assert_not_called()
+                    lancer.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()
