@@ -7,3 +7,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+# Qualité du réseau Lefouzebreizh
+
+Lire les sections « Identité visuelle partagée », « Exigence permanente du réseau » et « QA avant lancement » de `CLAUDE.md` avant toute intervention. Elles portent les choix du propriétaire et les critères de validation. Ce renvoi complète le bloc Next.js ci-dessus et ne le remplace pas.
