@@ -12,6 +12,13 @@
 .univers-master__frame { position: relative; width: 100%; margin: 0; overflow: hidden; border: 1px solid rgb(64 224 208 / .34); border-radius: clamp(1rem, 2vw, 1.75rem); background: #050a12; box-shadow: 0 40px 120px rgb(0 0 0 / .5), 0 0 70px rgb(64 224 208 / .08); }
 .univers-master__frame + .univers-master__frame { margin-top: clamp(1.25rem, 3vw, 2.5rem); }
 .univers-master__frame img { display: block; width: 100%; height: auto; }
+.univers-master__brand { position: absolute; z-index: 2; display: flex; flex-wrap: wrap; align-content: center; padding-left: 1.5%; color: #fff; background: #07111e; font: 600 clamp(.42rem, 2.05vw, 2rem)/1 var(--lfb-font-display); letter-spacing: -.035em; }
+.univers-master__brand span { color: transparent; background: linear-gradient(90deg, var(--lfb-cyan), var(--lfb-violet)); background-clip: text; -webkit-background-clip: text; }
+.univers-master__brand small { flex-basis: 100%; margin-top: 4%; color: rgb(248 248 248 / .68); font: 600 clamp(.16rem, .48vw, .48rem)/1 var(--lfb-font-ui); letter-spacing: .28em; text-transform: uppercase; }
+.univers-master__brand--hero-top { top: 0; left: 5.4%; width: 22.5%; height: 13%; }
+.univers-master__brand--hero-bottom { bottom: 0; left: 4.6%; width: 20%; height: 12.5%; }
+.univers-master__brand--ecosystem-top { top: 0; left: 2.7%; width: 20%; height: 8.5%; }
+.univers-master__brand--ecosystem-bottom { bottom: 5.1%; left: 2.8%; width: 16.7%; height: 8.1%; }
 .univers-master__frame figcaption { position: absolute; right: 1rem; bottom: 1rem; padding: .5rem .75rem; border: 1px solid rgb(255 255 255 / .14); border-radius: 999px; color: rgb(255 255 255 / .78); background: rgb(2 6 12 / .78); backdrop-filter: blur(12px); font: 600 .65rem/1 var(--lfb-font-ui); letter-spacing: .12em; text-transform: uppercase; }
 .univers-master__frame--ecosystem { width: min(1180px, 100%); margin-inline: auto; }
 .univers-pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: clamp(2rem, 5vw, 4.5rem); }

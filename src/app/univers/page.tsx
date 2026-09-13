@@ -72,6 +72,8 @@ export default function UniversPage() {
             priority
             sizes="100vw"
           />
+          <span className="univers-master__brand univers-master__brand--hero-top" aria-hidden="true">Lefouzè<span>breizh</span><small>Des horizons plus grands</small></span>
+          <span className="univers-master__brand univers-master__brand--hero-bottom" aria-hidden="true">Lefouzè<span>breizh</span><small>Des horizons plus grands</small></span>
           <figcaption>Hero Master · Référence canonique</figcaption>
         </figure>
         <figure className="univers-master__frame univers-master__frame--ecosystem">
@@ -82,6 +84,8 @@ export default function UniversPage() {
             height={1024}
             sizes="(max-width: 800px) 100vw, 1180px"
           />
+          <span className="univers-master__brand univers-master__brand--ecosystem-top" aria-hidden="true">Lefouzè<span>breizh</span><small>Des horizons plus grands</small></span>
+          <span className="univers-master__brand univers-master__brand--ecosystem-bottom" aria-hidden="true">Lefouzè<span>breizh</span><small>Des horizons plus grands</small></span>
           <figcaption>Écosystème Master · Déclinaisons de référence</figcaption>
         </figure>
       </section>
