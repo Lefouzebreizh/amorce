@@ -100,8 +100,10 @@ test('crée une session Stripe et rend son adresse de paiement', async () => {
   assert.equal(params.get('mode'), 'payment');
   assert.equal(params.get('line_items[0][price]'), 'price_test_abc');
   assert.equal(params.get('line_items[0][quantity]'), '1');
+  assert.equal(params.get('integration_identifier'), 'amorceaudit-kzqvtrpn');
   assert.equal(params.get('metadata[url_a_auditer]'), 'https://client-exemple.com/page-de-vente');
   assert.equal(requete2.headers.get('authorization'), `Basic ${btoa('sk_test_123:')}`);
+  assert.equal(requete2.headers.get('stripe-version'), '2026-07-29.dahlia');
 });
 
 test('un refus de Stripe rend une erreur générique, sans détail interne', async () => {
