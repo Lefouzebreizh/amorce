@@ -5,7 +5,13 @@ from pathlib import Path
 import secrets
 import stat
 
-KEYS = ("JWT_SECRET", "API_KEY_SECRET", "INITIAL_PASSWORD", "STORAGE_ENCRYPTION_KEY")
+KEYS = (
+    "JWT_SECRET",
+    "API_KEY_SECRET",
+    "INITIAL_PASSWORD",
+    "STORAGE_ENCRYPTION_KEY",
+    "OMNIROUTE_WS_BRIDGE_SECRET",
+)
 
 
 def prepare(directory: Path) -> bool:
