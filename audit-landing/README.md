@@ -418,7 +418,9 @@ RESEND_API_KEY=... AUDIT_EXPEDITEUR=... python audit-landing/operateur.py --base
 
 Cette console rend un pilote manuel de bout en bout exploitable ; elle ne
 constitue pas encore un traitement autonome. Une erreur après la prise reste
-visible à l'état `analyse` et doit être examinée, jamais rejouée aveuglément.
+visible à l'état `echec_analyse`, avec un message borné. Après examen, la
+commande peut être replacée volontairement en attente avec `reprendre` ; aucune
+relance automatique ne risque de dupliquer le travail.
 
 Les URLs commandées sont contrôlées avant navigation : seuls HTTP/HTTPS sans
 identifiants sont acceptés et toute résolution vers localhost, une adresse
