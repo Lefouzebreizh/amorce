@@ -27,8 +27,10 @@ Un test minimal de Claude Code 2.1.270 a également réussi via OmniRoute :
 `--print`, outils désactivés, modèle `cxa/gpt-5.3-codex-spark`, réponse
 `OMNIROUTE_OK`, `is_error:false`, code de sortie 0 et durée API de 10,65 secondes.
 Ce test valide une requête texte de bout en bout. La boucle `Read` a également
-été validée après le second correctif décrit ci-dessous ; les autres outils
-Claude Code et l'intégration OpenClaw restent à vérifier séparément.
+été validée après le second correctif décrit ci-dessous. Le 13 septembre 2026,
+un scénario isolé `Write` → `Edit` → `Read` a réussi en quatre tours, avec trois
+résultats d'outils et contenu final exact. Les autres outils dangereux ou
+interactifs et l'intégration OpenClaw restent à vérifier séparément.
 
 Un essai réel avec l'outil `Read` a ensuite confirmé un second défaut : le
 client exécute la lecture, mais `extractPromptText` ignore le résultat
@@ -142,8 +144,12 @@ le client (`repair-cxa-client.mjs --restore`).
 
 `probe-claude-tools.mjs <pilot-root>` effectue une vraie génération avec un
 fichier dédié et un contenu aléatoire. Le succès exige exactement un appel
-`Read`, un résultat d'outil et la restitution exacte de ce contenu. Il consomme
-du quota et conserve uniquement le bilan du contrôle dans `.runtime`.
+`Read`, un résultat d'outil et la restitution exacte de ce contenu.
+`probe-claude-multitool.mjs <pilot-root>` vérifie ensuite `Write`, `Edit` et
+`Read` dans cet ordre, uniquement dans `.runtime/codex-work`. Un premier passage
+peut échouer si le modèle répète un outil ; la trace JSONL permet alors de
+distinguer ce choix du modèle d'une perte de résultat dans le transport. Ces
+deux sondes consomment du quota et gardent leurs preuves sous `.runtime`.
 
 ## Démarrage par l'opérateur
 
