@@ -42,6 +42,12 @@ class ImportTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.importer(self.db, {**self.catalogue, 'prospects': self.catalogue['prospects'] * 2})
 
+    def test_url_radar_invalide_est_exclue_sans_interrompre_le_rapport(self):
+        self.db.execute("INSERT INTO leads VALUES(2,'http://','','Invalide','','new','','2026-09-13')")
+        out, report = module.importer(self.db, self.catalogue)
+        self.assertEqual(len(out['prospects']), 1)
+        self.assertEqual(report['exclus'], [{'radar_id': 2, 'reason': 'URL invalide'}])
+
 
 if __name__ == '__main__':
     unittest.main()

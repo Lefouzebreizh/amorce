@@ -9,7 +9,7 @@ python3 titan-builder/scripts/importer-radar.py \
   --sortie /chemin/prive/nouveau-lot
 ```
 
-Le catalogue suit le format de `PREPARER-PROSPECTS.md`, avec un champ `radar_url` pour chaque prospect. Cette URL doit désigner exactement sa ligne dans `leads`. Une URL ne peut désigner deux profils différents ; pour un annuaire multi-entreprises, utiliser des fiches individuelles. Les différences de casse ou d'encodage dans l'URL ne sont pas rapprochées automatiquement.
+Le catalogue suit le format de `PREPARER-PROSPECTS.md`, avec un champ `radar_url` et une vérification récente `site_check` pour chaque prospect. Cette URL doit désigner exactement sa ligne dans `leads`. Une URL ne peut désigner deux profils différents ; pour un annuaire multi-entreprises, utiliser des fiches individuelles. Les différences de casse ou d'encodage dans l'URL ne sont pas rapprochées automatiquement. Une URL radar invalide est consignée dans les exclusions sans interrompre les autres fiches.
 
 Le raccordement produit :
 
@@ -29,7 +29,7 @@ L'API Brave et la commande `add` du radar existant peuvent alimenter sa base. Po
 
 ## Vérification du 13 septembre 2026
 
-Quatre tests couvrent le résultat sans profil, le maintien en validation, une opposition sur le courriel enrichi, un statut de réponse et le refus d'attribution ambiguë. Le parcours réel a été exécuté avec une base locale créée par `radar.connect` et alimentée par `radar.upsert_lead`, sur les cinq fiches déjà documentées : quatre démos et un dossier incomplet. Il s'agit d'une preuve du raccordement, pas d'une nouvelle collecte ni d'un déploiement sur le VPS. Aucun rendu visuel supplémentaire n'est validé par ces tests.
+Cinq tests couvrent le résultat sans profil, le maintien en validation, une opposition sur le courriel enrichi, un statut de réponse, le refus d'attribution ambiguë et l'exclusion non bloquante d'une URL invalide. Le préparateur exige en plus une vérification sourcée de l'absence de site datant de 30 jours au maximum. Le parcours réel historique avait produit quatre démos et un dossier incomplet ; ce résultat ne vaut plus comme sélection actuelle, car une entreprise possède désormais un site officiel. Il s'agit d'une preuve du raccordement, pas d'une nouvelle collecte ni d'un déploiement sur le VPS. Aucun rendu visuel supplémentaire n'est validé par ces tests.
 
 ```sh
 python3 titan-builder/scripts/test_importer_radar.py
