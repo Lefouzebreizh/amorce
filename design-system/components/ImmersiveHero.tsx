@@ -1,5 +1,6 @@
 'use client';
 
+import type { CSSProperties } from 'react';
 import { useEffect, useRef } from 'react';
 import { BrandButton, BrandMark } from './LefouzebreizhUI';
 import './immersive-hero.css';
@@ -74,18 +75,22 @@ export function ImmersiveHero({
       <div className="lfb-immersive-hero__mist lfb-immersive-hero__mist--b" aria-hidden="true" />
 
       <div className="lfb-immersive-hero__layers" aria-hidden="true">
-        {layers.map((layer, index) => (
-          <img
-            key={`${layer.src}-${index}`}
-            src={layer.src}
-            alt=""
-            className={`lfb-immersive-hero__layer ${layer.className ?? ''}`.trim()}
-            style={{
-              '--lfb-depth': layer.depth ?? (index + 1) * 0.35,
-              opacity: layer.opacity ?? 1,
-            } as React.CSSProperties}
-          />
-        ))}
+        {layers.map((layer, index) => {
+          const style = {
+            '--lfb-depth': layer.depth ?? (index + 1) * 0.35,
+            opacity: layer.opacity ?? 1,
+          } as CSSProperties;
+
+          return (
+            <img
+              key={`${layer.src}-${index}`}
+              src={layer.src}
+              alt=""
+              className={`lfb-immersive-hero__layer ${layer.className ?? ''}`.trim()}
+              style={style}
+            />
+          );
+        })}
       </div>
 
       <div className="lfb-immersive-hero__vignette" aria-hidden="true" />
