@@ -61,6 +61,17 @@ test('refuse une adresse absente, malformée ou non http(s)', async () => {
   }
 });
 
+test('refuse une adresse interne ou locale', async () => {
+  const r = reglages();
+  for (const url of [
+    'http://localhost:3000', 'https://sous-domaine.localhost', 'http://127.0.0.1',
+    'http://10.0.0.4', 'http://172.16.0.1', 'http://192.168.1.1', 'http://[::1]',
+  ]) {
+    const requete = new Request('https://x/creer-session', { method: 'POST', body: JSON.stringify({ url }) });
+    assert.equal((await traiter(requete, r)).status, 400, url);
+  }
+});
+
 test('refuse un corps de requête illisible', async () => {
   const requete = new Request('https://x/creer-session', { method: 'POST', body: 'pas du json' });
   const reponse = await traiter(requete, reglages());
