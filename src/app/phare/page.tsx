@@ -17,7 +17,7 @@ export default function PharePage() {
         { label: 'La promesse', href: '#promesse' },
       ]} />
       <section className="phare-hero" id="cap">
-        <Image className="phare-hero__image" src="/brand/le-phare-double-exposure-v2.png" fill priority sizes="100vw"
+        <Image className="phare-hero__image" src="/brand/le-phare-double-exposure-v2.jpg" fill priority sizes="100vw"
           alt="Zèbre en double exposition fusionné avec un phare breton, l’océan et les falaises dans une lumière turquoise, violette et ambrée." />
         <div className="phare-hero__veil" />
         <div className="phare-beam" aria-hidden="true" />
