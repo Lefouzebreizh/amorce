@@ -19,8 +19,9 @@ import {
 import { champsFormulaire } from '@/lib/formulaire';
 import { RemplirFormulaire, type FormulairePreRempli } from './RemplirFormulaire';
 import { AssistantCoffre } from './AssistantCoffre';
+import { CoffreMer } from './CoffreMer';
 
-type Etape = 'chargement' | 'creer' | 'deverrouiller' | 'ouvert';
+type Etape = 'chargement' | 'configurer-acces' | 'creer' | 'deverrouiller' | 'ouvert';
 
 const ECHEANCE_VIDE: Echeance = { presente: false, date: null, libelle: null, confiance: 'basse' };
 const CATEGORIES_RESILIABLES = ['Assurance', 'Énergie', 'Téléphonie et internet'];
@@ -372,6 +373,7 @@ export default function PageCoffre() {
   // eux-mêmes restent repliés tant qu'on n'a pas cliqué dessus.
   const [vueDossiers, setVueDossiers] = useState(true);
   const [correction, setCorrection] = useState<Correction | null>(null);
+  const [coffreOuvert, setCoffreOuvert] = useState(false);
   const [triAutoEnCours, setTriAutoEnCours] = useState(false);
   const [triAutoProgres, setTriAutoProgres] = useState<{ fait: number; total: number } | null>(null);
   // Plus de « non-documents » ici depuis le 10/09/2026 : tout fichier reçoit
@@ -413,9 +415,37 @@ export default function PageCoffre() {
       }
       setUtilisateur(data.session.user);
       const existe = await coffreExiste(data.session.user.id);
-      setEtape(existe ? 'deverrouiller' : 'creer');
+      const configurerAcces = data.session.user.user_metadata?.acces_direct_configure !== true;
+      setEtape(configurerAcces ? 'configurer-acces' : existe ? 'deverrouiller' : 'creer');
     });
   }, [routeur]);
+
+  async function configurerAcces(e: React.FormEvent) {
+    e.preventDefault();
+    const forme = new FormData(e.target as HTMLFormElement);
+    const motDePasse = String(forme.get('mot-de-passe-compte') || '');
+    const confirmation = String(forme.get('confirmation-mot-de-passe-compte') || '');
+    setErreur('');
+    if (motDePasse.length < 12) {
+      setErreur('Choisis au moins 12 caractères pour protéger l’accès à ton compte.');
+      return;
+    }
+    if (motDePasse !== confirmation) {
+      setErreur('Les deux mots de passe ne correspondent pas.');
+      return;
+    }
+    setEnCours(true);
+    const { error } = await supabase.auth.updateUser({
+      password: motDePasse,
+      data: { ...utilisateur?.user_metadata, acces_direct_configure: true },
+    });
+    setEnCours(false);
+    if (error) {
+      setErreur(error.message);
+      return;
+    }
+    routeur.replace('/coffre');
+  }
 
   // Le bouton retour du téléphone déclenche cet événement plutôt que de
   // recharger la page — voir ouvrirDetail/fermerDetail pour l'entrée
@@ -1124,6 +1154,32 @@ export default function PageCoffre() {
     );
   }
 
+  if (etape === 'configurer-acces') {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
+        <div>
+          <p className="text-sm tracking-widest text-ink-soft uppercase">Le Tiroir Secret</p>
+          <h1 className="mt-2 font-affiche text-4xl texte-degrade">Crée ton accès direct</h1>
+          <p className="mt-3 text-ink-soft">La prochaine fois, tu entreras directement avec ce mot de passe.</p>
+        </div>
+        <div className="rounded-xl border border-violet/40 bg-violet/10 p-4 text-sm text-ink-soft">
+          Ce mot de passe ouvre ton compte. Ta phrase secrète reste séparée : elle seule chiffre tes documents.
+        </div>
+        <form onSubmit={configurerAcces} className="flex flex-col gap-3">
+          <label className="text-sm text-ink-soft" htmlFor="mot-de-passe-compte">Mot de passe d’accès</label>
+          <Champ id="mot-de-passe-compte" name="mot-de-passe-compte" type="password" autoComplete="new-password" />
+          <label className="text-sm text-ink-soft" htmlFor="confirmation-mot-de-passe-compte">Retape-le</label>
+          <Champ id="confirmation-mot-de-passe-compte" name="confirmation-mot-de-passe-compte" type="password" autoComplete="new-password" />
+          {erreur && <p className="text-sm text-wine">{erreur}</p>}
+          <button type="submit" disabled={enCours}
+            className="rounded-xl bg-bleu px-4 py-3 font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
+            {enCours ? 'Enregistrement…' : 'Activer mon accès direct'}
+          </button>
+        </form>
+      </main>
+    );
+  }
+
   if (etape === 'creer') {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
@@ -1251,8 +1307,9 @@ export default function PageCoffre() {
             les deux sont censés dominer à parts égales, et le turquoise
             porte déjà l'eyebrow « Bonjour » juste en dessous. */}
         <p className="text-sm font-semibold tracking-widest text-violet uppercase">Le Tiroir Secret</p>
+        <CoffreMer ouvert={coffreOuvert} onBasculer={() => setCoffreOuvert((ouvert) => !ouvert)} />
         {/* En-tête */}
-        <header className="coffre-hero flex flex-wrap items-start justify-between gap-6 rounded-3xl border border-line bg-paper-raised p-6 sm:p-8">
+        <header className="coffre-hero studio-overview flex flex-wrap items-start justify-between gap-6 rounded-3xl border border-line bg-paper-raised p-6 sm:p-8">
           <div className="coffre-vault" aria-hidden="true"><span className="coffre-vault__bar" /><span className="coffre-vault__dial" /></div>
           <div className="coffre-hero__content">
             <p className="text-sm font-semibold tracking-widest text-accent uppercase">
@@ -1520,8 +1577,8 @@ export default function PageCoffre() {
         )}
 
         {/* Grille principale : documents (large) + rendez-vous/identité (colonne) */}
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <section className="lg:col-span-2">
+        <div className="studio-grid grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <section className="studio-documents lg:col-span-2">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm font-semibold tracking-widest text-ink-soft uppercase">
                 {/* « X sur Y » dès qu'un filtre réduit la liste — un simple
@@ -1580,7 +1637,7 @@ export default function PageCoffre() {
                 {dossiers.map(([categorie, nomsDossier]) => {
                   const ouvert = dossiersOuverts.has(categorie);
                   return (
-                    <div key={categorie} className="rounded-2xl border border-line bg-paper-raised p-4">
+                    <div key={categorie} className="studio-folder rounded-2xl border border-line bg-paper-raised p-4">
                       <button
                         type="button"
                         aria-expanded={ouvert}
@@ -1612,7 +1669,7 @@ export default function PageCoffre() {
             )}
           </section>
 
-          <div className="flex flex-col gap-8">
+          <div className="studio-side flex flex-col gap-8">
             {/* Carte en verre demandée le 10/09/2026 : ces trois sections
                 n'avaient jamais reçu la même carte que le reste de la page
                 (en-tête, barre de recherche, fiches document) — sans
@@ -1621,7 +1678,7 @@ export default function PageCoffre() {
                 turquoise-violet. Seul le turquoise des boutons et des bords
                 de champ y ressortait, perçu comme « tout en vert » face au
                 duo turquoise-violet visible ailleurs. */}
-            <section id="rendez-vous" className="scroll-mt-6 rounded-2xl border border-line bg-paper-raised p-6">
+            <section id="rendez-vous" className="studio-module scroll-mt-6 rounded-2xl border border-line bg-paper-raised p-6">
               <h2 className="mb-4 font-affiche text-2xl">Rendez-vous</h2>
               <form onSubmit={surAjoutRendezVous} className="mb-4 flex flex-col gap-2">
                 <Champ name="libelle" placeholder="Dentiste, cabinet Martin…" required />
@@ -1668,7 +1725,7 @@ export default function PageCoffre() {
               )}
             </section>
 
-            <section id="mon-identite" className="scroll-mt-6 rounded-2xl border border-line bg-paper-raised p-6">
+            <section id="mon-identite" className="studio-module scroll-mt-6 rounded-2xl border border-line bg-paper-raised p-6">
               <h2 className="mb-2 font-affiche text-2xl">Mon identité</h2>
               <p className="mb-4 text-sm text-ink-soft">
                 Sert uniquement à remplir l&apos;en-tête des lettres de résiliation — chiffrée comme le reste.
@@ -1696,7 +1753,7 @@ export default function PageCoffre() {
               </form>
             </section>
 
-            <section id="remplir-formulaire" className="scroll-mt-6 rounded-2xl border border-line bg-paper-raised p-6">
+            <section id="remplir-formulaire" className="studio-module scroll-mt-6 rounded-2xl border border-line bg-paper-raised p-6">
               <h2 className="mb-2 font-affiche text-2xl">Remplir un formulaire</h2>
               <p className="mb-4 text-sm text-ink-soft">
                 Dépose un CERFA ou un mandat vierge : l&apos;appli détecte ses champs et les

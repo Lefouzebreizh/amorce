@@ -7,9 +7,9 @@ import styles from './accueil.module.css';
 
 export default function PageAccueil() {
   const routeur = useRouter();
-  const [email, setEmail] = useState('');
+  const [identifiant, setIdentifiant] = useState('');
+  const [motDePasse, setMotDePasse] = useState('');
   const [enCours, setEnCours] = useState(false);
-  const [envoye, setEnvoye] = useState(false);
   const [erreur, setErreur] = useState('');
 
   useEffect(() => {
@@ -18,20 +18,31 @@ export default function PageAccueil() {
     });
   }, [routeur]);
 
-  async function envoyerLien(e: React.FormEvent) {
+  async function seConnecter(e: React.FormEvent) {
     e.preventDefault();
     setErreur('');
     setEnCours(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/coffre` : undefined },
+    const { data, error: erreurFonction } = await supabase.functions.invoke('connexion-coffre', {
+      body: { identifiant, motDePasse },
     });
+    const error = erreurFonction || (data?.error ? new Error(data.error) : null);
+    if (!error && data?.access_token && data?.refresh_token) {
+      const { error: erreurSession } = await supabase.auth.setSession({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+      });
+      if (erreurSession) {
+        setEnCours(false);
+        setErreur('Connexion indisponible. Réessaie.');
+        return;
+      }
+    }
     setEnCours(false);
     if (error) {
-      setErreur(error.message);
+      setErreur(error.message === 'Trop de tentatives. Réessaie dans quelques minutes.' ? error.message : 'Identifiant ou mot de passe incorrect.');
       return;
     }
-    setEnvoye(true);
+    routeur.replace('/coffre');
   }
 
   return (
@@ -74,33 +85,33 @@ export default function PageAccueil() {
             <p className={styles.eyebrow}>Accès personnel</p>
             <h2 id="titre-connexion">Entre quand tu es prêt.</h2>
           </div>
-          <p className={styles.accessIntro}>Un lien arrive dans ta boîte mail. Pas de mot de passe à mémoriser.</p>
+          <p className={styles.accessIntro}>Entre directement dans ton espace. Aucun lien à attendre dans ta boîte mail.</p>
 
-      {envoye ? (
-        <div className={styles.sent} role="status">
-          <p className="font-semibold">Lien envoyé.</p>
-          <p className="mt-2 text-sm text-ink-soft">
-            Regarde ta boîte mail (« {email} ») et clique sur le lien pour entrer — pas de mot de
-            passe à retenir pour ton compte. Ta phrase secrète du coffre, elle, se choisit à
-            l&apos;étape suivante et reste toujours entre toi et ton navigateur.
-          </p>
-        </div>
-      ) : (
-        <form onSubmit={envoyerLien} className={styles.form} aria-busy={enCours}>
-          <label htmlFor="email" className="text-sm text-ink-soft">
-            Ton adresse e-mail
+        <form onSubmit={seConnecter} className={styles.form} aria-busy={enCours}>
+          <label htmlFor="identifiant" className="text-sm text-ink-soft">
+            Ton identifiant
           </label>
           <input
-            id="email"
-            type="email"
+            id="identifiant"
+            type="text"
             required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="username"
+            value={identifiant}
+            onChange={(e) => setIdentifiant(e.target.value)}
             className={styles.input}
             aria-invalid={!!erreur}
             aria-describedby={erreur ? 'erreur-connexion' : undefined}
-            placeholder="toi@exemple.fr"
+            placeholder="lefouzebreizh"
+          />
+          <label htmlFor="mot-de-passe" className="text-sm text-ink-soft">Ton mot de passe</label>
+          <input
+            id="mot-de-passe"
+            type="password"
+            required
+            autoComplete="current-password"
+            value={motDePasse}
+            onChange={(e) => setMotDePasse(e.target.value)}
+            className={styles.input}
           />
           {erreur && <p id="erreur-connexion" role="alert" className={styles.error}>{erreur}</p>}
           <button
@@ -108,10 +119,9 @@ export default function PageAccueil() {
             disabled={enCours}
             className={styles.submit}
           >
-            {enCours ? 'Envoi…' : 'Recevoir un lien de connexion'}
+            {enCours ? 'Connexion…' : 'Entrer dans mon espace'}
           </button>
         </form>
-      )}
 
           <div className={styles.privacy}>
             <h3>Ta phrase secrète protège le stockage.</h3>
