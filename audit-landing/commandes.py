@@ -19,8 +19,13 @@ class Commandes:
             session TEXT PRIMARY KEY, url TEXT NOT NULL, email TEXT NOT NULL,
             etat TEXT NOT NULL DEFAULT 'attente', rapport TEXT, empreinte TEXT,
             relecteur TEXT, message_id TEXT,
+            erreur TEXT,
             modifie TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )''')
+        # Migration des registres créés par les premières versions du pilote.
+        colonnes = {row['name'] for row in self.db.execute('PRAGMA table_info(commandes)')}
+        if 'erreur' not in colonnes:
+            self.db.execute('ALTER TABLE commandes ADD COLUMN erreur TEXT')
 
     def fermer(self):
         self.db.close()
@@ -47,7 +52,7 @@ class Commandes:
 
     def _transition(self, session, depart, arrivee, **champs):
         # Noms de colonnes définis par ce module, jamais reçus d'une requête.
-        autorises = {'rapport', 'empreinte', 'relecteur', 'message_id'}
+        autorises = {'rapport', 'empreinte', 'relecteur', 'message_id', 'erreur'}
         if not set(champs) <= autorises:
             raise ValueError('Colonne inconnue')
         affectations = ''.join(', ' + cle + '=?' for cle in champs)
@@ -58,7 +63,17 @@ class Commandes:
         return resultat.rowcount == 1
 
     def prendre(self, session):
-        return self._transition(session, 'attente', 'analyse')
+        return self._transition(session, 'attente', 'analyse', erreur=None)
+
+    def signaler_echec_analyse(self, session, erreur):
+        if not isinstance(erreur, str) or not erreur.strip():
+            raise ValueError('Erreur requise')
+        # Message borné : utile à l'opérateur sans transformer SQLite en journal.
+        return self._transition(session, 'analyse', 'echec_analyse', erreur=erreur.strip()[:500])
+
+    def reprendre_analyse(self, session):
+        # Reprise toujours explicite après examen de la cause.
+        return self._transition(session, 'echec_analyse', 'attente', erreur=None)
 
     def deposer(self, session, rapport):
         chemin = Path(rapport).resolve()
