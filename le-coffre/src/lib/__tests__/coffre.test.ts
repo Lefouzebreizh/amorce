@@ -28,6 +28,7 @@ import {
   bufFromB64,
   deriverCle,
   empaqueterVerificateur,
+  reempaqueterVerificateur,
 } from '../crypto';
 
 // Le module `./supabase` construit son client à l'import et lève sans les
@@ -150,16 +151,38 @@ describe('l’existence du coffre', () => {
 });
 
 describe('initialiser le coffre', () => {
-  it('n’envoie jamais la phrase secrète, sous aucune forme', async () => {
+  it('ne transmet que les métadonnées prévues et le vérificateur chiffré', async () => {
     const f = poser(clientFactice({ tables: { coffre_cles: { error: null } } }));
     await coffre.initialiserCoffre(UTILISATEUR, PHRASE);
 
     const sorti = toutCeQuiEstSorti(f.journal);
     assert.equal(sorti.includes(PHRASE), false);
     assert.equal(sorti.includes('phrase secrète'), false);
-    for (const mot of PHRASE.split(' ')) {
-      assert.equal(sorti.includes(mot), false, `le mot « ${mot} » est sorti`);
-    }
+    // Un mot court comme « ne » peut apparaître par hasard dans le Base64
+    // du sel, de l'IV ou du chiffré. Vérifier le contrat transmis et le
+    // contenu authentifié, plutôt que chercher des syllabes dans l'aléatoire.
+    assert.deepEqual(f.journal.map((appel) => appel.methode), ['from', 'insert']);
+    assert.deepEqual(f.premier('from'), ['coffre_cles']);
+    const insertion = f.premier('insert')!;
+    assert.equal(insertion.length, 1);
+    const ligne = insertion[0] as {
+      user_id: string; sel: string; iterations: number;
+      verificateur_iv: string; verificateur_texte: string;
+    };
+    assert.deepEqual(Object.keys(ligne).sort(), [
+      'iterations', 'sel', 'user_id', 'verificateur_iv', 'verificateur_texte',
+    ]);
+    assert.equal(ligne.user_id, UTILISATEUR);
+    assert.equal(ligne.iterations, ITERATIONS);
+    assert.equal(bufFromB64(ligne.sel).byteLength, 16);
+    assert.equal(bufFromB64(ligne.verificateur_iv).byteLength, 12);
+    const cleVerification = await deriverCle(
+      PHRASE, new Uint8Array(bufFromB64(ligne.sel)), ligne.iterations,
+    );
+    const paquet = reempaqueterVerificateur(ligne.verificateur_iv, ligne.verificateur_texte);
+    assert.equal(await dechiffrerTexte(cleVerification, paquet), TEXTE_VERIF);
+    assert.equal(bufFromB64(ligne.verificateur_texte).byteLength,
+      new TextEncoder().encode(TEXTE_VERIF).byteLength + 16);
   });
 
   it('déclare le nombre d’itérations qu’il a réellement utilisé', async () => {
