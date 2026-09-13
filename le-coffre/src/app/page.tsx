@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import Image from 'next/image';
 import styles from './accueil.module.css';
 
 export default function PageAccueil() {
@@ -47,11 +46,8 @@ export default function PageAccueil() {
       <div className={styles.content}>
         <section className={styles.intro} aria-labelledby="titre-accueil">
           <div className={styles.scene}>
-            <Image
+            <img
               src="/brand/coffre-breton-ouvert-v1.webp"
-              fill
-              sizes="100vw"
-              priority
               alt="Un coffre-fort ouvert dans une grotte bretonne, donnant sur la mer et un phare."
             />
             <div className={styles.vignette} aria-hidden="true" />
