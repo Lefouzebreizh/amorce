@@ -50,15 +50,27 @@ export default function PageAccueil() {
             <Image src="/brand/bretagne-zebre-scene.webp" width={1200} height={400}
               sizes="(max-width: 900px) 100vw, 60vw" priority
               alt="Un zèbre en double exposition dans une côte bretonne imaginaire, entre océan, dolmen et phare." />
+            <div className={styles.scanlines} aria-hidden="true" />
+            <div className={styles.beam} aria-hidden="true" />
+            <div className={styles.vault} aria-hidden="true">
+              <span className={styles.vaultDoor}><i /></span>
+              <span className={styles.vaultGlow} />
+            </div>
+            <div className={styles.sceneCaption}>
+              <span>LEFOUZÈBREIZH STUDIO · ACCÈS PRIVÉ</span>
+              <strong>Ta régie personnelle</strong>
+            </div>
+            <div className={styles.heroCopy}>
+              <p className={styles.eyebrow}>Tes papiers. Ta place pour souffler.</p>
+              <h1 id="titre-accueil">Ton petit monde.<br /><span>À l&apos;abri.</span></h1>
+              <p className={styles.description}>Dépose tes documents, retrouve l&apos;essentiel et garde tes échéances en vue. À ton rythme.</p>
+              <ul className={styles.steps} aria-label="Les étapes du coffre">
+                <li><span>01</span> Déposer</li>
+                <li><span>02</span> Retrouver</li>
+                <li><span>03</span> Avancer</li>
+              </ul>
+            </div>
           </div>
-          <p className={styles.eyebrow}>Tes papiers. Ta place pour souffler.</p>
-          <h1 id="titre-accueil">Ton petit monde.<br /><span>À l&apos;abri.</span></h1>
-          <p className={styles.description}>Un endroit pour déposer tes documents, les retrouver et garder tes échéances en vue. À ton rythme.</p>
-          <ul className={styles.steps} aria-label="Les étapes du coffre">
-            <li><span>01</span> Déposer tes papiers</li>
-            <li><span>02</span> Retrouver l&apos;essentiel</li>
-            <li><span>03</span> Avancer sereinement</li>
-          </ul>
         </section>
         <section id="connexion" tabIndex={-1} className={styles.access} aria-labelledby="titre-connexion">
           <p className={styles.eyebrow}>Ton espace personnel</p>
