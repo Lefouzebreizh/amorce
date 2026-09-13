@@ -31,7 +31,7 @@
 .content { min-height: 100dvh; }
 .intro { min-height: min(900px, 100dvh); }
 .scene { position: relative; min-height: min(900px, 100dvh); overflow: hidden; isolation: isolate; border-bottom: 1px solid rgb(123 205 255 / .2); background: var(--slab); }
-.scene img { object-fit: cover; object-position: center; filter: saturate(1.06) contrast(1.05); transform: scale(1.01); animation: slowCamera 20s ease-in-out infinite alternate; }
+.scene img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; filter: saturate(1.06) contrast(1.05); transform: scale(1.01); animation: slowCamera 20s ease-in-out infinite alternate; }
 .vignette { position: absolute; z-index: 1; inset: 0; background: linear-gradient(90deg, rgb(1 6 15 / .94) 0%, rgb(2 7 17 / .74) 28%, rgb(2 7 17 / .16) 64%, rgb(2 3 10 / .34)), linear-gradient(0deg, rgb(1 3 10 / .86), transparent 42%); }
 .grain { position: absolute; z-index: 2; inset: 0; opacity: .18; pointer-events: none; background-image: repeating-linear-gradient(180deg, transparent 0 3px, rgb(152 231 255 / .18) 4px); mix-blend-mode: screen; }
 .lightSweep { position: absolute; z-index: 3; width: 70vw; height: 55vh; top: 8%; left: -35%; pointer-events: none; opacity: .32; background: linear-gradient(112deg, transparent 43%, rgb(147 233 255 / .05) 51%, rgb(194 176 255 / .38) 54%, transparent 61%); filter: blur(10px); transform: rotate(-10deg); animation: sweep 13s ease-in-out infinite; }
