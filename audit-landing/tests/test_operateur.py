@@ -38,6 +38,35 @@ class TestOperateur(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "déjà prise"):
             produire(self.base, "cs_test_1", self.racine / "captures")
 
+    @patch("operateur.rendre_html", side_effect=["<html>premier rapport approuvé</html>", "<html>second rapport</html>"])
+    @patch("operateur.rendre_markdown", return_value="# Rapport")
+    @patch("operateur.dataclasses.asdict", return_value={"rapport": "test"})
+    @patch("operateur.analyser_page", return_value=Mock())
+    @patch("operateur.capturer_url")
+    @patch("operateur.sync_playwright")
+    def test_deux_commandes_de_la_meme_url_conservent_leurs_rapports(self, *_mocks):
+        self.base.enregistrer("cs_test_2", "https://example.com/vente", "autre@example.com")
+        premier = produire(self.base, "cs_test_1", self.racine / "captures")
+        self.base.approuver("cs_test_1", "Relecteur test")
+        second = produire(self.base, "cs_test_2", self.racine / "captures")
+        self.assertEqual(premier.read_text(), "<html>premier rapport approuvé</html>")
+        self.assertNotEqual(premier, second)
+        envoi = self.base.preparer_envoi("cs_test_1")
+        self.assertEqual(envoi["contenu"], b"<html>premier rapport approuv\xc3\xa9</html>")
+
+    @patch("operateur.rendre_html", return_value="<html>rapport</html>")
+    @patch("operateur.rendre_markdown", return_value="# Rapport")
+    @patch("operateur.dataclasses.asdict", return_value={"rapport": "test"})
+    @patch("operateur.analyser_page", side_effect=[RuntimeError("analyse interrompue"), Mock()])
+    @patch("operateur.capturer_url")
+    @patch("operateur.sync_playwright")
+    def test_reprise_ne_reutilise_pas_des_segments_d_une_capture_inachevee(self, playwright, capturer, *_mocks):
+        with self.assertRaisesRegex(RuntimeError, "analyse interrompue"):
+            produire(self.base, "cs_test_1", self.racine / "captures")
+        premiere_sortie = capturer.call_args.args[2]
+        self.base.reprendre_analyse("cs_test_1")
+        produire(self.base, "cs_test_1", self.racine / "captures")
+        self.assertNotEqual(premiere_sortie, capturer.call_args.args[2])
 
     @patch("operateur.sync_playwright", side_effect=RuntimeError("navigateur indisponible"))
     def test_echec_est_enregistre_pour_reprise_explicite(self, _playwright):

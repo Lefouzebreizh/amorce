@@ -191,20 +191,19 @@ def verifier_url_publique(url: str) -> None:
 
 
 def installer_filtre_reseau(contexte: BrowserContext) -> None:
-    """Contrôle aussi les redirections et sous-ressources avant leur requête."""
-    autorises: set[tuple[str, int | None]] = set()
+    """Contrôle aussi chaque sous-ressource HTTP(S) avant sa requête.
+
+    Ne pas mémoriser un domaine comme autorisé : sa résolution peut changer
+    au cours d'une capture. Ce contrôle applicatif ne remplace pas l'isolation
+    réseau du navigateur, qui doit aussi interdire les destinations internes.
+    """
 
     def filtrer(route) -> None:
         url = route.request.url
-        decoupee = urlparse(url)
-        if decoupee.scheme not in ("http", "https"):
-            route.continue_()
-            return
-        destination = (decoupee.hostname or "", decoupee.port)
         try:
-            if destination not in autorises:
+            decoupee = urlparse(url)
+            if decoupee.scheme in ("http", "https"):
                 verifier_url_publique(url)
-                autorises.add(destination)
         except ValueError:
             route.abort("blockedbyclient")
             return
@@ -264,6 +263,20 @@ def nom_dossier_pour_url(url: str) -> str:
     brut = brut or decoupee.netloc
     nettoye = re.sub(r"[^a-zA-Z0-9]+", "-", brut).strip("-").lower()
     return nettoye or "page"
+
+
+def verifier_dossier_capture(dossier_page: Path) -> None:
+    """Évite de mêler une nouvelle capture aux images d'une ancienne tentative.
+
+    L'analyse consomme tous les PNG de ce dossier, y compris ceux dont le nom
+    n'est pas produit par ce script. Ne rien effacer : la nouvelle tentative
+    doit recevoir un dossier de sortie distinct.
+    """
+    if any(dossier_page.glob("*.png")):
+        raise ValueError(
+            f"Des images PNG existent déjà dans {dossier_page} ; "
+            "choisissez un nouveau dossier de sortie pour cette capture."
+        )
 
 
 def fermer_bandeaux_cookies(page: Page) -> bool:
@@ -378,6 +391,7 @@ def capturer_et_decouper(
     qu'à l'écran : c'est aussi exactement ce qu'un utilisateur réel verrait.
     """
     dossier_page = dossier_sortie / nom_dossier_pour_url(url)
+    verifier_dossier_capture(dossier_page)
     dossier_page.mkdir(parents=True, exist_ok=True)
 
     hauteur_totale_logique = page.evaluate("document.documentElement.scrollHeight")
@@ -426,8 +440,13 @@ def capturer_et_decouper(
 
 def capturer_url(page: Page, url: str, dossier_sortie: Path) -> list[Path]:
     """Le parcours complet pour une URL : ouvrir, nettoyer, charger, découper."""
+    verifier_dossier_capture(dossier_sortie / nom_dossier_pour_url(url))
     verifier_url_publique(url)
-    page.goto(url, timeout=DELAI_NAVIGATION_MS, wait_until="domcontentloaded")
+    reponse = page.goto(url, timeout=DELAI_NAVIGATION_MS, wait_until="domcontentloaded")
+    if reponse is None:
+        raise ValueError("Aucune réponse HTTP à capturer")
+    if reponse.status >= 400:
+        raise ValueError(f"Document principal indisponible : HTTP {reponse.status}")
     attendre_stabilite(page)
 
     a_ferme_un_bandeau = fermer_bandeaux_cookies(page)
@@ -477,6 +496,7 @@ def main() -> int:
         contexte = navigateur.new_context(
             viewport={"width": LARGEUR_VIEWPORT, "height": HAUTEUR_VIEWPORT},
             device_scale_factor=FACTEUR_ECHELLE,
+            service_workers="block",  # Les requêtes doivent rester visibles au filtre.
         )
         installer_filtre_reseau(contexte)
         page = contexte.new_page()
@@ -486,7 +506,7 @@ def main() -> int:
             print(f"→ {url}", file=sys.stderr)
             try:
                 fichiers = capturer_url(page, url, arguments.sortie)
-            except (ErreurPlaywright, DelaiDepassePlaywright) as erreur:
+            except (ErreurPlaywright, DelaiDepassePlaywright, ValueError) as erreur:
                 print(f"  ÉCHEC : {erreur}", file=sys.stderr)
                 echec = 1
                 continue

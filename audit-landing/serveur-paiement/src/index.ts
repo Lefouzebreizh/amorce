@@ -26,7 +26,7 @@ export type Reglages = {
   origines: string[];
   urlSucces: string;
   urlAnnulation: string;
-  /** Point d'injection pour les tests : remplace l'appel réseau à Stripe et à GitHub. */
+  /** Point d'injection pour les tests : remplace Stripe et la réception durable. */
   fetch?: typeof fetch;
 };
 
@@ -55,12 +55,24 @@ function urlPlausible(valeur: unknown): valeur is string {
   try {
     const u = new URL(valeur);
     if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+    // La réception et le moteur de capture refusent également ces identifiants.
+    if (u.username || u.password) return false;
     const hote = u.hostname.toLowerCase();
     // Le contrôle DNS complet appartient au moteur de capture. Ici, avant
     // encaissement, on refuse déjà les noms locaux et toutes les IP littérales.
     if (hote === 'localhost' || hote.endsWith('.localhost')) return false;
     if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hote) || hote.startsWith('[')) return false;
     return hote.includes('.');
+  } catch {
+    return false;
+  }
+}
+
+function receptionValide(reception: Reglages['receptionCommandes']): reception is NonNullable<Reglages['receptionCommandes']> {
+  if (!reception || reception.secret.length < 32) return false;
+  try {
+    const adresse = new URL(reception.url);
+    return adresse.protocol === 'https:' && !adresse.username && !adresse.password;
   } catch {
     return false;
   }
@@ -77,7 +89,9 @@ async function creerSession(requete: Request, r: Reglages): Promise<Response> {
     return erreur('produit pas encore configuré (prix manquant)', 503, partage);
   }
 
-  if (!r.receptionCommandes || r.receptionCommandes.secret.length < 32) {
+  // Même règle qu'au webhook : ne pas accepter un achat que nous savons
+  // déjà impossible à enregistrer avec cette configuration.
+  if (!receptionValide(r.receptionCommandes)) {
     return erreur('réception des commandes non configurée', 503, partage);
   }
 
@@ -148,10 +162,8 @@ async function declencherAnalyse(
 ): Promise<boolean> {
   const appelerFetch = r.fetch ?? fetch;
   const reception = r.receptionCommandes;
-  if (!reception || reception.secret.length < 32) return false;
+  if (!receptionValide(reception)) return false;
   try {
-    const adresse = new URL(reception.url);
-    if (adresse.protocol !== 'https:' || adresse.username || adresse.password) return false;
     const reponse = await appelerFetch(reception.url, {
       method: 'POST',
       redirect: 'error',

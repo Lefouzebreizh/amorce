@@ -53,3 +53,7 @@ jobs:
       - name: Types
         if: ${{ !cancelled() }}
         run: npm run typecheck
+
+      - name: Construire le serveur HTTP
+        if: ${{ !cancelled() }}
+        run: npm run build

@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import hashlib
 import json
 import os
+import tempfile
 from pathlib import Path
 
 from analyser_captures import analyser_page, rendre_markdown
@@ -35,22 +37,27 @@ def produire(base: Commandes, session: str, captures: Path, chromium: str | None
         raise RuntimeError("Commande prise par un autre processus")
 
     try:
-        captures.mkdir(parents=True, exist_ok=True)
+        # Deux achats d'une même URL doivent conserver chacun leur rapport.
+        # Une reprise doit aussi repartir sans les PNG d'un essai interrompu.
+        dossier_commande = captures / hashlib.sha256(session.encode("utf-8")).hexdigest()
+        dossier_commande.mkdir(parents=True, exist_ok=True)
+        sortie = Path(tempfile.mkdtemp(prefix="capture-", dir=dossier_commande))
         with sync_playwright() as pw:
             executable = chromium if chromium and Path(chromium).is_file() else None
             navigateur = pw.chromium.launch(executable_path=executable)
             contexte = navigateur.new_context(
                 viewport={"width": LARGEUR_VIEWPORT, "height": HAUTEUR_VIEWPORT},
                 device_scale_factor=FACTEUR_ECHELLE,
+                service_workers="block",
             )
             installer_filtre_reseau(contexte)
             try:
-                capturer_url(contexte.new_page(), commande["url"], captures)
+                capturer_url(contexte.new_page(), commande["url"], sortie)
             finally:
                 contexte.close()
                 navigateur.close()
-    
-        dossier = captures / nom_dossier_pour_url(commande["url"])
+
+        dossier = sortie / nom_dossier_pour_url(commande["url"])
         dossier.mkdir(parents=True, exist_ok=True)
         rapport = analyser_page(dossier)
         (dossier / "rapport.md").write_text(

@@ -13,6 +13,7 @@ function reglages(partiel: Partial<Reglages> = {}): Reglages {
     origines: ['https://audit-page-de-vente.example'],
     urlSucces: 'https://audit-page-de-vente.example/merci',
     urlAnnulation: 'https://audit-page-de-vente.example/annule',
+    fetch: async () => { throw new Error('Appel réseau imprévu : fournir un transport simulé'); },
     ...partiel,
   };
 }
@@ -57,11 +58,34 @@ test('refuse une adresse absente, malformée ou non http(s)', async () => {
   for (const corps of [
     {}, { url: 'pas-une-url' }, { url: 'ftp://exemple.com' }, { url: 42 },
     { url: 'http://localhost/admin' }, { url: 'http://127.0.0.1' }, { url: 'http://[::1]' },
+    { url: 'https://identifiant:mot-de-passe@exemple.com/prive' },
   ]) {
     const requete = new Request('https://x/creer-session', { method: 'POST', body: JSON.stringify(corps) });
     const reponse = await traiter(requete, r);
     assert.equal(reponse.status, 400, JSON.stringify(corps));
   }
+});
+
+test('refuse Checkout avant tout paiement si la réception ne peut pas être appelée', async () => {
+  let appels = 0;
+  const fetchFactice: typeof fetch = async () => {
+    appels += 1;
+    return new Response(JSON.stringify({ url: 'https://checkout.stripe.com/pay/cs_test_1' }));
+  };
+  for (const receptionCommandes of [
+    undefined,
+    { url: 'https://registre.example/commandes', secret: 'court' },
+    { url: '', secret: 's'.repeat(32) },
+    { url: 'pas-une-url', secret: 's'.repeat(32) },
+    { url: 'http://registre.example/commandes', secret: 's'.repeat(32) },
+    { url: 'https://identifiant:secret@registre.example/commandes', secret: 's'.repeat(32) },
+  ]) {
+    const reponse = await traiter(new Request('https://x/creer-session', {
+      method: 'POST', body: JSON.stringify({ url: 'https://exemple.com' }),
+    }), reglages({ receptionCommandes, fetch: fetchFactice }));
+    assert.equal(reponse.status, 503);
+  }
+  assert.equal(appels, 0);
 });
 
 test('refuse un corps de requête illisible', async () => {
