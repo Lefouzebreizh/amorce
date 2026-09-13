@@ -1,0 +1,17 @@
+{
+  "$schema": "./projects.schema.json",
+  "teamId": "team_Ud6fLFndWomeVNsLIHiW1q32",
+  "repository": "Lefouzebreizh/amorce",
+  "projects": [
+    { "name": "amorce", "projectId": "prj_F5EkaOLDMSzkxUvC4tyupQGfoegG", "root": ".", "mode": "git", "protectedPreview": true, "criticalPaths": ["/"], "expectedText": "Amorce" },
+    { "name": "coffre", "projectId": "prj_g1gHkb7LGH6pSy5WpXo5QKHqnYGu", "root": "le-coffre", "mode": "git", "protectedPreview": true, "criticalPaths": ["/"], "expectedText": "Le Tiroir Secret" },
+    { "name": "chat-traducteur", "projectId": "prj_ytT0rP3P1rgVByQWzkCHH0H8U5tJ", "root": "chat-traducteur/web", "mode": "git", "protectedPreview": true, "criticalPaths": ["/"], "expectedText": "Qu'est-ce qu'il dit" },
+    { "name": "psy-ia", "projectId": "prj_K0ZierHGho02ZAPMGBcNhonr097u", "root": "psy-ia", "mode": "git", "protectedPreview": true, "criticalPaths": ["/"], "expectedText": "Psy" },
+    { "name": "iptv", "projectId": "prj_aKVnWzr13fnyGktHSs7Dr5YuMtsg", "root": "iptv", "mode": "git", "protectedPreview": true, "criticalPaths": ["/"], "expectedText": "IPTV" },
+    { "name": "renov-facile", "projectId": "prj_W3Wq8bhQJENzA04ECkCSF4AYoOra", "root": "renov-facile", "mode": "git", "protectedPreview": true, "criticalPaths": ["/"], "expectedText": "Rénov" },
+    { "name": "artisan-express", "projectId": "prj_xgWRNZmvdtgPi4stHHvQevcY2qZz", "root": "artisan-express", "mode": "git", "protectedPreview": true, "criticalPaths": ["/"], "expectedText": "artisan express" },
+    { "name": "audit-landing", "root": "audit-landing/site", "mode": "preview-only", "protectedPreview": true, "criticalPaths": ["/", "/exemple-rapport.html"], "expectedText": "Audit de page de vente", "reason": "Ancien aperçu PR 953 indisponible (404 vérifié le 2026-09-13), aucun projet Vercel actuel identifié" },
+    { "name": "annuaire-ia", "root": "annuaire-ia", "mode": "disabled-vercel", "reason": "Déployé par GitHub Pages" },
+    { "name": "nexuscrypto", "root": "nexuscrypto", "mode": "disabled-vercel", "reason": "Projet Vercel retiré" }
+  ]
+}
