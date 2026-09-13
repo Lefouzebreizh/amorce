@@ -31,6 +31,8 @@ from urllib.parse import parse_qs, urlencode, urljoin, urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 from urllib.robotparser import RobotFileParser
 
+from ai_gateway import MODEL_ID, analyze_public_page
+
 ROOT = Path(__file__).resolve().parent
 DEFAULT_DB = ROOT / "data" / "radar.sqlite3"
 DEFAULT_CONFIG = ROOT / "config.json"
@@ -111,6 +113,11 @@ def connect(path: Path) -> sqlite3.Connection:
         );
         """
     )
+    columns = {row[1] for row in db.execute("PRAGMA table_info(leads)")}
+    for name in ("ai_insight", "ai_model", "ai_error"):
+        if name not in columns:
+            db.execute(f"ALTER TABLE leads ADD COLUMN {name} TEXT NOT NULL DEFAULT ''")
+    db.commit()
     return db
 
 
@@ -342,15 +349,35 @@ def process_pending(db: sqlite3.Connection, config: dict[str, Any], limit: int =
             status, markup, final_url = fetch_public_page(row["url"], timeout, maximum)
             product = row["product"] or title_from_html(markup, row["domain"])
             assessment = assess(final_url, markup, row["snippet"], bool(row["contact_email"]))
+            ai_insight = ""
+            ai_model = ""
+            ai_error = ""
+            try:
+                insight = analyze_public_page(final_url, visible_text(markup), config)
+                if insight:
+                    ai_insight = json.dumps(
+                        {
+                            "summary": insight.summary,
+                            "opportunities": insight.opportunities,
+                            "risks": insight.risks,
+                            "confidence": insight.confidence,
+                        },
+                        ensure_ascii=False,
+                    )
+                    ai_model = MODEL_ID
+            except (ValueError, KeyError, TypeError, HTTPError, URLError, TimeoutError, OSError) as exc:
+                ai_error = str(exc)[:500]
             next_status = "review" if assessment.score >= minimum_score else "discarded"
             transient = dict(row)
             transient.update({"product": product, "public_fact": assessment.fact})
             subject, body = make_draft(transient, config)  # type: ignore[arg-type]
             db.execute(
                 """UPDATE leads SET product=?, status=?, score=?, score_reasons=?, public_fact=?, tech=?,
-                   http_status=?, draft_subject=?, draft_body=?, checked_at=?, last_error='' WHERE id=?""",
+                   http_status=?, draft_subject=?, draft_body=?, checked_at=?, last_error='',
+                   ai_insight=?, ai_model=?, ai_error=? WHERE id=?""",
                 (product, next_status, assessment.score, json.dumps(assessment.reasons, ensure_ascii=False), assessment.fact,
-                 json.dumps(assessment.tech, ensure_ascii=False), status, subject, body, utcnow(), row["id"]),
+                 json.dumps(assessment.tech, ensure_ascii=False), status, subject, body, utcnow(),
+                 ai_insight, ai_model, ai_error, row["id"]),
             )
             db.execute("INSERT INTO events(lead_id,kind,detail,created_at) VALUES(?,?,?,?)", (row["id"], "checked", f"score={assessment.score}", utcnow()))
             checked += 1
@@ -408,10 +435,20 @@ def dashboard(db_path: Path, config: dict[str, Any], host: str, port: int) -> No
             cards = []
             for row in rows:
                 reasons = json.loads(row["score_reasons"])
+                insight_html = ""
+                if row["ai_insight"]:
+                    insight = json.loads(row["ai_insight"])
+                    items = insight.get("opportunities", []) + insight.get("risks", [])
+                    insight_html = (
+                        f'<details><summary>Lecture DeepSeek ({html.escape(insight.get("confidence", "low"))})</summary>'
+                        f'<p>{html.escape(insight.get("summary", ""))}</p>'
+                        f'<ul>{"".join(f"<li>{html.escape(str(item))}</li>" for item in items)}</ul></details>'
+                    )
                 cards.append(f"""
                 <article><header><div><strong>{html.escape(row['product'] or row['domain'])}</strong><br><a href="{html.escape(row['url'])}" target="_blank" rel="noopener">{html.escape(row['domain'])}</a></div><span>{row['score']}/10</span></header>
                 <p class="fact">{html.escape(row['public_fact'])}</p>
                 <ul>{''.join(f'<li>{html.escape(reason)}</li>' for reason in reasons)}</ul>
+                {insight_html}
                 <details><summary>Voir le brouillon</summary><h3>{html.escape(row['draft_subject'])}</h3><pre>{html.escape(row['draft_body'])}</pre></details>
                 <form method="post"><input type="hidden" name="token" value="{token}"><input type="hidden" name="lead_id" value="{row['id']}"><button name="status" value="approved">Approuver</button><button class="secondary" name="status" value="rejected">Rejeter</button></form></article>""")
             body = f"""<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Radar Reprise IA</title><style>

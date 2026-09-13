@@ -62,7 +62,7 @@ qui **devine** dans quel dossier elle est et ce qui s'y est déjà passé.
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge vingt-cinq chantiers actifs, plus un en sommeil, et dix
+Ce dépôt héberge vingt-six chantiers actifs, plus un en sommeil, et dix
 ressources transverses qui ne sont pas des projets mais servent à tous. Une
 idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir un
 front de plus. La liste vieillit vite — recompter avant de noter.
@@ -79,6 +79,7 @@ autre, et deux paires ont **ré-implémenté la même chose sans le savoir**.
 | **Chaîne KDP** (`kdp/`) | Pré-presse de couvertures et validation de niches. | Python | — | actif |
 | **Socle Agence** (`agence/`) | Socle de production livré aux clients. | Next.js 16, Supabase | — | actif |
 | **Artisan Express** (`artisan-express/`) | Page de vente du site vitrine artisan à 300 €. | Next.js 16, Tailwind v4 | charte de `titan-builder/src/lib/charte.ts`, copiée et tenue par un test | actif |
+| **Radar Reprise IA** (`audit-radar/`) | Découverte et qualification prudente de prospects depuis des pages publiques, avec validation humaine. | Python | Vercel AI Gateway optionnel pour la lecture DeepSeek | actif |
 | **Paper-Manager** (`paper-manager/`) | Assistant administratif : scan, échéances, résiliations. | Python | source de la lettre de résiliation et de la détection d’échéance | actif |
 | **Life-Organizer** (`life-organizer/`) | Rangement de fichiers personnels. | Python | source du coffre chiffré et du classement par vision | actif |
 | **Moteur administratif** (`moteur-administratif/`) | Moteur partagé de cinq produits personnels : lecture, délais, rédaction, rappels. Aucune règle métier. | Python | **est** le moteur de Le Coffre, Le Dossier, Le Recours, Le Classeur, La Relève | actif |

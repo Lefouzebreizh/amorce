@@ -4,9 +4,11 @@ import sqlite3
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 MODULE_PATH = Path(__file__).parents[1] / "radar.py"
+sys.path.insert(0, str(MODULE_PATH.parent))
 SPEC = importlib.util.spec_from_file_location("radar", MODULE_PATH)
 radar = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
@@ -80,6 +82,22 @@ class RadarTests(unittest.TestCase):
         request = radar.Request("https://example.com")
         with self.assertRaises(ValueError):
             handler.redirect_request(request, None, 302, "Found", {}, "http://127.0.0.1/admin")
+
+    def test_ai_is_optional_without_gateway_key(self):
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertIsNone(
+                radar.analyze_public_page(
+                    "https://example.fr", "Page publique", {"ai": {"enabled": True}}
+                )
+            )
+
+    def test_ai_sanitizer_removes_contact_and_secret(self):
+        from ai_gateway import sanitize_public_text
+
+        value = sanitize_public_text("Contact test@example.fr ou 06 12 34 56 78 api_key=abcd")
+        self.assertNotIn("test@example.fr", value)
+        self.assertNotIn("06 12 34 56 78", value)
+        self.assertNotIn("abcd", value)
 
 
 if __name__ == "__main__":

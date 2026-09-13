@@ -25,6 +25,7 @@ L'approbation humaine reste obligatoire.
 cd audit-radar
 cp config.example.json config.json
 export BRAVE_SEARCH_API_KEY="votre-cle"
+export AI_GATEWAY_API_KEY="votre-cle-vercel-ai-gateway"
 python3 radar.py init
 python3 radar.py run
 python3 radar.py serve
@@ -51,6 +52,23 @@ python3 radar.py export
 
 Le fichier produit est `data/messages-approuves.csv`. Aucun pixel de suivi ni
 envoi massif n'est ajouté.
+
+## Lecture DeepSeek optionnelle
+
+Quand `AI_GATEWAY_API_KEY` est défini, le radar envoie à Vercel AI Gateway un
+extrait nettoyé de la page publique et utilise
+`deepseek/deepseek-v4.1-flash`. Les e-mails, téléphones et motifs de secrets
+sont retirés avant l'appel. Le modèle ne modifie jamais le score et une panne
+de passerelle n'interrompt pas la collecte : sa lecture reste un conseil visible
+dans la fiche à valider humainement.
+
+DeepSeek est volontairement interdit pour le Coffre, les dossiers MDPH, la
+santé, l'identité, les documents bancaires et les secrets. Le modèle n'offre
+pas une garantie ZDR/no-training sur tous ses fournisseurs dans AI Gateway.
+
+Le budget doit rester plafonné dans Vercel AI Gateway et le rechargement
+automatique désactivé. Sans clé, le radar conserve exactement son parcours
+déterministe.
 
 En cas d'opposition :
 
@@ -83,7 +101,8 @@ chemins supposent le dépôt installé dans `/opt/amorce`.
 Avant activation :
 
 1. copier `config.example.json` en `config.json` et renseigner l'identité ;
-2. créer `/opt/amorce/audit-radar/.env` avec `BRAVE_SEARCH_API_KEY=...` ;
+2. créer `/opt/amorce/audit-radar/.env` avec `BRAVE_SEARCH_API_KEY=...` et,
+   pour l'analyse optionnelle, `AI_GATEWAY_API_KEY=...` ;
 3. créer le dossier `data/` avec les droits du compte de service ;
 4. placer le tableau derrière un tunnel SSH, jamais directement sur Internet ;
 5. copier les unités dans `/etc/systemd/system/`, puis activer le service et le timer.
