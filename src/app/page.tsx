@@ -1,14 +1,12 @@
-import { Accueil } from '@/components/Accueil';
+import UniversPage from './univers/page';
 
 /**
- * La racine porte la page qui explique, plus le studio.
+ * La racine est la porte d'entrée de Lefouzèbreizh Studio.
  *
- * Elle rendait `<Studio />` : un visiteur qui n'avait jamais entendu parler
- * d'Amorce tombait sur une timeline vide, sans savoir ce qu'il regardait ni ce
- * que ça coûtait. Le studio a désormais son adresse propre, `/studio`, et tout
- * ce qui l'ouvrait a suivi — le manifeste, la cible de partage et les cinq
- * parcours de vérification.
+ * Amorce garde sa page de vente et son atelier sous `/studio`. La page d'accueil
+ * ne doit pas emprisonner l'écosystème dans un seul produit : elle oriente vers
+ * les projets, leurs usages et leurs accès réels.
  */
 export default function Page() {
-  return <Accueil />;
+  return <UniversPage />;
 }

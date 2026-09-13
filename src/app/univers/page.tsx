@@ -8,28 +8,50 @@ import './univers.css';
 
 const projects = [
   {
-    name: 'Ensemble',
-    badge: 'Clarté humaine',
-    description: 'Une lumière chaleureuse dans la brume administrative. Des parcours calmes, progressifs et toujours rassurants.',
+    name: 'Ensemble face aux démarches',
+    badge: 'Déjà ouvert',
+    description: 'Un premier pas simple pour ne plus se perdre dans les démarches. Des parcours calmes, progressifs et rassurants.',
     className: 'univers-card--ensemble',
+    href: 'https://ensemble-copilote-prive.erwannchevallier.chatgpt.site',
+    action: 'Découvrir Ensemble',
   },
   {
     name: 'Mon Tiroir Secret',
-    badge: 'Intimité protégée',
-    description: 'Le granit, la profondeur et une lumière contenue pour donner une sensation de refuge sans jamais assombrir l’usage.',
+    badge: 'Déjà ouvert',
+    description: 'Un refuge numérique pour garder ses documents importants organisés et accessibles au bon moment.',
     className: 'univers-card--tiroir',
+    href: 'https://coffre-puce.vercel.app',
+    action: 'Ouvrir le Tiroir Secret',
   },
   {
-    name: 'OmniRoute',
-    badge: 'Flux intelligent',
-    description: 'Des trajectoires lumineuses, une profondeur 3D progressive et une interface qui rend les choix complexes immédiatement lisibles.',
-    className: 'univers-card--route',
+    name: 'Amorce',
+    badge: 'Studio créatif',
+    description: 'Le studio de montage qui transforme tes rushes en vidéo verticale prête à publier, directement dans ton navigateur.',
+    className: 'univers-card--amorce',
+    href: '/studio',
+    action: 'Entrer dans Amorce',
   },
   {
     name: 'Le Phare',
     badge: 'Orientation',
-    description: 'Un horizon nocturne guidé par un faisceau ambré : spectaculaire pour découvrir, simple et précis pour avancer.',
+    description: 'Un espace pour retrouver de la clarté, un cap et la prochaine petite étape quand tout devient trop dense.',
     className: 'univers-card--phare',
+    href: '/phare',
+    action: 'Suivre le Phare',
+  },
+  {
+    name: 'Roussy & Zéphy',
+    badge: 'Livre jeunesse',
+    description: 'Le monde tendre et malicieux d’un petit renard et d’un zèbre ailé : la future maison de la BD et de ses surprises.',
+    className: 'univers-card--roussy',
+    action: 'En préparation',
+  },
+  {
+    name: 'Audit de page de vente',
+    badge: 'Pour les indépendants',
+    description: 'Un regard clair sur une page qui vend : les priorités à corriger, illustrées et livrées rapidement.',
+    className: 'univers-card--audit',
+    action: 'Ouverture prochaine',
   },
 ];
 
@@ -48,20 +70,20 @@ export default function UniversPage() {
 
       <ImmersiveHero
         eyebrow="Bretagne · Singularité · Bienveillance"
-        title="La Bretagne en inspiration."
-        highlight="Le monde en horizon."
-        description="Un écosystème numérique sensible et audacieux, où la double exposition, la lumière et la profondeur servent des expériences profondément humaines."
-        primaryLabel="Découvrir les univers"
-        secondaryLabel="Voir la signature"
+        title="Mes projets,"
+        highlight="un même horizon."
+        description="Bienvenue dans Lefouzèbreizh Studio : des projets utiles, créatifs et profondément humains, imaginés depuis la Bretagne pour faire avancer, créer et respirer."
+        primaryLabel="Voir les projets"
+        secondaryLabel="Notre signature"
         onPrimary={() => scrollTo('univers')}
         onSecondary={() => scrollTo('signature')}
       />
 
       <section className="univers-master" aria-labelledby="univers-master-title">
         <div className="univers-master__heading">
-          <p className="lfb-eyebrow">Direction artistique validée</p>
-          <h2 id="univers-master-title">Le master qui donne le cap.</h2>
-          <p>Cette planche devient la référence visuelle du réseau : zèbre double exposition, côte bretonne, phare, mégalithes et lumière d’horizon.</p>
+          <p className="lfb-eyebrow">Lefouzèbreizh Studio</p>
+          <h2 id="univers-master-title">Un écosystème à explorer, pas à deviner.</h2>
+          <p>Chaque projet a son rôle, son univers et son accès. Ici, tu retrouves tout au même endroit — avec une seule promesse : la technologie doit te simplifier la vie et te donner de l’élan.</p>
         </div>
         <figure className="univers-master__frame">
           <Image
@@ -112,13 +134,21 @@ export default function UniversPage() {
       <section id="univers" className="univers-section univers-projects">
         <SectionHeading
           eyebrow="Un ADN · Plusieurs expériences"
-          title="Chaque site possède son propre horizon."
-          copy="La famille est immédiatement reconnaissable, mais chaque produit conserve son ton, son rythme et son niveau d’immersion selon la mission qu’il remplit."
+          title="Choisis la porte qui te ressemble."
+          copy="Les projets déjà ouverts sont accessibles tout de suite. Les autres arrivent ici au fur et à mesure, sans liens morts ni promesses floues."
         />
         <div className="univers-project-grid">
           {projects.map((project) => (
             <div className={project.className} key={project.name}>
-              <ProjectCard name={project.name} badge={project.badge} description={project.description} />
+              <ProjectCard name={project.name} badge={project.badge} description={project.description}>
+                {project.href ? (
+                  <a className="univers-project-link" href={project.href} {...(project.href.startsWith('http') ? { target: '_blank', rel: 'noreferrer' } : {})}>
+                    {project.action} <span aria-hidden="true">→</span>
+                  </a>
+                ) : (
+                  <span className="univers-project-status">{project.action}</span>
+                )}
+              </ProjectCard>
             </div>
           ))}
         </div>
