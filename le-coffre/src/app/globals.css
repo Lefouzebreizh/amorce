@@ -18,18 +18,18 @@
  * cinquième rôle sémantique, pas une des quatre teintes ci-dessus.
  */
 @theme {
-  --color-paper: #eef3f7;
-  --color-paper-raised: #ffffff;
-  --color-ink: #172235;
-  --color-ink-soft: #657185;
-  --color-line: #d9e2eb;
-  --color-accent: #087f7a;
-  --color-accent-strong: #0ca8a1;
-  --color-violet: #7153c8;
-  --color-vert: #168a63;
-  --color-bleu: #246bd6;
-  --color-bleu-strong: #4187ed;
-  --color-wine: #c34e69;
+  --color-paper: #030913;
+  --color-paper-raised: #0c1728;
+  --color-ink: #f5f7ff;
+  --color-ink-soft: #aab6cb;
+  --color-line: #263750;
+  --color-accent: #40e0d0;
+  --color-accent-strong: #71eee0;
+  --color-violet: #b79bff;
+  --color-vert: #50d9a5;
+  --color-bleu: #62a7ff;
+  --color-bleu-strong: #8cc2ff;
+  --color-wine: #ff8cab;
 
   --font-affiche: 'Instrument Serif', Georgia, serif;
   --font-corps: 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -42,9 +42,9 @@
    éclairage de la pièce plutôt qu'un élément qui glisse avec la page. */
 body {
   background:
-    radial-gradient(760px circle at 12% -8%, color-mix(in srgb, var(--color-accent) 13%, transparent), transparent 62%),
-    radial-gradient(820px circle at 105% 28%, color-mix(in srgb, var(--violet-degrade) 11%, transparent), transparent 62%),
-    radial-gradient(640px circle at 18% 112%, color-mix(in srgb, var(--violet-degrade) 8%, transparent), transparent 60%),
+    radial-gradient(900px circle at 8% -16%, rgb(64 224 208 / .19), transparent 58%),
+    radial-gradient(850px circle at 102% 18%, rgb(124 58 237 / .26), transparent 60%),
+    radial-gradient(700px circle at 26% 112%, rgb(64 224 208 / .1), transparent 62%),
     var(--color-paper);
   background-attachment: fixed;
   color: var(--color-ink);
@@ -75,7 +75,7 @@ body {
    posés partout dans page.tsx pour chaque bouton d'action. */
 .bg-bleu {
   background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
-  color: #fff;
+  color: #031119;
 }
 .hover\:bg-bleu-strong:hover {
   filter: brightness(1.12);
@@ -114,10 +114,10 @@ input.border-line.bg-paper-raised {
    propriété standard une seule fois. */
 .border-line.bg-paper-raised:not(input) {
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 3%, transparent), color-mix(in srgb, var(--violet-degrade) 5%, transparent)),
-    color-mix(in srgb, var(--color-paper-raised) 94%, transparent);
-  backdrop-filter: blur(18px) saturate(110%);
-  border-color: color-mix(in srgb, var(--color-ink) 10%, var(--color-line));
+    linear-gradient(135deg, rgb(64 224 208 / .08), rgb(124 58 237 / .14)),
+    rgb(12 23 40 / .78);
+  backdrop-filter: blur(20px) saturate(125%);
+  border-color: rgb(164 185 218 / .22);
 }
 /* Lift + glow au survol de chaque carte/bloc principal — cible la même
    paire de classes déjà posée sur l'en-tête, la bannière d'alerte, le bloc
@@ -126,10 +126,11 @@ input.border-line.bg-paper-raised {
   transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
 .border-line.bg-paper-raised:hover {
-  border-color: color-mix(in srgb, var(--color-accent) 34%, var(--color-line));
+  border-color: rgb(64 224 208 / .62);
   box-shadow:
-    0 1px 0 color-mix(in srgb, #fff 80%, transparent) inset,
-    0 16px 38px -20px color-mix(in srgb, var(--color-ink) 40%, transparent);
+    0 0 0 1px rgb(64 224 208 / .12),
+    0 25px 54px -30px rgb(0 0 0 / .88),
+    0 0 36px -16px rgb(124 58 237 / .7);
 }
 @media (prefers-reduced-motion: no-preference) {
   .border-line.bg-paper-raised:hover {
@@ -168,33 +169,34 @@ input.border-line.bg-paper-raised {
 /* Le tableau de bord est une pièce calme, pas une console de contrôle : les
    trois blocs suivants donnent une hiérarchie aux informations réellement
    utiles, sans modifier le comportement du coffre. */
-.coffre-hero {
-  position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 82% 12%, rgb(113 83 200 / .16), transparent 28%),
-    linear-gradient(115deg, rgb(8 127 122 / .12), rgb(255 255 255 / .96) 46%, rgb(113 83 200 / .1));
-  box-shadow: 0 20px 54px -34px rgb(23 34 53 / .5);
-}
-.coffre-hero::after { content: ''; position: absolute; right: -4rem; bottom: -7rem; width: 20rem; height: 20rem; border: 1px solid rgb(8 127 122 / .16); border-radius: 50%; pointer-events: none; }
+.coffre-page { position: relative; isolation: isolate; overflow: hidden; background: transparent; }
+.coffre-page::before, .coffre-page::after { content: ''; position: fixed; z-index: -1; border-radius: 50%; pointer-events: none; filter: blur(18px); }
+.coffre-page::before { top: 12vh; right: -18vw; width: 52vw; height: 52vw; background: radial-gradient(circle, rgb(124 58 237 / .23), transparent 64%); }
+.coffre-page::after { bottom: -18vh; left: -16vw; width: 46vw; height: 46vw; background: radial-gradient(circle, rgb(64 224 208 / .16), transparent 64%); }
+.coffre-shell { position: relative; }
+.coffre-hero { position: relative; min-height: 270px; overflow: hidden; background: linear-gradient(116deg, rgb(6 24 38 / .96), rgb(18 26 63 / .95) 57%, rgb(52 28 90 / .92)); box-shadow: 0 36px 80px -44px #000, 0 0 70px -34px rgb(64 224 208 / .68); }
+.coffre-hero::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 84% 50%, rgb(64 224 208 / .17), transparent 22%), linear-gradient(100deg, transparent 40%, rgb(124 58 237 / .17), transparent 76%); }
+.coffre-hero::after { content: ''; position: absolute; right: 8%; top: -32%; width: 34rem; height: 8rem; background: linear-gradient(90deg, transparent, rgb(126 239 226 / .32), transparent); clip-path: polygon(0 48%,100% 0,100% 100%,0 52%); filter: blur(9px); transform: rotate(-14deg); animation: coffre-faisceau 9s ease-in-out infinite alternate; pointer-events: none; }
 .coffre-hero__content { position: relative; z-index: 1; }
-.coffre-reperes { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; width: min(100%, 21rem); }
-.coffre-repere { padding: 1rem; border: 1px solid rgb(23 34 53 / .1); border-radius: 1rem; background: rgb(255 255 255 / .7); box-shadow: 0 10px 24px -20px rgb(23 34 53 / .6); }
-.coffre-repere dt { color: var(--color-ink-soft); font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-.coffre-repere dd { margin: .35rem 0 0; color: var(--color-ink); font: 500 1.1rem/1.2 var(--font-affiche); }
-.coffre-question { display: grid; grid-template-columns: minmax(13rem, .65fr) minmax(18rem, 1.35fr); gap: 1.25rem; align-items: center; border-color: rgb(8 127 122 / .22) !important; box-shadow: 0 18px 42px -32px rgb(23 34 53 / .42); }
+.coffre-reperes { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; width: min(100%, 21rem); }
+.coffre-repere { padding: 1rem; border: 1px solid rgb(201 215 255 / .18); border-radius: 1rem; background: rgb(8 18 37 / .5); box-shadow: 0 16px 32px -26px #000, 0 1px 0 rgb(255 255 255 / .1) inset; backdrop-filter: blur(14px); }
+.coffre-repere dt { color: rgb(213 223 244 / .62); font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.coffre-repere dd { margin: .35rem 0 0; color: #fff; font: 500 1.1rem/1.2 var(--font-affiche); }
+.coffre-question { display: grid; grid-template-columns: minmax(13rem, .65fr) minmax(18rem, 1.35fr); gap: 1.25rem; align-items: center; border-color: rgb(64 224 208 / .34) !important; background: linear-gradient(125deg, rgb(8 30 47 / .82), rgb(27 19 60 / .75)) !important; box-shadow: 0 28px 60px -42px #000, 0 0 38px -28px rgb(64 224 208 / .85); }
 .coffre-question .coffre-question__title { text-align: left; }
 .coffre-question form { width: 100%; max-width: none; margin-top: 0; }
-.coffre-question input { background: rgb(255 255 255 / .86); box-shadow: 0 1px 1px rgb(23 34 53 / .05) inset; }
-@media (max-width: 700px) { .coffre-hero { padding: 1.25rem !important; } .coffre-reperes { width: 100%; } .coffre-question { grid-template-columns: 1fr; padding: 1.25rem !important; } }
+.coffre-question input { background: rgb(3 12 24 / .9); box-shadow: 0 1px 1px rgb(0 0 0 / .3) inset; }
+.coffre-vault { position: absolute; z-index: 1; right: 25rem; bottom: -4rem; width: 15rem; height: 15rem; pointer-events: none; border: 1px solid rgb(183 155 255 / .48); border-radius: 2.4rem; background: linear-gradient(145deg, rgb(42 46 92 / .9), rgb(8 19 39 / .95)); box-shadow: -22px 26px 36px rgb(0 0 0 / .32), 0 0 50px rgb(64 224 208 / .15), 1px 1px 0 rgb(255 255 255 / .18) inset; transform: perspective(700px) rotateY(-14deg) rotateX(7deg); animation: coffre-flotte 7s ease-in-out infinite; }
+.coffre-vault::before { content: ''; position: absolute; inset: 1.15rem; border: 1px solid rgb(64 224 208 / .32); border-radius: 1.6rem; box-shadow: 0 0 24px rgb(64 224 208 / .08) inset; }
+.coffre-vault::after { content: ''; position: absolute; top: 1.55rem; right: 1.8rem; width: .75rem; height: .75rem; border-radius: 50%; background: var(--color-accent); box-shadow: 0 0 16px var(--color-accent); }
+.coffre-vault__dial { position: absolute; top: 50%; left: 50%; width: 6.7rem; height: 6.7rem; border: .9rem solid rgb(183 155 255 / .7); border-radius: 50%; box-shadow: 0 0 0 .35rem rgb(4 12 26), 0 0 24px rgb(124 58 237 / .38), 0 0 30px rgb(64 224 208 / .2) inset; transform: translate(-50%, -50%); }
+.coffre-vault__dial::before, .coffre-vault__dial::after { content: ''; position: absolute; top: 50%; left: 50%; background: var(--color-accent); transform: translate(-50%, -50%); box-shadow: 0 0 13px var(--color-accent); }
+.coffre-vault__dial::before { width: 5.2rem; height: .25rem; } .coffre-vault__dial::after { width: .25rem; height: 5.2rem; }
+.coffre-vault__bar { position: absolute; top: 50%; left: 50%; width: 10.2rem; height: 1rem; border-radius: 99px; background: linear-gradient(180deg, #d9e8ff, #6575a6); box-shadow: 0 4px 12px rgb(0 0 0 / .35); transform: translate(-50%, -50%); }
+@keyframes coffre-faisceau { from { transform: rotate(-17deg) translateX(-3%); opacity: .35; } to { transform: rotate(-8deg) translateX(5%); opacity: .82; } }
+@keyframes coffre-flotte { 0%,100% { transform: perspective(700px) rotateY(-14deg) rotateX(7deg) translateY(0); } 50% { transform: perspective(700px) rotateY(-10deg) rotateX(4deg) translateY(-8px); } }
+@media (max-width: 1100px) { .coffre-vault { right: 3rem; opacity: .55; } }
+@media (max-width: 700px) { .coffre-hero { min-height: auto; padding: 1.25rem !important; } .coffre-vault { display: none; } .coffre-reperes { width: 100%; } .coffre-question { grid-template-columns: 1fr; padding: 1.25rem !important; } }
+@media (prefers-reduced-motion: reduce) { .coffre-hero::after, .coffre-vault { animation: none; } }
 
 @keyframes cascade-entree {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
