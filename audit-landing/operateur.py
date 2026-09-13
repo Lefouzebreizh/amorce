@@ -34,38 +34,42 @@ def produire(base: Commandes, session: str, captures: Path, chromium: str | None
     if not base.prendre(session):
         raise RuntimeError("Commande prise par un autre processus")
 
-    captures.mkdir(parents=True, exist_ok=True)
-    with sync_playwright() as pw:
-        executable = chromium if chromium and Path(chromium).is_file() else None
-        navigateur = pw.chromium.launch(executable_path=executable)
-        contexte = navigateur.new_context(
-            viewport={"width": LARGEUR_VIEWPORT, "height": HAUTEUR_VIEWPORT},
-            device_scale_factor=FACTEUR_ECHELLE,
+    try:
+        captures.mkdir(parents=True, exist_ok=True)
+        with sync_playwright() as pw:
+            executable = chromium if chromium and Path(chromium).is_file() else None
+            navigateur = pw.chromium.launch(executable_path=executable)
+            contexte = navigateur.new_context(
+                viewport={"width": LARGEUR_VIEWPORT, "height": HAUTEUR_VIEWPORT},
+                device_scale_factor=FACTEUR_ECHELLE,
+            )
+            installer_filtre_reseau(contexte)
+            try:
+                capturer_url(contexte.new_page(), commande["url"], captures)
+            finally:
+                contexte.close()
+                navigateur.close()
+    
+        dossier = captures / nom_dossier_pour_url(commande["url"])
+        dossier.mkdir(parents=True, exist_ok=True)
+        rapport = analyser_page(dossier)
+        (dossier / "rapport.md").write_text(
+            rendre_markdown(rapport, nom_page=dossier.name), encoding="utf-8"
         )
-        installer_filtre_reseau(contexte)
-        try:
-            capturer_url(contexte.new_page(), commande["url"], captures)
-        finally:
-            contexte.close()
-            navigateur.close()
-
-    dossier = captures / nom_dossier_pour_url(commande["url"])
-    dossier.mkdir(parents=True, exist_ok=True)
-    rapport = analyser_page(dossier)
-    (dossier / "rapport.md").write_text(
-        rendre_markdown(rapport, nom_page=dossier.name), encoding="utf-8"
-    )
-    (dossier / "rapport.json").write_text(
-        json.dumps(dataclasses.asdict(rapport), ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-    chemin_html = dossier / "rapport.html"
-    chemin_html.write_text(
-        rendre_html(rapport, nom_page=dossier.name, dossier_page=dossier), encoding="utf-8"
-    )
-    if not base.deposer(session, chemin_html):
-        raise RuntimeError("Rapport produit mais transition vers relecture refusée")
-    return chemin_html
+        (dossier / "rapport.json").write_text(
+            json.dumps(dataclasses.asdict(rapport), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        chemin_html = dossier / "rapport.html"
+        chemin_html.write_text(
+            rendre_html(rapport, nom_page=dossier.name, dossier_page=dossier), encoding="utf-8"
+        )
+        if not base.deposer(session, chemin_html):
+            raise RuntimeError("Rapport produit mais transition vers relecture refusée")
+        return chemin_html
+    except Exception as erreur:
+        base.signaler_echec_analyse(session, str(erreur) or erreur.__class__.__name__)
+        raise
 
 
 def main() -> int:
@@ -82,6 +86,8 @@ def main() -> int:
     p_approuver.add_argument("--relecteur", required=True)
     p_livrer = sous.add_parser("livrer")
     p_livrer.add_argument("session")
+    p_reprendre = sous.add_parser("reprendre")
+    p_reprendre.add_argument("session")
     args = parser.parse_args()
 
     base = Commandes(args.base)
@@ -104,6 +110,10 @@ def main() -> int:
             if not identifiant:
                 raise SystemExit("Commande non disponible pour envoi")
             print(f"Envoi accepté : {identifiant}")
+        elif args.action == "reprendre":
+            if not base.reprendre_analyse(args.session):
+                raise SystemExit("Commande non disponible pour reprise")
+            print("Commande replacée en attente")
     finally:
         base.fermer()
     return 0
