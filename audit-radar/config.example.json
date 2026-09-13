@@ -1,0 +1,26 @@
+{
+  "identity": {
+    "name": "Erwann Chevallier",
+    "brand": "Lefouzèbreizh",
+    "email": "audit@votre-domaine.fr",
+    "privacy_url": "https://votre-domaine.fr/confidentialite"
+  },
+  "discovery": {
+    "country": "fr",
+    "language": "fr",
+    "results_per_query": 10,
+    "queries": [
+      "site:forum.bubble.io (Stripe OR webhook OR privacy OR performance OR scaling) (live OR production)",
+      "site:community.vercel.com v0 (production OR deployment OR auth OR database OR Stripe) (error OR broken OR help)",
+      "site:producthunt.com/products (Lovable OR Bolt.new OR Bubble OR FlutterFlow) (SaaS OR app)",
+      "\"built with Lovable\" (pricing OR abonnement OR \"paying users\" OR MRR)",
+      "(Lovable OR Bolt.new OR Bubble OR FlutterFlow) (bug OR bloqué OR paiement OR lancement) France"
+    ]
+  },
+  "limits": {
+    "daily_review": 5,
+    "minimum_score": 7,
+    "request_timeout_seconds": 12,
+    "maximum_page_bytes": 1000000
+  }
+}
