@@ -24,6 +24,8 @@ inventé. **Ce qui manque avant tout déploiement réel** :
 1. Créer le produit et son prix dans le tableau de bord Stripe (test, puis
    live une fois validé), et renseigner `idPrixStripe` avec l'ID du prix
    (`price_...`).
+   Utiliser une clé restreinte dédiée à la création de sessions Checkout,
+   séparée entre test et production, plutôt qu'une clé secrète générale.
 2. Le secret du webhook Stripe (`whsec_...`), obtenu en créant l'endpoint
    dans le tableau de bord Stripe une fois ce serveur déployé.
 3. Une clé d'analyse disponible sur le processus opérateur, pour que
