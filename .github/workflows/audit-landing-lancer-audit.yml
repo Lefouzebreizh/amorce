@@ -14,12 +14,10 @@
 # rend ce pipeline exécutable ici alors qu'il ne l'est pas depuis une session
 # distante — api.anthropic.com y est injoignable, pas depuis un runner.
 #
-# Livraison : le rapport part en artefact de ce run, pas encore par
-# courriel — ça demanderait Resend, comme `comptes-serveur/`, et n'est pas
-# fait ici. Le lien de l'artefact est donc, pour l'instant, ce qu'on peut
-# donner à l'acheteur — avec le rappel du §7 : une session distante ne peut
-# pas rapatrier un artefact d'exécution (mur réseau différent de celui de
-# l'API), seulement en donner le lien.
+# Livraison : l'artefact conserve une copie pour l'équipe, mais ne sert pas
+# de livraison client — un lien GitHub peut demander une authentification.
+# Si les secrets Resend sont présents, le rapport HTML est joint directement
+# au courriel reçu de Stripe.
 
 name: Lancer un audit payé
 
@@ -41,6 +39,7 @@ jobs:
     timeout-minutes: 20
     env:
       URL_A_AUDITER: ${{ github.event.client_payload.url || inputs.url }}
+      EMAIL_CLIENT: ${{ github.event.client_payload.email || '' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -73,3 +72,43 @@ jobs:
           name: rapport-audit
           path: ${{ env.DOSSIER_RAPPORT }}/rapport.html
           retention-days: 30
+
+      - name: Livrer le rapport par e-mail
+        if: ${{ env.EMAIL_CLIENT != '' && secrets.RESEND_API_KEY != '' && secrets.RESEND_EXPEDITEUR != '' }}
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_EXPEDITEUR: ${{ secrets.RESEND_EXPEDITEUR }}
+        run: |
+          python3 - <<'PY'
+          import base64
+          import json
+          import os
+          import urllib.request
+
+          with open(os.path.join(os.environ['DOSSIER_RAPPORT'], 'rapport.html'), 'rb') as rapport:
+              contenu = base64.b64encode(rapport.read()).decode('ascii')
+
+          charge = {
+              'from': os.environ['RESEND_EXPEDITEUR'],
+              'to': [os.environ['EMAIL_CLIENT']],
+              'subject': 'Votre audit de page de vente',
+              'html': '<p>Bonjour,</p><p>Votre audit est prêt. Le rapport HTML est joint à ce message.</p>',
+              'attachments': [{'filename': 'audit-page-de-vente.html', 'content': contenu}],
+          }
+          requete = urllib.request.Request(
+              'https://api.resend.com/emails',
+              data=json.dumps(charge).encode('utf-8'),
+              headers={
+                  'Authorization': f"Bearer {os.environ['RESEND_API_KEY']}",
+                  'Content-Type': 'application/json',
+              },
+              method='POST',
+          )
+          with urllib.request.urlopen(requete, timeout=30) as reponse:
+              if not 200 <= reponse.status < 300:
+                  raise RuntimeError(f'Livraison refusée : HTTP {reponse.status}')
+          PY
+
+      - name: Signaler une livraison e-mail non configurée
+        if: ${{ env.EMAIL_CLIENT != '' && (secrets.RESEND_API_KEY == '' || secrets.RESEND_EXPEDITEUR == '') }}
+        run: echo "Rapport créé, mais livraison e-mail non configurée." >> "$GITHUB_STEP_SUMMARY"
