@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import type { User } from '@supabase/supabase-js';
 import {
   Bell, Briefcase, Car, ChevronRight, File, FileText, Folder, Heart, Home, Landmark, LogOut,
@@ -1252,21 +1253,31 @@ export default function PageCoffre() {
             porte déjà l'eyebrow « Bonjour » juste en dessous. */}
         <p className="text-sm font-semibold tracking-widest text-violet uppercase">Le Tiroir Secret</p>
         {/* En-tête */}
-        <header className="coffre-hero flex flex-wrap items-start justify-between gap-6 rounded-3xl border border-line bg-paper-raised p-6 sm:p-8">
-          <div className="coffre-vault" aria-hidden="true"><span className="coffre-vault__bar" /><span className="coffre-vault__dial" /></div>
+        <header className="coffre-hero rounded-3xl border border-line bg-paper-raised">
+          <Image
+            className="coffre-hero__image"
+            src="/brand/coffre-breton-3d-v2.webp"
+            width={1586}
+            height={992}
+            sizes="(max-width: 700px) 100vw, 94vw"
+            priority
+            alt="Un coffre-fort ouvert dans un refuge rocheux face à la mer et à un phare breton."
+          />
+          <div className="coffre-hero__veil" aria-hidden="true" />
           <div className="coffre-hero__content">
+            <span className="coffre-hero__scene-label">Coffre privé · Bretagne</span>
             <p className="text-sm font-semibold tracking-widest text-accent uppercase">
               Bonjour {prenom || 'toi'}
             </p>
             <h1 className="mt-2 font-affiche text-3xl sm:text-4xl texte-degrade">Voici où en sont tes papiers</h1>
             <p className="mt-3 max-w-md text-ink-soft">
-              Tout est déjà lu et rangé pour toi — il ne reste qu&apos;à jeter un œil.
+              Le coffre est ouvert. La mer respire. Tes papiers sont à leur place.
             </p>
             <p className="mt-4 flex items-center gap-2 text-sm text-vert">
               <ShieldCheck size={16} /> Personne d&apos;autre ne peut voir tes papiers. Même nous.
             </p>
           </div>
-          <div className="flex flex-col items-end gap-5">
+          <div className="coffre-hero__aside flex flex-col items-end gap-5">
             <button onClick={seDeconnecter}
               className="flex shrink-0 items-center gap-2 rounded-lg border border-line bg-paper-raised/70 px-3 py-2 text-sm text-ink-soft transition hover:border-wine/60 hover:text-wine">
               <LogOut size={16} /> Se déconnecter

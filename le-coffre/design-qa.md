@@ -47,6 +47,7 @@ Focused checks covered the hero title/CTA, the open-vault crop, the three-step l
 - Initial implementation pass: preview rendered blank because the isolated preview did not receive placeholder Supabase build variables.
 - Fix: added ignored local preview variables and restarted the preview. This was preview infrastructure, not a visual design change.
 - Post-fix evidence: the full hero, access section, navigation, and disclosure rendered and were inspected successfully. No P0/P1/P2 visual correction was required after the rendered comparison.
+- Private-app iteration: the authenticated dashboard originally used a CSS-drawn vault and hid it below 700 px. The fake vault was removed and the same real coastal-vault asset is now rendered as a panoramic dashboard scene. A data-free local QA state rendered the actual `/coffre` component at 1363 × 936 CSS px: vault, lighthouse, copy, logout action and both status counters were visible with no overlap. The QA-only state was removed before commit.
 
 ## Implementation checklist
 
