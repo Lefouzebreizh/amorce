@@ -1,0 +1,38 @@
+name: Cohérence Vercel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ops/vercel/**'
+      - '**/vercel.json'
+      - 'vercel.json'
+      - 'scripts/vercel-*'
+      - '.github/workflows/vercel-coherence.yml'
+  pull_request:
+    paths:
+      - 'ops/vercel/**'
+      - '**/vercel.json'
+      - 'vercel.json'
+      - 'scripts/vercel-*'
+      - '.github/workflows/vercel-coherence.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Vérifier le registre
+        run: node scripts/vercel-verifier-registre.mjs
+      - name: Tester le filtre de déploiement
+        run: bash scripts/vercel-tester-filtre.sh

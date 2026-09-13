@@ -152,14 +152,26 @@
 racine=$(git rev-parse --show-toplevel 2>/dev/null) || exit 1
 cd "$racine" || exit 1
 
-# Sans parent, il n'y a rien à comparer. C'est le cas d'un clone tronqué à un
-# seul commit, et celui du tout premier commit d'une branche. On déploie.
-git rev-parse --verify --quiet HEAD^ >/dev/null 2>&1 || exit 1
+# Vercel peut fournir le SHA qui précédait le push courant. C'est la seule base
+# qui couvre correctement un push contenant plusieurs commits. On ne lui fait
+# confiance que s'il existe et est bien un ancêtre de HEAD. Sinon, repli prudent
+# sur le parent immédiat ; si même lui manque, on déploie (fail-open).
+base="${VERCEL_GIT_PREVIOUS_SHA:-}"
+if [ -n "$base" ]; then
+  git cat-file -e "$base^{commit}" >/dev/null 2>&1 || base=""
+  if [ -n "$base" ] && ! git merge-base --is-ancestor "$base" HEAD; then
+    base=""
+  fi
+fi
+
+if [ -z "$base" ]; then
+  base=$(git rev-parse --verify HEAD^ 2>/dev/null) || exit 1
+fi
 
 # `git diff --quiet` implique `--exit-code` : 0 s'il n'y a aucune différence,
 # 1 s'il y en a, 128 s'il échoue. Le `if` ne distingue pas 1 de 128, et c'est
 # voulu : les deux mènent au déploiement.
-if git diff --quiet HEAD^ HEAD -- "$@"; then
+if git diff --quiet "$base" HEAD -- "$@"; then
   echo "Rien de touché dans : $* — déploiement annulé."
   exit 0
 fi
