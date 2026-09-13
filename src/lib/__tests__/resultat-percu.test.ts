@@ -1,9 +1,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { buildAutoEdit } from '../autoEdit.ts';
+import { buildAutoEdit as assemble } from '../autoEdit.ts';
 import { alerteSurDecoupage, captionCoverage } from '../analysis.ts';
 import { layoutClips, totalDuration } from '../timeline.ts';
 import { DEFAULT_CLIP, type Clip, type MediaAsset } from '../types.ts';
+
+// Scénarios d'habillage sur demande ; ils ne valident pas la qualité perçue.
+const buildAutoEdit = (assets: MediaAsset[]) => assemble(assets, {
+  shorten: true, visualEffects: true, soundEffects: true, captionGuide: true,
+});
 
 /**
  * La deuxième famille de vérifications : le résultat perçu, pas la mécanique.
@@ -14,10 +19,9 @@ import { DEFAULT_CLIP, type Clip, type MediaAsset } from '../types.ts';
  * phrase de texte sur trente secondes, des bruitages sans rapport avec ce
  * qu'on voit, et un découpage que rien n'arrêtait.
  *
- * Ce fichier mesure donc l'autre moitié : **est-ce que ce qui sort est bon à
- * regarder et à écouter**. Ses seuils ne sont pas inventés — ce sont ceux que
- * `analysis.ts` applique déjà pour noter un montage. Le défaut n'était pas
- * qu'ils manquaient, c'est que rien ne les consultait au moment du geste.
+ * Ces contrôles mesurent des propriétés du projet, pas sa qualité à regarder
+ * ou à écouter. Les seuils viennent de `analysis.ts` : leur cohérence interne
+ * ne constitue ni une validation artistique ni une mesure de rétention.
  */
 
 function rush(id: string, duration: number, hasAudio = false): MediaAsset {

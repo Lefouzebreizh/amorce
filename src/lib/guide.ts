@@ -56,7 +56,7 @@ export function nextStep(project: Project, analysis: Analysis = analyzeProject(p
   if (project.clips.length === 0) {
     return {
       title: 'Lance le montage express',
-      why: 'Il assemble tout d’un coup : plans courts, transitions, bruitages, rendu cinéma. Tu retoucheras ensuite.',
+      why: 'Il assemble tes plans dans leur ordre, en conservant les vidéos entières et leur son. Tu choisis ensuite les coupes et les effets.',
       actionLabel: 'Monter automatiquement',
       action: { kind: 'autoEdit' },
       done: false,

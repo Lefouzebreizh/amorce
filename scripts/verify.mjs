@@ -561,8 +561,44 @@ check('Les métadonnées sont lues', /\d+×\d+/.test(meta ?? ''), meta);
 await page.screenshot({ path: join(SHOTS, `01-import-${profile.id}.png`) });
 
 // -------------------------------------------------------- 2. Montage express
+// D'abord le chemin par défaut, avec les quatre rushes de 4 + 3 + 5 + 3 s.
+// Il doit conserver leurs fins, sans texte ni bruitage ajouté. Le fichier
+// exporté reste disponible même si tous les contrôles passent.
+await page.locator('button:has-text("Monter automatiquement (")').click();
+await page.waitForTimeout(1500);
+const dureeConservee = Number(await page.locator('input[aria-label="Position dans le montage"]').getAttribute('max'));
+check('La conservation garde les quatre rushes entiers', Math.abs(dureeConservee - 15) < 0.25, `${dureeConservee} s`);
+await page.screenshot({ path: join(SHOTS, `02-conservation-${profile.id}.png`) });
+if (!profile.mobile) {
+  await allerAEtape(page, profile, 'Exporter');
+  const telechargementConserve = page.waitForEvent('download', { timeout: 300000 });
+  await page.locator('button').filter({ hasText: /⬇ Exporter (la vidéo|quand même)/ }).first().click();
+  try {
+    const fichier = await telechargementConserve;
+    const chemin = join(SHOTS, `conservation-${fichier.suggestedFilename()}`);
+    await fichier.saveAs(chemin);
+    const meta = JSON.parse(execFileSync('ffprobe', [
+      '-v', 'error', '-show_entries', 'format=duration:stream=codec_type', '-of', 'json', chemin,
+    ], { encoding: 'utf8' }));
+    check('L’export conservé contient les 15 secondes', Math.abs(Number(meta.format.duration) - 15) < 0.3, chemin);
+    check('L’export conservé porte image et son',
+      meta.streams.some(s => s.codec_type === 'video') && meta.streams.some(s => s.codec_type === 'audio'));
+  } catch (error) {
+    check('L’export conservé est produit et mesuré', false, String(error).slice(0, 160));
+  }
+  await allerAEtape(page, profile, 'Importer');
+}
+await page.locator('button:has-text("Annuler")').first().click();
+await page.locator('text=Conserver mes plans entiers').waitFor({ state: 'visible' });
+
 // Le bandeau de guidage propose le même intitulé : on vise explicitement le
 // bouton du panneau d'import.
+// Ce parcours historique éprouve l'habillage facultatif, explicitement choisi.
+await page.getByLabel('Prélever des débuts de plans courts').check();
+await page.getByText('Habillage facultatif', { exact: true }).click();
+await page.getByLabel('Ajouter des mouvements et transitions').check();
+await page.getByLabel('Ajouter des bruitages aux plans muets').check();
+await page.getByLabel('Ajouter une trame de textes à compléter').check();
 await page.locator('button:has-text("Monter automatiquement (")').click();
 await page.waitForTimeout(1500);
 

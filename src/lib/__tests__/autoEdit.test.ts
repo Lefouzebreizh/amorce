@@ -1,8 +1,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { buildAutoEdit, PLANS_MAX } from '../autoEdit.ts';
+import { buildAutoEdit as assemble, PLANS_MAX } from '../autoEdit.ts';
 import { totalDuration } from '../timeline.ts';
 import { IMAGE_DURATION, type MediaAsset } from '../types.ts';
+
+// Ces contrôles historiques couvrent l'habillage explicitement demandé.
+// Le montage par défaut est protégé dans autoEdit-preservation.test.ts.
+const buildAutoEdit = (assets: MediaAsset[]) => assemble(assets, {
+  shorten: true, visualEffects: true, soundEffects: true, captionGuide: true,
+});
 
 function asset(id: string, duration: number): MediaAsset {
   return { id, name: `${id}.mp4`, kind: 'video', url: `blob:${id}`, duration, width: 1080, height: 1920, thumbnail: '', hasAudio: true };
