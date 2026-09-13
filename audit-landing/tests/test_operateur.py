@@ -39,5 +39,14 @@ class TestOperateur(unittest.TestCase):
             produire(self.base, "cs_test_1", self.racine / "captures")
 
 
+    @patch("operateur.sync_playwright", side_effect=RuntimeError("navigateur indisponible"))
+    def test_echec_est_enregistre_pour_reprise_explicite(self, _playwright):
+        with self.assertRaises(RuntimeError):
+            produire(self.base, "cs_test_1", self.racine / "captures")
+        commande = self.base.lire("cs_test_1")
+        self.assertEqual(commande["etat"], "echec_analyse")
+        self.assertEqual(commande["erreur"], "navigateur indisponible")
+
+
 if __name__ == "__main__":
     unittest.main()
