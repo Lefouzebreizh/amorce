@@ -18,18 +18,18 @@
  * cinquième rôle sémantique, pas une des quatre teintes ci-dessus.
  */
 @theme {
-  --color-paper: #0f1115;
-  --color-paper-raised: #202430;
-  --color-ink: #f2f1ee;
-  --color-ink-soft: #9ea3b0;
-  --color-line: #262a33;
-  --color-accent: #40e0d0;
-  --color-accent-strong: #6ee8da;
-  --color-violet: #a78bfa;
-  --color-vert: #34d399;
-  --color-bleu: #3b82f6;
-  --color-bleu-strong: #60a5fa;
-  --color-wine: #e8829a;
+  --color-paper: #eef3f7;
+  --color-paper-raised: #ffffff;
+  --color-ink: #172235;
+  --color-ink-soft: #657185;
+  --color-line: #d9e2eb;
+  --color-accent: #087f7a;
+  --color-accent-strong: #0ca8a1;
+  --color-violet: #7153c8;
+  --color-vert: #168a63;
+  --color-bleu: #246bd6;
+  --color-bleu-strong: #4187ed;
+  --color-wine: #c34e69;
 
   --font-affiche: 'Instrument Serif', Georgia, serif;
   --font-corps: 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -42,9 +42,9 @@
    éclairage de la pièce plutôt qu'un élément qui glisse avec la page. */
 body {
   background:
-    radial-gradient(760px circle at 12% -8%, color-mix(in srgb, var(--color-accent) 22%, transparent), transparent 62%),
-    radial-gradient(820px circle at 105% 28%, color-mix(in srgb, var(--violet-degrade) 22%, transparent), transparent 62%),
-    radial-gradient(640px circle at 18% 112%, color-mix(in srgb, var(--violet-degrade) 16%, transparent), transparent 60%),
+    radial-gradient(760px circle at 12% -8%, color-mix(in srgb, var(--color-accent) 13%, transparent), transparent 62%),
+    radial-gradient(820px circle at 105% 28%, color-mix(in srgb, var(--violet-degrade) 11%, transparent), transparent 62%),
+    radial-gradient(640px circle at 18% 112%, color-mix(in srgb, var(--violet-degrade) 8%, transparent), transparent 60%),
     var(--color-paper);
   background-attachment: fixed;
   color: var(--color-ink);
@@ -75,6 +75,7 @@ body {
    posés partout dans page.tsx pour chaque bouton d'action. */
 .bg-bleu {
   background: linear-gradient(135deg, var(--color-accent), var(--color-accent-strong));
+  color: #fff;
 }
 .hover\:bg-bleu-strong:hover {
   filter: brightness(1.12);
@@ -113,10 +114,10 @@ input.border-line.bg-paper-raised {
    propriété standard une seule fois. */
 .border-line.bg-paper-raised:not(input) {
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 10%, transparent), color-mix(in srgb, var(--violet-degrade) 16%, transparent)),
-    color-mix(in srgb, var(--color-paper-raised) 68%, transparent);
-  backdrop-filter: blur(20px) saturate(140%);
-  border-color: color-mix(in srgb, var(--color-ink) 14%, var(--color-line));
+    linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 3%, transparent), color-mix(in srgb, var(--violet-degrade) 5%, transparent)),
+    color-mix(in srgb, var(--color-paper-raised) 94%, transparent);
+  backdrop-filter: blur(18px) saturate(110%);
+  border-color: color-mix(in srgb, var(--color-ink) 10%, var(--color-line));
 }
 /* Lift + glow au survol de chaque carte/bloc principal — cible la même
    paire de classes déjà posée sur l'en-tête, la bannière d'alerte, le bloc
@@ -125,10 +126,10 @@ input.border-line.bg-paper-raised {
   transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
 .border-line.bg-paper-raised:hover {
-  border-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 34%, var(--color-line));
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-accent) 25%, transparent),
-    0 12px 32px -12px color-mix(in srgb, var(--violet-degrade) 55%, transparent);
+    0 1px 0 color-mix(in srgb, #fff 80%, transparent) inset,
+    0 16px 38px -20px color-mix(in srgb, var(--color-ink) 40%, transparent);
 }
 @media (prefers-reduced-motion: no-preference) {
   .border-line.bg-paper-raised:hover {
@@ -158,11 +159,34 @@ input.border-line.bg-paper-raised {
 }
 /* Dégradé turquoise → violet sur les titres et éléments d'accent. */
 .texte-degrade {
-  background: linear-gradient(135deg, var(--color-accent), var(--violet-degrade));
+  background: linear-gradient(105deg, var(--color-accent), var(--color-violet));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
+
+/* Le tableau de bord est une pièce calme, pas une console de contrôle : les
+   trois blocs suivants donnent une hiérarchie aux informations réellement
+   utiles, sans modifier le comportement du coffre. */
+.coffre-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 82% 12%, rgb(113 83 200 / .16), transparent 28%),
+    linear-gradient(115deg, rgb(8 127 122 / .12), rgb(255 255 255 / .96) 46%, rgb(113 83 200 / .1));
+  box-shadow: 0 20px 54px -34px rgb(23 34 53 / .5);
+}
+.coffre-hero::after { content: ''; position: absolute; right: -4rem; bottom: -7rem; width: 20rem; height: 20rem; border: 1px solid rgb(8 127 122 / .16); border-radius: 50%; pointer-events: none; }
+.coffre-hero__content { position: relative; z-index: 1; }
+.coffre-reperes { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; width: min(100%, 21rem); }
+.coffre-repere { padding: 1rem; border: 1px solid rgb(23 34 53 / .1); border-radius: 1rem; background: rgb(255 255 255 / .7); box-shadow: 0 10px 24px -20px rgb(23 34 53 / .6); }
+.coffre-repere dt { color: var(--color-ink-soft); font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.coffre-repere dd { margin: .35rem 0 0; color: var(--color-ink); font: 500 1.1rem/1.2 var(--font-affiche); }
+.coffre-question { display: grid; grid-template-columns: minmax(13rem, .65fr) minmax(18rem, 1.35fr); gap: 1.25rem; align-items: center; border-color: rgb(8 127 122 / .22) !important; box-shadow: 0 18px 42px -32px rgb(23 34 53 / .42); }
+.coffre-question .coffre-question__title { text-align: left; }
+.coffre-question form { width: 100%; max-width: none; margin-top: 0; }
+.coffre-question input { background: rgb(255 255 255 / .86); box-shadow: 0 1px 1px rgb(23 34 53 / .05) inset; }
+@media (max-width: 700px) { .coffre-hero { padding: 1.25rem !important; } .coffre-reperes { width: 100%; } .coffre-question { grid-template-columns: 1fr; padding: 1.25rem !important; } }
 
 @keyframes cascade-entree {
   from {
