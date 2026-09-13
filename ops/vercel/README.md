@@ -49,6 +49,12 @@ de l'intégration Git et ignore les builds hors `VERCEL_ENV=preview`. Cela ne
 retire pas les droits administrateur de déployer manuellement ni ne crée un
 projet Vercel absent.
 
+Le validateur impose aux projets `preview-only` les deux protections :
+`git.deploymentEnabled.main: false` et le préfixe littéral
+`if [ "$VERCEL_ENV" != "preview" ]; then exit 0; fi; ` dans `ignoreCommand`.
+Cette convention du dépôt évite d’exécuter une commande provenant d’une PR
+pendant la validation. Elle ne vérifie pas les réglages distants Vercel.
+
 ## Reprise — audit du 13 septembre 2026
 
 Les 7 IDs Amorce du registre concordent avec Vercel. Les accueils d'Amorce, du
