@@ -18,6 +18,7 @@ from capturer_page import (
     HAUTEUR_VIEWPORT,
     LARGEUR_VIEWPORT,
     capturer_url,
+    installer_filtre_reseau,
     nom_dossier_pour_url,
     sync_playwright,
 )
@@ -41,6 +42,7 @@ def produire(base: Commandes, session: str, captures: Path, chromium: str | None
             viewport={"width": LARGEUR_VIEWPORT, "height": HAUTEUR_VIEWPORT},
             device_scale_factor=FACTEUR_ECHELLE,
         )
+        installer_filtre_reseau(contexte)
         try:
             capturer_url(contexte.new_page(), commande["url"], captures)
         finally:
