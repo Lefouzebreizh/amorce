@@ -19,6 +19,7 @@ from capturer_page import (
     calculer_segments,
     capturer_et_decouper,
     capturer_url,
+    forcer_chargement_complet,
     installer_filtre_reseau,
     nom_dossier_pour_url,
     verifier_url_publique,
@@ -155,6 +156,64 @@ class TestCaptureRefusee(unittest.TestCase):
 
                     page.screenshot.assert_not_called()
                     page.wait_for_load_state.assert_not_called()
+
+
+class TestChargementComplet(unittest.TestCase):
+    def page_qui_defile(self, hauteurs):
+        page = unittest.mock.Mock()
+        hauteurs = iter(hauteurs)
+        position = 0
+
+        def evaluer(script):
+            nonlocal position
+            if script.startswith("window.scrollBy"):
+                position += 700
+            elif script == "document.documentElement.scrollHeight":
+                return next(hauteurs)
+            elif script == "window.scrollY + window.innerHeight":
+                return position + 900
+            else:
+                self.fail(f"Expression inattendue : {script}")
+
+        page.evaluate.side_effect = evaluer
+        return page
+
+    @patch("capturer_page.MAX_PAS_SCROLL", 3)
+    @patch("capturer_page.time.sleep")
+    def test_page_stable_atteinte_au_dernier_pas_acceptee(self, _pause):
+        page = self.page_qui_defile([3000, 3000, 3000])
+        forcer_chargement_complet(page)
+        page.wait_for_load_state.assert_called_once()
+
+    @patch("capturer_page.MAX_PAS_SCROLL", 3)
+    @patch("capturer_page.time.sleep")
+    def test_page_trop_longue_refusee(self, _pause):
+        page = self.page_qui_defile([10000, 10000, 10000])
+        with self.assertRaisesRegex(ValueError, "Chargement incomplet"):
+            forcer_chargement_complet(page)
+        page.wait_for_load_state.assert_not_called()
+
+    @patch("capturer_page.MAX_PAS_SCROLL", 3)
+    @patch("capturer_page.time.sleep")
+    def test_page_qui_grandit_encore_refusee(self, _pause):
+        page = self.page_qui_defile([1500, 2200, 2900])
+        with self.assertRaisesRegex(ValueError, "Chargement incomplet"):
+            forcer_chargement_complet(page)
+        page.wait_for_load_state.assert_not_called()
+
+    @patch("capturer_page.verifier_url_publique")
+    @patch("capturer_page.attendre_stabilite")
+    @patch("capturer_page.fermer_bandeaux_cookies", return_value=False)
+    @patch("capturer_page.forcer_chargement_complet", side_effect=ValueError("Chargement incomplet"))
+    @patch("capturer_page.capturer_et_decouper")
+    def test_chargement_incomplet_ne_produit_pas_de_captures(self, decouper, *_mocks):
+        page = unittest.mock.Mock()
+        page.goto.return_value.status = 200
+        with TemporaryDirectory() as temporaire:
+            with self.assertRaisesRegex(ValueError, "Chargement incomplet"):
+                capturer_url(page, "https://example.com", Path(temporaire))
+        decouper.assert_not_called()
+        page.screenshot.assert_not_called()
 
 
 class TestVerifierUrlPublique(unittest.TestCase):
