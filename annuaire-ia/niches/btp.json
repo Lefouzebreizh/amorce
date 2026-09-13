@@ -4,6 +4,7 @@
     "nom": "IA BTP",
     "emoji": "🏗️",
     "actif": false,
+    "activation_automatique": true,
     "domaine": "https://lefouzebreizh.github.io/amorce/btp/",
     "metier": "conducteurs de travaux et entreprises du bâtiment",
     "h1_accent": "L'IA du chantier",
