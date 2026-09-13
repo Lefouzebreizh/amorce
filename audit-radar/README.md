@@ -42,6 +42,18 @@ python3 radar.py add "https://exemple.fr" \
 python3 radar.py run --skip-discovery
 ```
 
+Un lot privé peut aussi être importé sans le publier dans le dépôt :
+
+```bash
+python3 radar.py import data/prospects-prives.csv
+```
+
+Les colonnes minimales sont `url,source,snippet,product`. Pour placer un dossier
+déjà vérifié dans la file, ajouter `status=review`, un `score` au-dessus du seuil,
+un `public_fact` vérifiable et `score_reasons` sous forme de liste JSON. Les
+colonnes facultatives `draft_subject` et `draft_body` permettent un message
+spécifique à l'annonce. Le fichier reste sous `data/`, donc ignoré par Git.
+
 Les messages approuvés restent des brouillons. Exporter ceux qui peuvent être
 envoyés depuis la boîte professionnelle :
 
