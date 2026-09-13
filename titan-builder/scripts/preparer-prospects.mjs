@@ -7,15 +7,32 @@ import path from 'node:path';
 
 const cle = x => String(x ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 const texte = x => typeof x === 'string' && x.trim().length > 0;
-const identites = p => [p.id, p.name, p.email, p.phone].map(cle).filter(Boolean);
+function telephoneCle(value) {
+  const raw = String(value ?? '').replace(/[\s().-]/g, '');
+  const local = raw.replace(/^(?:\+33|0033)0?([1-9]\d{8})$/, '0$1');
+  return /^0[1-9]\d{8}$/.test(local) ? local : cle(value);
+}
+const identites = p => [...[p.id, p.name, p.email].map(cle), telephoneCle(p.phone)].filter(Boolean);
 const sourceValide = x => { try { return ['https:', 'http:'].includes(new URL(Array.isArray(x) ? x[1] : x).protocol); } catch { return false; } };
 
 export function selectionner(input) {
   if (!input || !Array.isArray(input.prospects) || !Array.isArray(input.exclusions)) throw Error('prospects et exclusions doivent être des tableaux.');
   if (input.prospects.some(p => !p || typeof p !== 'object') || input.exclusions.some(p => !p || !['string', 'object'].includes(typeof p))) throw Error('Entrée invalide.');
-  const refuses = new Set(input.exclusions.flatMap(p => typeof p === 'string' ? [cle(p)] : identites(p)));
+  const refuses = new Set(input.exclusions.flatMap(p => typeof p === 'string' ? [cle(p), telephoneCle(p)] : identites(p)));
   // Une opposition trouvée plus bas dans le même lot bloque aussi le premier doublon.
   for (const p of input.prospects) if (p.opposition === true || p.sent === true || p.inactive === true) identites(p).forEach(k => refuses.add(k));
+  // Propage les exclusions entre alias liés : une troisième fiche ne doit pas
+  // passer parce qu'elle ne partage que le téléphone du deuxième alias bloqué.
+  let change = true;
+  while (change) {
+    change = false;
+    for (const p of input.prospects) {
+      const ids = identites(p);
+      if (ids.some(k => refuses.has(k))) for (const k of ids) {
+        if (!refuses.has(k)) { refuses.add(k); change = true; }
+      }
+    }
+  }
   const vus = new Set();
   return input.prospects.map(p => {
     if (!p || typeof p !== 'object') throw Error('Prospect invalide.');
