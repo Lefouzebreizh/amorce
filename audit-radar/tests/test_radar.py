@@ -46,6 +46,31 @@ class RadarTests(unittest.TestCase):
         row = self.db.execute("SELECT * FROM leads").fetchone()
         self.assertEqual(row["snippet"], "description plus longue")
 
+    def test_imports_prequalified_private_batch(self):
+        source = Path(self.temp.name) / "batch.csv"
+        source.write_text(
+            'url,source,snippet,product,status,score,public_fact,score_reasons\n'
+            'https://example.fr,Plateforme publique,Bug Stripe en production,Produit,review,8,'
+            'Le budget et le problème sont indiqués publiquement.,"[""Douleur précise (+2)""]"\n',
+            encoding="utf-8",
+        )
+        count = radar.import_leads(self.db, source, {"limits": {"minimum_score": 7}, "identity": {}})
+        self.assertEqual(count, 1)
+        row = self.db.execute("SELECT * FROM leads").fetchone()
+        self.assertEqual(row["status"], "review")
+        self.assertEqual(row["score"], 8)
+        self.assertIn("Répondez simplement", row["draft_body"])
+
+    def test_import_rejects_unqualified_review(self):
+        source = Path(self.temp.name) / "batch.csv"
+        source.write_text(
+            'url,source,snippet,product,status,score,public_fact,score_reasons\n'
+            'https://example.fr,Plateforme publique,Besoin flou,Produit,review,4,Fait public,[]\n',
+            encoding="utf-8",
+        )
+        with self.assertRaisesRegex(ValueError, "score minimal"):
+            radar.import_leads(self.db, source, {"limits": {"minimum_score": 7}})
+
     def test_draft_contains_boundary_and_opt_out(self):
         lead_id = radar.upsert_lead(self.db, "https://example.fr", "annuaire public", product="Produit")
         self.db.execute("UPDATE leads SET public_fact=? WHERE id=?", ("Une page tarifaire est visible.", lead_id))
