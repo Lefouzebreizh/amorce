@@ -10,6 +10,12 @@ en brouillon tant que les cases « preuve externe » ne sont pas remplies.
 - [x] Serveur Checkout : tests hors réseau réussis et typage gardé par la CI.
 - [x] Un paiement non confirmé ne crée pas de commande.
 - [x] Une session Stripe rejouée ne crée pas deux commandes.
+- [x] Contrat croisé local : webhook signé dans Node → réception WSGI Python
+  → SQLite relu dans un autre processus. Panne d'écriture puis reprise,
+  paiement non confirmé, signature invalide et rejeu incompatible contrôlés.
+  Le transport est remplacé dans ce test ; aucun appel Stripe ni HTTPS réel.
+  Ce test fait partie de `npm test` et la CI le relance aussi quand
+  `reception.py` ou `commandes.py` change.
 - [x] Un rapport modifié après relecture ne peut pas être envoyé.
 - [x] Une URL de redirection autre que `https://checkout.stripe.com` est refusée.
 - [x] La page garde le bouton désactivé tant que le serveur n'est pas configuré.
@@ -33,6 +39,18 @@ avec `encoding: "utf-8"` et `target: "preview"` a été refusée par Vercel (403
 permission de créer un aperçu de `amorce-pr953-audit-landing`). Il faut rétablir
 ce droit puis republier. Aucun changement de domaine ni promotion en production
 n'est requis pour cette correction.
+
+Nouvelle vérification le 13/09/2026 : le plugin Vercel est installé et actif,
+mais la lecture du projet dédié rend toujours 404. Aucun outil disponible ne
+permet de modifier les droits Vercel du compte connecté. Les permissions de
+confirmation des actions dans ChatGPT ne remplacent pas ces droits.
+
+La validation visuelle indépendante de la source locale a également été
+tentée dans le navigateur officiel : la navigation vers `127.0.0.1:8793` a
+été refusée avec `net::ERR_BLOCKED_BY_CLIENT`. Le serveur local a été arrêté.
+Aucune capture réelle ni validation visuelle nouvelle n'est revendiquée.
+Le workflow historique de capture lance aussi une analyse Anthropic ; il
+n'a pas été déclenché pour transformer ce blocage en faux succès.
 
 ## Configuration pilote recommandée
 

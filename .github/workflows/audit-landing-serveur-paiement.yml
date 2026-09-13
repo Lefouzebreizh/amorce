@@ -1,4 +1,4 @@
-# Vérification du serveur de paiement d'« Audit de page de vente en 24h ».
+# Vérification du serveur de paiement d'« Audit de page de vente ».
 #
 # Même patron que licence-serveur.yml : zéro dépendance d'exécution, le
 # compilateur est installé sans être enregistré dans package.json (qui doit
@@ -14,10 +14,14 @@ on:
     branches: [main]
     paths:
       - 'audit-landing/serveur-paiement/**'
+      - 'audit-landing/reception.py'
+      - 'audit-landing/commandes.py'
       - '.github/workflows/audit-landing-serveur-paiement.yml'
   pull_request:
     paths:
       - 'audit-landing/serveur-paiement/**'
+      - 'audit-landing/reception.py'
+      - 'audit-landing/commandes.py'
       - '.github/workflows/audit-landing-serveur-paiement.yml'
   workflow_dispatch:
 
@@ -41,6 +45,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+
+      # Le contrat webhook → réception exécute le vrai WSGI et SQLite.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: Tests
         if: ${{ !cancelled() }}
