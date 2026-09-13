@@ -41,6 +41,7 @@ commandes=(
   "Amorce : npm run typecheck|lint|test"
   "Socle Agence : (dans agence/) npm run lint|typecheck|test|build"
   "Artisan Express : (dans artisan-express/) npm run lint|typecheck|test|build"
+  "Radar Reprise IA : cd audit-radar && python3 -m unittest discover -s tests"
   "Hypersensible : (dans hypersensible-bienveillance/) npm test, npm run check, npm run build"
   "Look & Find : flutter analyze|test"
   "KDP : python3 kdp/pipeline/valider.py, python3 -m unittest discover -s kdp/tests"
