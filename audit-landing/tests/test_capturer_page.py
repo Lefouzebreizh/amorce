@@ -11,7 +11,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from capturer_page import Segment, calculer_segments, nom_dossier_pour_url
+from unittest.mock import patch
+
+from capturer_page import (
+    Segment,
+    calculer_segments,
+    installer_filtre_reseau,
+    nom_dossier_pour_url,
+    verifier_url_publique,
+)
 
 
 class TestCalculerSegments(unittest.TestCase):
@@ -66,6 +74,47 @@ class TestNomDossierPourUrl(unittest.TestCase):
 
     def test_schema_absent_tolere(self):
         self.assertEqual(nom_dossier_pour_url("payfit.com/fr"), "payfit-com-fr")
+
+
+class TestVerifierUrlPublique(unittest.TestCase):
+    @patch("capturer_page.socket.getaddrinfo", return_value=[(2, 1, 6, "", ("93.184.216.34", 443))])
+    def test_accepte_un_domaine_public(self, _dns):
+        verifier_url_publique("https://example.com/vente")
+
+    @patch("capturer_page.socket.getaddrinfo", return_value=[(2, 1, 6, "", ("127.0.0.1", 80))])
+    def test_refuse_loopback(self, _dns):
+        with self.assertRaisesRegex(ValueError, "locale ou privée"):
+            verifier_url_publique("http://localhost/admin")
+
+    @patch("capturer_page.socket.getaddrinfo", return_value=[(2, 1, 6, "", ("169.254.169.254", 80))])
+    def test_refuse_metadonnees_cloud(self, _dns):
+        with self.assertRaises(ValueError):
+            verifier_url_publique("http://169.254.169.254/latest/meta-data")
+
+    @patch("capturer_page.socket.getaddrinfo", return_value=[
+        (2, 1, 6, "", ("93.184.216.34", 443)),
+        (2, 1, 6, "", ("10.0.0.5", 443)),
+    ])
+    def test_refuse_un_dns_mixte_public_prive(self, _dns):
+        with self.assertRaises(ValueError):
+            verifier_url_publique("https://rebinding.example")
+
+    def test_refuse_identifiants_et_protocoles_non_web(self):
+        for url in ("https://user:secret@example.com", "file:///etc/passwd", "ftp://example.com"):
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                verifier_url_publique(url)
+
+    @patch("capturer_page.verifier_url_publique")
+    def test_filtre_intercepte_une_redirection_privee(self, verifier):
+        contexte = unittest.mock.Mock()
+        installer_filtre_reseau(contexte)
+        filtrer = contexte.route.call_args.args[1]
+        route = unittest.mock.Mock()
+        route.request.url = "http://127.0.0.1/admin"
+        verifier.side_effect = ValueError("privée")
+        filtrer(route)
+        route.abort.assert_called_once_with("blockedbyclient")
+        route.continue_.assert_not_called()
 
 
 if __name__ == "__main__":

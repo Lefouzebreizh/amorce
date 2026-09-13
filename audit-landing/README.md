@@ -25,19 +25,19 @@ dans un navigateur, sans serveur ni build. `site/exemple-rapport.html` est un
 vrai rapport produit par `rapport_html.py` sur un site fictif
 (`exemple-saas.com`) — pas une maquette, le même rendu qu'un client recevrait.
 
-Le formulaire de commande (adresse de la page à auditer + bouton) appelle
-`serveur-paiement/` — voir son README pour ce qui est vérifié et ce qui reste
-à déployer. **Tant que ce serveur n'est pas déployé et configuré**, le
-formulaire échoue proprement et affiche « Paiement en ligne sécurisé —
-bientôt disponible » plutôt que de laisser croire qu'un paiement est
-possible — même principe que `artisan-express/` : ce qui n'est pas réglé (ici,
-le prix et l'adresse du serveur) ne s'invente pas, il se dit absent.
+Les commandes sont fermées par défaut : bouton désactivé et indisponibilité
+annoncée avant toute saisie. Aucun appel ne part vers un serveur fictif.
+Avant ouverture : valider le prix, afficher le tarif et un contact réel,
+renseigner le serveur de paiement, puis tester paiement, déclenchement,
+relecture et livraison. Aucun délai réel de livraison n'a été vérifié ici.
 
-Vérifié à l'œil, dans un vrai Chromium, plein format et largeur téléphone
-(393 px) : aucun débordement horizontal, aucune erreur console, le lien vers
-l'exemple de rapport navigue bien, et les deux chemins du formulaire ont été
-exercés — sans backend (message honnête affiché) et avec un backend simulé
-(redirection réelle vers l'adresse de paiement rendue).
+Contrôle qualité ajouté le 12/09/2026 : les constats doivent référencer une
+capture effectivement envoyée au modèle ; notes non entières et observations
+vides sont refusées. Le prompt distingue hypothèses et observations et interdit
+les preuves commerciales inventées. Cela ne remplace pas une relecture humaine.
+
+Vérification de ce lot : tests Python de l'analyse et du rendu HTML. Le contrôle
+visuel reste à faire : le navigateur de cette session refuse l'aperçu local.
 
 ## Défaut corrigé : tranches blanches sur `qonto.com/fr`
 
@@ -379,3 +379,80 @@ donc exécutable sur n'importe quel runner. La partie qui pilote réellement
 Chromium (fermeture des bandeaux, scroll, capture) n'est pas testée
 unitairement : c'est un parcours d'intégration, vérifié à l'œil ci-dessus
 plutôt que simulé.
+
+## Registre durable des commandes (`commandes.py`)
+
+Module préparatoire pour un processus hébergé sur disque persistant (VPS, par
+exemple). SQLite est fourni par Python : aucune base de production existante
+n'a été modifiée. La session Stripe identifie une seule commande ; une session
+rejouée avec une autre URL ou un autre destinataire est refusée. Une transition
+atomique réserve le traitement à un processus. Le rapport doit passer par
+relecture puis approbation nominative ; son empreinte est contrôlée avant
+préparation de l'envoi, qui retourne exactement les octets approuvés.
+
+Un envoi incertain reste en état `envoi`, visible via `a_traiter()` : vérifier
+le journal du fournisseur avant toute reprise. `envoye` signifie accepté par
+le fournisseur avec identifiant, pas livré dans la boîte du client.
+
+**Portée : module testé localement, pas encore raccordé au webhook, au
+workflow GitHub ou à Resend.** Il ne doit pas être utilisé sur le disque
+éphémère d'un runner GitHub pour prétendre garantir une déduplication durable.
+Le prochain raccordement doit choisir un hébergement persistant, protéger les
+opérations de relecture et organiser la reprise des traitements interrompus.
+Aucun envoi automatique ni ouverture de vente n'est activé par ce module.
+
+### Console opérateur du pilote (`operateur.py`)
+
+Le chaînon entre la réception et les modules existants est désormais explicite.
+Sur l'hébergement persistant, l'opérateur peut lister les commandes, produire
+les captures et le rapport, l'approuver nominativement après lecture, puis le
+livrer. Chaque étape vérifie l'état du registre ; relancer `produire` sur une
+session déjà prise est refusé.
+
+```bash
+python audit-landing/operateur.py --base /donnees/commandes.sqlite lister
+python audit-landing/operateur.py --base /donnees/commandes.sqlite produire cs_test_... --captures /donnees/captures
+python audit-landing/operateur.py --base /donnees/commandes.sqlite approuver cs_test_... --relecteur "Nom"
+RESEND_API_KEY=... AUDIT_EXPEDITEUR=... python audit-landing/operateur.py --base /donnees/commandes.sqlite livrer cs_test_...
+```
+
+Cette console rend un pilote manuel de bout en bout exploitable ; elle ne
+constitue pas encore un traitement autonome. Une erreur après la prise reste
+visible à l'état `echec_analyse`, avec un message borné. Après examen, la
+commande peut être replacée volontairement en attente avec `reprendre` ; aucune
+relance automatique ne risque de dupliquer le travail.
+
+Les URLs commandées sont contrôlées avant navigation : seuls HTTP/HTTPS sans
+identifiants sont acceptés et toute résolution vers localhost, une adresse
+privée, locale, réservée ou de métadonnées cloud est refusée. Le filtre couvre
+aussi les redirections et sous-ressources. Ce garde-fou est obligatoire lorsque
+Chromium tourne sur le VPS ; il empêche qu'un audit acheté serve à lire une
+ressource interne.
+
+
+Vérification : 47 tests Python réussis, dont 5 tests du registre (redémarrage,
+concurrence, relecture, intégrité du rapport et envoi interrompu).
+
+### Adaptateur Resend (`livraison.py`)
+
+`livrer(base, session, cle_resend=..., expediteur=...)` raccorde le registre
+à l'API Resend. Il joint les octets exacts du rapport HTML approuvé, adresse
+le courriel au destinataire enregistré et conserve l'identifiant fournisseur.
+Aucun envoi n'a lieu à l'import. Clé et expéditeur vérifié sont obligatoires ;
+ils ne sont ni inventés ni enregistrés dans Git.
+
+La pièce jointe permet de remettre le rapport sans exposer un artefact GitHub
+privé au client. Le brouillon Resend à lien créé précédemment n'est pas utilisé
+par cet adaptateur. L'acceptation de pièces jointes HTML par les boîtes clientes
+reste à vérifier par un essai réel avant ouverture.
+
+L'appel possède une clé d'idempotence stable ; la documentation Resend indique
+une conservation de 24 heures. La prévention durable des réémissions repose
+sur le registre, pas sur cette durée. Toute panne ou réponse sans identifiant
+laisse `envoi` visible et nécessite rapprochement avec les journaux Resend.
+Source : https://resend.com/docs/api-reference/emails/send-email .
+
+52 tests Python passent, dont 5 scénarios de livraison avec transport simulé.
+Aucun courriel réel n'a été envoyé. Restent le raccordement du webhook au
+registre persistant, le déploiement, la reprise opérateur et la validation du
+parcours externe complet. Le module d'envoi seul ne résout pas ces étapes.

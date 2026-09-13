@@ -6,7 +6,8 @@ copie assumée, voir son en-tête) :
 
 - **`POST /creer-session`** — reçoit `{ url }`, crée une session Stripe
   Checkout (mode paiement unique) pour le prix configuré, pose l'URL du
-  client en métadonnée (`url_a_auditer`) et rend l'adresse de paiement.
+  client en métadonnée (`url_a_auditer`) et rend uniquement une adresse HTTPS
+  de `checkout.stripe.com`.
 - **`POST /webhook`** — vérifie la signature Stripe, et sur
   `checkout.session.completed`, relit l'URL en métadonnée et déclenche
   `.github/workflows/audit-landing-lancer-audit.yml` via
@@ -23,13 +24,13 @@ inventé. **Ce qui manque avant tout déploiement réel** :
 1. Créer le produit et son prix dans le tableau de bord Stripe (test, puis
    live une fois validé), et renseigner `idPrixStripe` avec l'ID du prix
    (`price_...`).
-2. Un jeton GitHub à portée strictement limitée à `repository_dispatch` sur
-   ce dépôt, pour `jetonDeclenchement`.
-3. Le secret du webhook Stripe (`whsec_...`), obtenu en créant l'endpoint
+   Utiliser une clé restreinte dédiée à la création de sessions Checkout,
+   séparée entre test et production, plutôt qu'une clé secrète générale.
+2. Le secret du webhook Stripe (`whsec_...`), obtenu en créant l'endpoint
    dans le tableau de bord Stripe une fois ce serveur déployé.
-4. `secrets.ANTHROPIC_API_KEY` sur ce dépôt GitHub, pour que
+3. Une clé d'analyse disponible sur le processus opérateur, pour que
    `audit-landing-lancer-audit.yml` puisse appeler `analyser_captures.py`.
-5. Le déploiement lui-même (Cloudflare Worker, comme `licence-serveur/`) —
+4. Le déploiement lui-même (Cloudflare Worker, comme `licence-serveur/`) —
    **pas fait depuis cette session**, et volontairement : c'est un geste
    d'infrastructure sur un compte auquel cette session n'a pas la main, et
    toucher aux paiements est une zone sensible du dépôt (`CLAUDE.md`,
@@ -61,8 +62,7 @@ explicite, pas en silence. Ce qui est vérifié à la place, en tests hors ligne
 - le déclenchement de `repository_dispatch` avec l'URL et l'identifiant de
   session sur un paiement confirmé, et son absence sur tout autre type
   d'événement ;
-- qu'un échec du déclenchement ne fait pas échouer la réponse au webhook
-  (sans quoi Stripe rejouerait l'événement pendant des jours).
+- qu’un échec du déclenchement rend 503 pour permettre une nouvelle tentative.
 
 **Et le formulaire de commande de `site/index.html` est vérifié à l'œil**,
 dans un vrai Chromium : sans backend déployé, il affiche la même note
@@ -81,3 +81,35 @@ encore déclenché. Voir son en-tête.
 npm test        # dix tests, sans réseau ni clé
 npm run typecheck
 ```
+
+
+## Contrôle du 12/09/2026 — proposition Codex
+
+12 tests hors réseau réussis. Le prévol OPTIONS est pris en charge pour les
+origines configurées. Seul un statut `paid` déclenche l’analyse ; les paiements
+asynchrones confirmés sont également écoutés. Un refus GitHub rend 503 au lieu
+d’accuser réception d’une commande perdue.
+
+Références : https://docs.stripe.com/checkout/fulfillment et
+https://docs.stripe.com/webhooks .
+
+Blocages avant ouverture : déduplication durable par session Stripe (la
+concurrence du workflow ne suffit pas), livraison au client après relecture,
+configuration réelle et essai complet. Les nouvelles tentatives peuvent
+actuellement produire plusieurs audits : ne pas ouvrir la vente en cet état.
+Le rapport stocké en artefact GitHub ne constitue pas une livraison client.
+
+## Raccordement durable préparé (branche Codex)
+
+Le webhook utilise désormais `receptionCommandes: {url, secret}` pour appeler
+`reception.py` sur `/commandes`, après vérification de signature et du statut
+payé. La réception acquitte seulement après l'écriture SQLite. Les doublons
+identiques rendent 200 ; une commande incompatible rend 409 ; une panne rend
+503. La création Checkout refuse une configuration de réception absente.
+
+Cette version remplace l'appel direct à GitHub : le workflow historique ne se
+lance donc plus depuis ce webhook. Le consommateur de la file, l'hébergement
+WSGI avec HTTPS et les secrets restent à configurer avant toute ouverture.
+Ce changement n'est pas déployé. Les scénarios locaux ne prouvent pas un
+parcours Stripe réel. Le secret partagé ne remplace pas la signature Stripe :
+la réception est un service interne réservé au serveur qui l'a vérifiée.

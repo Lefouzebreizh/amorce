@@ -1,22 +1,14 @@
 import { signatureValide } from './signature.ts';
 
-/**
- * Le serveur de paiement de « Audit de page de vente en 24h ».
- *
- * Deux routes : `/creer-session` crée une session Stripe Checkout pour la
- * page que le client veut faire auditer, `/webhook` reçoit la confirmation
- * de paiement et déclenche l'analyse. Sans dépendance — comme
- * `licence-serveur/`, dont il reprend la mécanique de vérification de
- * signature — la plateforme fournit `Request`, `Response`, `fetch` et
- * `crypto.subtle`.
- *
- * **Ce qu'il ne fait pas** : il ne stocke rien. Contrairement à
- * `licence-serveur/`, aucune clé à vérifier plus tard — la seule question
- * qu'il tranche est « ce paiement vient-il de se confirmer », et la réponse
- * part immédiatement vers GitHub Actions plutôt que dans une base.
+/** Serveur Checkout et webhook Stripe.
+ * Après vérification du paiement, transmet la commande à une réception HTTPS
+ * qui l'enregistre durablement. Aucun repository_dispatch dans cette version.
+ * Le traitement et la livraison sont assurés séparément sur stockage persistant.
  */
 
 export type Reglages = {
+  /** Réception HTTPS sur disque persistant ; vide : livraison durable indisponible. */
+  receptionCommandes?: { url: string; secret: string };
   /** Clé secrète Stripe (test ou live selon le déploiement) — jamais committée. */
   cleSecreteStripe: string;
   /**
@@ -30,10 +22,6 @@ export type Reglages = {
   idPrixStripe: string;
   /** Secret de signature du webhook Stripe. */
   secretWebhook: string;
-  /** Jeton GitHub à portée minimale (`repository_dispatch` seulement). */
-  jetonDeclenchement: string;
-  /** Dépôt à notifier, forme `proprietaire/depot`. */
-  depotDeclenchement: string;
   /** Origines autorisées à appeler `/creer-session` depuis un navigateur. */
   origines: string[];
   urlSucces: string;
@@ -66,7 +54,13 @@ function urlPlausible(valeur: unknown): valeur is string {
   if (typeof valeur !== 'string') return false;
   try {
     const u = new URL(valeur);
-    return u.protocol === 'http:' || u.protocol === 'https:';
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+    const hote = u.hostname.toLowerCase();
+    // Le contrôle DNS complet appartient au moteur de capture. Ici, avant
+    // encaissement, on refuse déjà les noms locaux et toutes les IP littérales.
+    if (hote === 'localhost' || hote.endsWith('.localhost')) return false;
+    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hote) || hote.startsWith('[')) return false;
+    return hote.includes('.');
   } catch {
     return false;
   }
@@ -81,6 +75,10 @@ async function creerSession(requete: Request, r: Reglages): Promise<Response> {
     // requête — même ordre que generation-serveur : un prix inconnu ne se
     // contourne par aucun autre chemin.
     return erreur('produit pas encore configuré (prix manquant)', 503, partage);
+  }
+
+  if (!r.receptionCommandes || r.receptionCommandes.secret.length < 32) {
+    return erreur('réception des commandes non configurée', 503, partage);
   }
 
   let corps: unknown;
@@ -98,6 +96,7 @@ async function creerSession(requete: Request, r: Reglages): Promise<Response> {
   params.set('mode', 'payment');
   params.set('line_items[0][price]', r.idPrixStripe);
   params.set('line_items[0][quantity]', '1');
+  params.set('integration_identifier', 'amorceaudit-kzqvtrpn');
   params.set('success_url', r.urlSucces);
   params.set('cancel_url', r.urlAnnulation);
   // C'est cette métadonnée que /webhook relit pour savoir quelle page
@@ -109,6 +108,7 @@ async function creerSession(requete: Request, r: Reglages): Promise<Response> {
     headers: {
       'authorization': `Basic ${btoa(`${r.cleSecreteStripe}:`)}`,
       'content-type': 'application/x-www-form-urlencoded',
+      'stripe-version': '2026-07-29.dahlia',
     },
     body: params.toString(),
   });
@@ -121,6 +121,14 @@ async function creerSession(requete: Request, r: Reglages): Promise<Response> {
 
   const session = (await reponse.json()) as { url?: string };
   if (!session.url) return erreur('réponse Stripe sans adresse de paiement', 502, partage);
+  try {
+    const adressePaiement = new URL(session.url);
+    if (adressePaiement.protocol !== 'https:' || adressePaiement.hostname !== 'checkout.stripe.com') {
+      return erreur('réponse Stripe avec adresse de paiement refusée', 502, partage);
+    }
+  } catch {
+    return erreur('réponse Stripe avec adresse de paiement invalide', 502, partage);
+  }
 
   return new Response(JSON.stringify({ url: session.url }), {
     status: 200,
@@ -129,37 +137,32 @@ async function creerSession(requete: Request, r: Reglages): Promise<Response> {
 }
 
 /**
- * Notifie GitHub Actions qu'un audit payé attend d'être lancé.
+ * Enregistre un audit payé auprès de la réception durable.
  *
- * N'échoue jamais bruyamment vers l'appelant : un `repository_dispatch`
- * raté ne doit pas faire échouer la réponse au webhook Stripe, sans quoi
- * Stripe rejoue l'événement pendant des jours pour une cause qui n'est pas
- * la sienne (voir `licence-serveur/src/index.ts`, même raison pour le 200
- * systématique). Rend `true`/`false` pour que l'appelant puisse au moins le
- * journaliser.
+ * Rend false en cas de refus ou de panne : le webhook doit alors rendre
+ * un 503 pour conserver les nouvelles tentatives de Stripe.
  */
 async function declencherAnalyse(
   r: Reglages,
   charge: { url: string; sessionId: string; email: string | null },
 ): Promise<boolean> {
   const appelerFetch = r.fetch ?? fetch;
+  const reception = r.receptionCommandes;
+  if (!reception || reception.secret.length < 32) return false;
   try {
-    const reponse = await appelerFetch(
-      `https://api.github.com/repos/${r.depotDeclenchement}/dispatches`,
-      {
-        method: 'POST',
-        headers: {
-          'authorization': `Bearer ${r.jetonDeclenchement}`,
-          'accept': 'application/vnd.github+json',
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          event_type: 'nouvel-audit-paye',
-          client_payload: { url: charge.url, session_id: charge.sessionId, email: charge.email },
-        }),
+    const adresse = new URL(reception.url);
+    if (adresse.protocol !== 'https:' || adresse.username || adresse.password) return false;
+    const reponse = await appelerFetch(reception.url, {
+      method: 'POST',
+      redirect: 'error',
+      signal: AbortSignal.timeout(10000),
+      headers: {
+        'authorization': `Bearer ${reception.secret}`,
+        'content-type': 'application/json',
       },
-    );
-    return reponse.ok;
+      body: JSON.stringify(charge),
+    });
+    return reponse.status === 200 || reponse.status === 201;
   } catch {
     return false;
   }
@@ -179,8 +182,9 @@ async function webhook(requete: Request, r: Reglages): Promise<Response> {
     return new Response('corps illisible', { status: 400 });
   }
 
-  if (evenement.type === 'checkout.session.completed') {
+  if (evenement.type === 'checkout.session.completed' || evenement.type === 'checkout.session.async_payment_succeeded') {
     const objet = evenement.data?.object ?? {};
+    if (objet.payment_status !== 'paid') return new Response('paiement en attente', { status: 200 });
     const sessionId = typeof objet.id === 'string' ? objet.id : '';
     const metadata = (objet.metadata ?? {}) as Record<string, unknown>;
     const url = typeof metadata.url_a_auditer === 'string' ? metadata.url_a_auditer : '';
@@ -188,20 +192,30 @@ async function webhook(requete: Request, r: Reglages): Promise<Response> {
     const email = typeof details.email === 'string' ? details.email : null;
 
     if (sessionId && url) {
-      await declencherAnalyse(r, { url, sessionId, email });
+      if (!await declencherAnalyse(r, { url, sessionId, email })) {
+        return new Response('déclenchement temporairement indisponible', { status: 503 });
+      }
     }
     // Une session sans URL en métadonnée ne devrait pas exister (elle vient
     // toujours de /creer-session, qui l'y pose) — mais si Stripe l'envoie
     // quand même, on ne bloque pas le webhook pour autant : rien à déclencher.
   }
 
-  // Toujours 200, même pour un type qu'on n'écoute pas : Stripe réessaie
-  // tout ce qui n'est pas un 2xx pendant des jours.
+  // Accuser réception des événements ignorés et des déclenchements acceptés.
   return new Response('ok', { status: 200 });
 }
 
 export async function traiter(requete: Request, r: Reglages): Promise<Response> {
   const chemin = new URL(requete.url).pathname;
+  if (chemin === '/creer-session' && requete.method === 'OPTIONS') {
+    const origine = requete.headers.get('Origin');
+    if (!origine || !r.origines.includes(origine)) return new Response('origine refusée', { status: 403 });
+    return new Response(null, { status: 204, headers: {
+      ...entetesOrigine(requete, r.origines),
+      'access-control-allow-methods': 'POST',
+      'access-control-allow-headers': 'content-type',
+    } });
+  }
   if (chemin === '/creer-session' && requete.method === 'POST') return creerSession(requete, r);
   if (chemin === '/webhook' && requete.method === 'POST') return webhook(requete, r);
   return new Response('introuvable', { status: 404 });

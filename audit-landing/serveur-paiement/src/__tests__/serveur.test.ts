@@ -7,10 +7,9 @@ const SECRET_WEBHOOK = 'whsec_test';
 function reglages(partiel: Partial<Reglages> = {}): Reglages {
   return {
     cleSecreteStripe: 'sk_test_123',
+    receptionCommandes: {url: 'https://registre.example/commandes', secret: 's'.repeat(32)},
     idPrixStripe: 'price_test_abc',
     secretWebhook: SECRET_WEBHOOK,
-    jetonDeclenchement: 'ghp_test',
-    depotDeclenchement: 'Lefouzebreizh/amorce',
     origines: ['https://audit-page-de-vente.example'],
     urlSucces: 'https://audit-page-de-vente.example/merci',
     urlAnnulation: 'https://audit-page-de-vente.example/annule',
@@ -34,6 +33,7 @@ const evenementPaye = (sessionId: string, url: string, email: string | null = 'c
     data: {
       object: {
         id: sessionId,
+        payment_status: 'paid',
         metadata: { url_a_auditer: url },
         customer_details: { email },
       },
@@ -54,7 +54,10 @@ test('refuse de créer une session si le prix n\'est pas configuré', async () =
 
 test('refuse une adresse absente, malformée ou non http(s)', async () => {
   const r = reglages();
-  for (const corps of [{}, { url: 'pas-une-url' }, { url: 'ftp://exemple.com' }, { url: 42 }]) {
+  for (const corps of [
+    {}, { url: 'pas-une-url' }, { url: 'ftp://exemple.com' }, { url: 42 },
+    { url: 'http://localhost/admin' }, { url: 'http://127.0.0.1' }, { url: 'http://[::1]' },
+  ]) {
     const requete = new Request('https://x/creer-session', { method: 'POST', body: JSON.stringify(corps) });
     const reponse = await traiter(requete, r);
     assert.equal(reponse.status, 400, JSON.stringify(corps));
@@ -97,8 +100,10 @@ test('crée une session Stripe et rend son adresse de paiement', async () => {
   assert.equal(params.get('mode'), 'payment');
   assert.equal(params.get('line_items[0][price]'), 'price_test_abc');
   assert.equal(params.get('line_items[0][quantity]'), '1');
+  assert.equal(params.get('integration_identifier'), 'amorceaudit-kzqvtrpn');
   assert.equal(params.get('metadata[url_a_auditer]'), 'https://client-exemple.com/page-de-vente');
   assert.equal(requete2.headers.get('authorization'), `Basic ${btoa('sk_test_123:')}`);
+  assert.equal(requete2.headers.get('stripe-version'), '2026-07-29.dahlia');
 });
 
 test('un refus de Stripe rend une erreur générique, sans détail interne', async () => {
@@ -112,6 +117,16 @@ test('un refus de Stripe rend une erreur générique, sans détail interne', asy
   assert.equal(reponse.status, 502);
   const donnees = (await reponse.json()) as { erreur: string };
   assert.ok(!donnees.erreur.includes('price_bidon'));
+});
+
+test('refuse une redirection qui ne vient pas de Stripe Checkout', async () => {
+  const fetchFactice: typeof fetch = async () =>
+    new Response(JSON.stringify({ url: 'https://attaquant.example/payer' }), { status: 200 });
+  const requete = new Request('https://x/creer-session', {
+    method: 'POST', body: JSON.stringify({ url: 'https://exemple.com' }),
+  });
+  const reponse = await traiter(requete, reglages({ fetch: fetchFactice }));
+  assert.equal(reponse.status, 502);
 });
 
 // -------------------------------------------------------------- /webhook
@@ -130,17 +145,17 @@ test('une signature forgée, absente ou rejouée est refusée', async () => {
       body: corps,
       headers: entete ? { 'Stripe-Signature': entete } : {},
     });
-    const reponse = await traiter(requete, reglages());
+    const reponse = await traiter(requete, reglages({ fetch: async () => new Response(null, {status: 201}) }));
     if (nom === 'signée juste') assert.equal(reponse.status, 200, nom);
     else assert.equal(reponse.status, 400, nom);
   }
 });
 
-test('un paiement confirmé déclenche repository_dispatch avec l\'URL et la session', async () => {
-  let requeteGitHub: Request | null = null;
+test('un paiement confirmé déclenche la réception durable avec l\'URL et la session', async () => {
+  let requeteReception: Request | null = null;
   const fetchFactice: typeof fetch = async (url, init) => {
-    requeteGitHub = new Request(url as string, init);
-    return new Response('', { status: 204 });
+    requeteReception = new Request(url as string, init);
+    return new Response(null, { status: 201 });
   };
 
   const corps = evenementPaye('cs_test_42', 'https://client-exemple.com/vente', 'ada@exemple.com');
@@ -152,18 +167,17 @@ test('un paiement confirmé déclenche repository_dispatch avec l\'URL et la ses
   const reponse = await traiter(requete, reglages({ fetch: fetchFactice }));
 
   assert.equal(reponse.status, 200);
-  if (!requeteGitHub) throw new Error('aucune requête envoyée à GitHub');
-  const requeteG: Request = requeteGitHub;
-  assert.equal(requeteG.url, 'https://api.github.com/repos/Lefouzebreizh/amorce/dispatches');
-  assert.equal(requeteG.headers.get('authorization'), 'Bearer ghp_test');
+  if (!requeteReception) throw new Error('aucune requête envoyée à la réception');
+  const requeteG: Request = requeteReception;
+  assert.equal(requeteG.url, 'https://registre.example/commandes');
+  assert.equal(requeteG.headers.get('authorization'), 'Bearer ' + 's'.repeat(32));
   const charge = JSON.parse(await requeteG.text());
-  assert.equal(charge.event_type, 'nouvel-audit-paye');
-  assert.equal(charge.client_payload.url, 'https://client-exemple.com/vente');
-  assert.equal(charge.client_payload.session_id, 'cs_test_42');
-  assert.equal(charge.client_payload.email, 'ada@exemple.com');
+  assert.equal(charge.url, 'https://client-exemple.com/vente');
+  assert.equal(charge.sessionId, 'cs_test_42');
+  assert.equal(charge.email, 'ada@exemple.com');
 });
 
-test('un type d\'événement non écouté rend 200 sans appeler GitHub', async () => {
+test('un type d\'événement non écouté rend 200 sans appeler la réception', async () => {
   let appele = false;
   const fetchFactice: typeof fetch = async () => {
     appele = true;
@@ -180,9 +194,8 @@ test('un type d\'événement non écouté rend 200 sans appeler GitHub', async (
   assert.equal(appele, false);
 });
 
-test('un échec de repository_dispatch ne fait pas échouer la réponse au webhook', async () => {
-  // Stripe rejouerait pendant des jours un webhook en erreur, pour une cause
-  // (GitHub indisponible) qui n'est jamais la sienne.
+test('un échec de la réception durable rend 503 pour permettre une nouvelle tentative', async () => {
+  // Un échec d'enregistrement doit rester rejouable.
   const fetchFactice: typeof fetch = async () => new Response('erreur', { status: 500 });
   const corps = evenementPaye('cs_2', 'https://exemple.com');
   const requete = new Request('https://x/webhook', {
@@ -191,10 +204,29 @@ test('un échec de repository_dispatch ne fait pas échouer la réponse au webho
     headers: { 'Stripe-Signature': await signer(corps) },
   });
   const reponse = await traiter(requete, reglages({ fetch: fetchFactice }));
-  assert.equal(reponse.status, 200);
+  assert.equal(reponse.status, 503);
 });
 
 test('un chemin inconnu rend 404', async () => {
   const reponse = await traiter(new Request('https://x/autre-chose', { method: 'GET' }), reglages());
   assert.equal(reponse.status, 404);
+});
+
+
+test('le prévol CORS autorise uniquement une origine configurée', async () => {
+  for (const [origin, status] of [['https://audit-page-de-vente.example', 204], ['https://intrus.example', 403]] as const) {
+    const response = await traiter(new Request('https://x/creer-session', {method: 'OPTIONS', headers: {Origin: origin}}), reglages());
+    assert.equal(response.status, status);
+    if (status === 204) assert.equal(response.headers.get('access-control-allow-headers'), 'content-type');
+  }
+});
+
+test('une session non payée ne déclenche pas d’analyse', async () => {
+  const event = JSON.parse(evenementPaye('cs_pending', 'https://example.com'));
+  event.data.object.payment_status = 'unpaid';
+  const body = JSON.stringify(event);
+  let calls = 0;
+  const response = await traiter(new Request('https://x/webhook', {method: 'POST', body, headers: {'Stripe-Signature': await signer(body)}}), reglages({fetch: async () => { calls++; return new Response(null, {status: 201}); }}));
+  assert.equal(response.status, 200);
+  assert.equal(calls, 0);
 });
