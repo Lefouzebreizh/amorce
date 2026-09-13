@@ -96,6 +96,7 @@ async function creerSession(requete: Request, r: Reglages): Promise<Response> {
   params.set('mode', 'payment');
   params.set('line_items[0][price]', r.idPrixStripe);
   params.set('line_items[0][quantity]', '1');
+  params.set('integration_identifier', 'amorceaudit-kzqvtrpn');
   params.set('success_url', r.urlSucces);
   params.set('cancel_url', r.urlAnnulation);
   // C'est cette métadonnée que /webhook relit pour savoir quelle page
@@ -107,6 +108,7 @@ async function creerSession(requete: Request, r: Reglages): Promise<Response> {
     headers: {
       'authorization': `Basic ${btoa(`${r.cleSecreteStripe}:`)}`,
       'content-type': 'application/x-www-form-urlencoded',
+      'stripe-version': '2026-07-29.dahlia',
     },
     body: params.toString(),
   });
