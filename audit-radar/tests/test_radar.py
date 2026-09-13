@@ -8,6 +8,7 @@ from unittest.mock import patch
 from pathlib import Path
 
 MODULE_PATH = Path(__file__).parents[1] / "radar.py"
+sys.path.insert(0, str(MODULE_PATH.parent))
 SPEC = importlib.util.spec_from_file_location("radar", MODULE_PATH)
 radar = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
