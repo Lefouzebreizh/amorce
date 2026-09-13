@@ -151,6 +151,31 @@ peut échouer si le modèle répète un outil ; la trace JSONL permet alors de
 distinguer ce choix du modèle d'une perte de résultat dans le transport. Ces
 deux sondes consomment du quota et gardent leurs preuves sous `.runtime`.
 
+### OpenClaw local isolé
+
+OpenClaw 2026.9.4 a été installé dans `%LOCALAPPDATA%\\OpenClawPilot` avec
+les scripts npm désactivés, sans onboarding, canal, plugin communautaire ni
+service. Le profil `omni-pilot` utilise `openclaw.example.json` comme base :
+passerelle sur loopback avec jeton, navigateur et outils élevés désactivés,
+profil d'outils minimal et mémoire en mode lexical (`provider: "none"`) pour
+éviter les embeddings externes.
+
+`openclaw-via-omniroute.mjs` lit la clé OmniRoute dédiée et le jeton OpenClaw
+depuis leurs fichiers locaux, puis les injecte uniquement dans l'environnement
+du processus. Aucun secret n'est écrit dans la configuration versionnée.
+
+Le 13 septembre 2026, un tour OpenClaw local a appelé
+`http://127.0.0.1:20129/v1/messages`, reçu HTTP 200 et retourné exactement
+`OPENCLAW_OMNIROUTE_OK`, sans fallback. Après durcissement, un second tour a
+retourné `OPENCLAW_HARDENED_OK` sans tentative d'embedding externe. L'audit
+OpenClaw indique 0 critique ; l'unique avertissement concerne les proxys de
+confiance et reste attendu tant que le service demeure strictement local.
+
+La commande éphémère `agent exec --config` atteint aussi le modèle, mais
+OpenClaw 2026.9.4 échoue ensuite sous Windows en nettoyant sa base SQLite
+temporaire (`EBUSY`). Utiliser le profil local persistant pour le pilote et
+ne pas présenter ce mode éphémère comme validé.
+
 ## Démarrage par l'opérateur
 
 Sur le VPS authentifié, vérifier Docker Compose, les ressources libres et les
