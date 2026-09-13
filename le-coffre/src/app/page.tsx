@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { CoffreMer } from './coffre/CoffreMer';
 import styles from './accueil.module.css';
 
 export default function PageAccueil() {
   const routeur = useRouter();
   const [identifiant, setIdentifiant] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
+  const [coffreOuvert, setCoffreOuvert] = useState(false);
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState('');
 
@@ -56,29 +58,8 @@ export default function PageAccueil() {
       </header>
       <div className={styles.content}>
         <section className={styles.intro} aria-labelledby="titre-accueil">
-          <div className={styles.scene}>
-            <img
-              src="/brand/coffre-breton-ouvert-v1.webp"
-              alt="Un coffre-fort ouvert dans une grotte bretonne, donnant sur la mer et un phare."
-            />
-            <div className={styles.vignette} aria-hidden="true" />
-            <div className={styles.grain} aria-hidden="true" />
-            <div className={styles.lightSweep} aria-hidden="true" />
-            <div className={styles.liveMark} aria-hidden="true">
-              <span />
-              Scène protégée
-            </div>
-            <div className={styles.heroCopy}>
-              <p className={styles.eyebrow}>Tes papiers n&apos;ont plus à te suivre partout.</p>
-              <h1 id="titre-accueil">Un vrai lieu<br />pour <span>respirer.</span></h1>
-              <p className={styles.description}>Dépose ce qui t&apos;encombre. Retrouve ce qui compte. Ton espace reste fermé au monde, ouvert sur l&apos;essentiel.</p>
-              <ul className={styles.steps} aria-label="Les promesses du coffre">
-                <li><span aria-hidden="true">⌁</span> Chiffré avant stockage</li>
-                <li><span aria-hidden="true">◌</span> À ton rythme</li>
-              </ul>
-            </div>
-            <p className={styles.sceneNote}>Le coffre est ouvert. La mer reste dehors.</p>
-          </div>
+          <h1 id="titre-accueil" className="sr-only">Mon Tiroir Secret, coffre ouvert sur la mer</h1>
+          <CoffreMer ouvert={coffreOuvert} onBasculer={() => setCoffreOuvert((ouvert) => !ouvert)} />
         </section>
         <section id="connexion" tabIndex={-1} className={styles.access} aria-labelledby="titre-connexion">
           <div className={styles.accessHeading}>
