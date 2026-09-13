@@ -12,5 +12,7 @@ par projet, mets à jour plutôt que d'en ajouter une nouvelle.
 
 ## Projets
 
+- pepites — correctif console Windows validé par 186 tests : les caractères non représentables ne font plus échouer un scan — reste intégration et mise à jour du radar installé ; observation sans trading réel — 2026-09-13
+
 - look-and-find — version 1 quasi terminée — reste la clé de signature Android et six fonctionnalités validées à ajouter — 2026-09-08
 - moteur-administratif — poussé avec succès sur GitHub (commit 9cf3c44, 08/09 06:45), les 4 briques sont fonctionnelles et testées (90 tests) — plus de blocage d'authentification à ce stade — 2026-09-08

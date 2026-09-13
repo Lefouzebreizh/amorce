@@ -19,6 +19,7 @@ d'appels, sans rien écrire ni alerter.
 from __future__ import annotations
 
 import argparse
+import io
 import logging
 import sys
 from pathlib import Path
@@ -108,6 +109,13 @@ def commande_bilan(arguments) -> int:
 
 
 def principal(argv: list[str] | None = None) -> int:
+    # Une sortie redirigée sous Windows peut rester en cp1252 : les flèches
+    # du bilan et les symboles de jetons ne doivent pas invalider un scan fini.
+    # Garder l'encodage choisi ; échapper seulement ce qu'il ne représente pas.
+    for flux in (sys.stdout, sys.stderr):
+        if isinstance(flux, io.TextIOWrapper):
+            flux.reconfigure(errors="backslashreplace")
+
     analyseur = argparse.ArgumentParser(description="Radar de pépites multi-chaînes.")
     analyseur.add_argument("--base", default=BASE_PAR_DEFAUT, help="fichier SQLite")
     analyseur.add_argument("--bavard", action="store_true", help="journal détaillé")
