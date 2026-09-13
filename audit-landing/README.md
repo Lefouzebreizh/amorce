@@ -401,6 +401,25 @@ Le prochain raccordement doit choisir un hébergement persistant, protéger les
 opérations de relecture et organiser la reprise des traitements interrompus.
 Aucun envoi automatique ni ouverture de vente n'est activé par ce module.
 
+### Console opérateur du pilote (`operateur.py`)
+
+Le chaînon entre la réception et les modules existants est désormais explicite.
+Sur l'hébergement persistant, l'opérateur peut lister les commandes, produire
+les captures et le rapport, l'approuver nominativement après lecture, puis le
+livrer. Chaque étape vérifie l'état du registre ; relancer `produire` sur une
+session déjà prise est refusé.
+
+```bash
+python audit-landing/operateur.py --base /donnees/commandes.sqlite lister
+python audit-landing/operateur.py --base /donnees/commandes.sqlite produire cs_test_... --captures /donnees/captures
+python audit-landing/operateur.py --base /donnees/commandes.sqlite approuver cs_test_... --relecteur "Nom"
+RESEND_API_KEY=... AUDIT_EXPEDITEUR=... python audit-landing/operateur.py --base /donnees/commandes.sqlite livrer cs_test_...
+```
+
+Cette console rend un pilote manuel de bout en bout exploitable ; elle ne
+constitue pas encore un traitement autonome. Une erreur après la prise reste
+visible à l'état `analyse` et doit être examinée, jamais rejouée aveuglément.
+
 Vérification : 47 tests Python réussis, dont 5 tests du registre (redémarrage,
 concurrence, relecture, intégrité du rapport et envoi interrompu).
 
