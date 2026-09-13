@@ -16,6 +16,12 @@ from moteur_administratif.rappels.traitement import ecrire_ics
 
 
 class TestEchapper(unittest.TestCase):
+    def test_retours_windows_mac_et_unix(self):
+        for separateur in ("\r\n", "\r", "\n"):
+            with self.subTest(separateur=repr(separateur)):
+                self.assertEqual(echapper(f"Appeler{separateur}Envoyer"),
+                                 "Appeler\\nEnvoyer")
+
     def test_virgule(self):
         self.assertEqual(echapper("Taxe foncière, solde"), "Taxe foncière\\, solde")
 
@@ -72,6 +78,17 @@ class TestComposerIcs(unittest.TestCase):
 
 
 class TestEcrireIcs(unittest.TestCase):
+    def test_consigne_multiligne_sur_disque_sans_retour_chariot_brut(self):
+        with tempfile.TemporaryDirectory() as dossier:
+            destination = Path(dossier) / "rappels.ics"
+            rappel = Rappel(date(2026, 10, 1), "Rappel\r\nimportant",
+                            "Appeler\rPuis envoyer\r\nle dossier")
+            ecrire_ics([rappel], destination)
+            contenu = destination.read_bytes()
+        self.assertNotIn(b"\r", contenu.replace(b"\r\n", b""))
+        self.assertNotIn(b"\n", contenu.replace(b"\r\n", b""))
+        self.assertIn(b"DESCRIPTION:Appeler\\nPuis envoyer\\nle dossier\r\n", contenu)
+
     def test_ecrit_sur_disque(self):
         with tempfile.TemporaryDirectory() as dossier:
             destination = Path(dossier) / "sous-dossier" / "rappels.ics"
