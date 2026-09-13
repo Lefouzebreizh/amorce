@@ -38,44 +38,47 @@ export default function PageAccueil() {
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <div>
+        <div className={styles.brandBlock}>
           <p className={styles.brand}>Mon Tiroir Secret</p>
-          <span className={styles.signature}>Un abri signé Lefouzèbreizh</span>
+          <span className={styles.signature}>Lefouzèbreizh Studio · accès privé</span>
         </div>
-        <a href="#connexion" className={styles.accessLink}>Mon espace</a>
+        <a href="#connexion" className={styles.accessLink}>Ouvrir mon espace <span aria-hidden="true">↗</span></a>
       </header>
       <div className={styles.content}>
         <section className={styles.intro} aria-labelledby="titre-accueil">
           <div className={styles.scene}>
-            <Image src="/brand/bretagne-zebre-scene.webp" width={1200} height={400}
-              sizes="(max-width: 900px) 100vw, 60vw" priority
-              alt="Un zèbre en double exposition dans une côte bretonne imaginaire, entre océan, dolmen et phare." />
-            <div className={styles.scanlines} aria-hidden="true" />
-            <div className={styles.beam} aria-hidden="true" />
-            <div className={styles.vault} aria-hidden="true">
-              <span className={styles.vaultDoor}><i /></span>
-              <span className={styles.vaultGlow} />
-            </div>
-            <div className={styles.sceneCaption}>
-              <span>LEFOUZÈBREIZH STUDIO · ACCÈS PRIVÉ</span>
-              <strong>Ta régie personnelle</strong>
+            <Image
+              src="/brand/coffre-breton-ouvert-v1.webp"
+              fill
+              sizes="100vw"
+              priority
+              alt="Un coffre-fort ouvert dans une grotte bretonne, donnant sur la mer et un phare."
+            />
+            <div className={styles.vignette} aria-hidden="true" />
+            <div className={styles.grain} aria-hidden="true" />
+            <div className={styles.lightSweep} aria-hidden="true" />
+            <div className={styles.liveMark} aria-hidden="true">
+              <span />
+              Scène protégée
             </div>
             <div className={styles.heroCopy}>
-              <p className={styles.eyebrow}>Tes papiers. Ta place pour souffler.</p>
-              <h1 id="titre-accueil">Ton petit monde.<br /><span>À l&apos;abri.</span></h1>
-              <p className={styles.description}>Dépose tes documents, retrouve l&apos;essentiel et garde tes échéances en vue. À ton rythme.</p>
-              <ul className={styles.steps} aria-label="Les étapes du coffre">
-                <li><span>01</span> Déposer</li>
-                <li><span>02</span> Retrouver</li>
-                <li><span>03</span> Avancer</li>
+              <p className={styles.eyebrow}>Tes papiers n&apos;ont plus à te suivre partout.</p>
+              <h1 id="titre-accueil">Un vrai lieu<br />pour <span>respirer.</span></h1>
+              <p className={styles.description}>Dépose ce qui t&apos;encombre. Retrouve ce qui compte. Ton espace reste fermé au monde, ouvert sur l&apos;essentiel.</p>
+              <ul className={styles.steps} aria-label="Les promesses du coffre">
+                <li><span aria-hidden="true">⌁</span> Chiffré avant stockage</li>
+                <li><span aria-hidden="true">◌</span> À ton rythme</li>
               </ul>
             </div>
+            <p className={styles.sceneNote}>Le coffre est ouvert. La mer reste dehors.</p>
           </div>
         </section>
         <section id="connexion" tabIndex={-1} className={styles.access} aria-labelledby="titre-connexion">
-          <p className={styles.eyebrow}>Ton espace personnel</p>
-          <h2 id="titre-connexion">Ouvre ton tiroir.</h2>
-          <p className={styles.accessIntro}>Reçois un lien de connexion par e-mail. Aucun mot de passe de compte à retenir.</p>
+          <div className={styles.accessHeading}>
+            <p className={styles.eyebrow}>Accès personnel</p>
+            <h2 id="titre-connexion">Entre quand tu es prêt.</h2>
+          </div>
+          <p className={styles.accessIntro}>Un lien arrive dans ta boîte mail. Pas de mot de passe à mémoriser.</p>
 
       {envoye ? (
         <div className={styles.sent} role="status">
