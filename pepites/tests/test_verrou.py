@@ -59,10 +59,12 @@ class TestPlateforme(unittest.TestCase):
 class TestVerrou(unittest.TestCase):
     def setUp(self):
         self.dossier = tempfile.TemporaryDirectory()
+        # unittest exécute les cleanups en pile. Celui du dossier est
+        # enregistré en premier afin que les processus ajoutés par _tenant
+        # soient tués et attendus avant que Windows tente de supprimer le
+        # fichier encore ouvert.
+        self.addCleanup(self.dossier.cleanup)
         self.chemin = Path(self.dossier.name) / "pepites.verrou"
-
-    def tearDown(self):
-        self.dossier.cleanup()
 
     def _tenant(self):
         """Lance un processus qui tient le verrou, et attend qu'il l'ait pris.
