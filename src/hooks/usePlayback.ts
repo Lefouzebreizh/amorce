@@ -156,7 +156,7 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
   if (video.readyState < 2) await attendreVideo(video, 'loadeddata');
   // Les WebM MediaRecorder peuvent annoncer Infinity sur ce nouveau décodeur,
   // alors que l'import a déjà mesuré leur durée. Les ignorer figeait le plan.
-  const fin = Number.isFinite(video.duration) ? video.duration : item.clip.outPoint;
+  const fin = item.clip.outPoint;
   const vise = item.clip.inPoint + (temps - item.start) * item.clip.speed;
   const borne = Math.max(0, Math.min(vise, fin - 0.02));
   if (video.seeking) await attendreVideo(video, 'seeked');
