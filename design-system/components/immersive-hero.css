@@ -13,7 +13,7 @@
   background:
     radial-gradient(circle at 76% 22%, rgb(124 58 237 / .18), transparent 30%),
     radial-gradient(circle at 28% 40%, rgb(64 224 208 / .11), transparent 30%),
-    linear-gradient(180deg, #07101d 0%, #050a12 58%, #02050a 100%);
+    linear-gradient(180deg, #1c5260 0%, #17404f 52%, #112b43 100%);
 }
 
 .lfb-immersive-hero__sky {
@@ -23,7 +23,7 @@
   background:
     radial-gradient(circle at 70% 32%, rgb(244 184 80 / .13), transparent 11%),
     radial-gradient(circle at 67% 35%, rgb(124 58 237 / .1), transparent 30%),
-    linear-gradient(180deg, rgb(20 35 57 / .75), rgb(4 11 19 / .2));
+    linear-gradient(180deg, rgb(62 135 146 / .72), rgb(14 46 64 / .18));
 }
 
 .lfb-immersive-hero__layers { position: absolute; inset: 0; z-index: -5; pointer-events: none; }
@@ -61,8 +61,8 @@
   z-index: -1;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgb(1 4 9 / .78) 0%, rgb(1 4 9 / .44) 38%, transparent 67%),
-    linear-gradient(180deg, rgb(0 0 0 / .08), rgb(0 0 0 / .58) 86%, rgb(0 0 0 / .88));
+    linear-gradient(90deg, rgb(5 22 37 / .68) 0%, rgb(5 22 37 / .28) 42%, transparent 72%),
+    linear-gradient(180deg, rgb(0 0 0 / .02), rgb(4 20 35 / .3) 86%, rgb(5 18 32 / .6));
 }
 
 .lfb-immersive-hero__content {
