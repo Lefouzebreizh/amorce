@@ -28,6 +28,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { auditerAdresses } from './sonde-dns.mjs';
+import { activerSiMonetisable } from './affiliation-regles.mjs';
 
 const racine = path.dirname(fileURLToPath(import.meta.url));
 const dossierNiches = path.join(racine, 'niches');
@@ -232,10 +233,17 @@ async function poser(couples) {
       console.log(`  ${outil.id.padEnd(24)} ${url}` + (marqueurLeve ? '   (marqué « sans programme » — marqueur levé)' : ''));
     }
   }
-  for (const [chemin, base] of fichiersTouches) ecrire(chemin, base);
+  const activees = [];
+  for (const [chemin, base] of fichiersTouches) {
+    if (activerSiMonetisable(base)) activees.push(base.niche.id);
+    ecrire(chemin, base);
+  }
 
   const restants = inventaire().filter(({ outil }) => estDemo(outil)).length;
   console.log(`\n${poses} lien(s) posé(s) dans ${fichiersTouches.size} fichier(s). ${restants} encore en démonstration.`);
+  if (activees.length) {
+    console.log(`✓ ${activees.join(', ')} activée(s) automatiquement : la prochaine publication les mettra en ligne.`);
+  }
   console.log('· Contrôler : npm run valider');
 }
 
