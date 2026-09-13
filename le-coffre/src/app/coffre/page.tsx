@@ -1222,7 +1222,7 @@ export default function PageCoffre() {
 
   return (
     <main
-      className={`min-h-screen bg-paper pb-32 transition ${survole ? 'bg-accent/5 ring-2 ring-accent ring-inset' : ''}`}
+      className={`coffre-page min-h-screen bg-paper pb-32 transition ${survole ? 'bg-accent/5 ring-2 ring-accent ring-inset' : ''}`}
       onDragOver={(e) => { e.preventDefault(); setSurvole(true); }}
       onDragLeave={() => setSurvole(false)}
       onDrop={(e) => {
@@ -1245,7 +1245,7 @@ export default function PageCoffre() {
       <datalist id="categories-connues">
         {categoriesSuggerees.map((c) => <option key={c} value={c} />)}
       </datalist>
-      <div className="mx-auto flex max-w-[1700px] flex-col gap-8 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
+      <div className="coffre-shell mx-auto flex max-w-[1700px] flex-col gap-8 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
         {/* Marque persistante — visible sur le tableau de bord, pas
             seulement sur l'écran de connexion. Violet plutôt que turquoise :
             les deux sont censés dominer à parts égales, et le turquoise
@@ -1253,6 +1253,7 @@ export default function PageCoffre() {
         <p className="text-sm font-semibold tracking-widest text-violet uppercase">Le Tiroir Secret</p>
         {/* En-tête */}
         <header className="coffre-hero flex flex-wrap items-start justify-between gap-6 rounded-3xl border border-line bg-paper-raised p-6 sm:p-8">
+          <div className="coffre-vault" aria-hidden="true"><span className="coffre-vault__bar" /><span className="coffre-vault__dial" /></div>
           <div className="coffre-hero__content">
             <p className="text-sm font-semibold tracking-widest text-accent uppercase">
               Bonjour {prenom || 'toi'}
