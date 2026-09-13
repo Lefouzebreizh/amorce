@@ -3,9 +3,9 @@ import './globals.css';
 import { EnregistrerServiceWorker } from './EnregistrerServiceWorker';
 
 export const metadata: Metadata = {
-  title: 'Le Tiroir Secret — tes papiers, tes échéances',
+  title: 'Mon Tiroir Secret — tes papiers, tes échéances',
   description:
-    'Dépose tes papiers administratifs, chiffrés de bout en bout — rien de lisible ne sort de ton navigateur, pas même vers nous.',
+    'Tes documents chiffrés avant stockage, tes papiers et tes échéances au même endroit. Les fonctions IA transmettent les informations nécessaires à leur traitement.',
   robots: { index: true, follow: true },
   // PWA installable, lancée sans chrome de navigateur visible — voir
   // `manifest.ts` pour les icônes et `sw.js` pour ce qui la rend
