@@ -53,7 +53,13 @@ n'est requis pour cette correction.
 ## Preuves externes encore obligatoires
 
 - [ ] Déploiement de la landing et captures réelles ordinateur + mobile.
-- [ ] Produit et prix créés dans Stripe **mode test**.
+- [x] Produit et prix créés dans Stripe **mode test**, puis relus le 13/09/2026 :
+  produit `prod_audit_landing_pr953_pilote_test`, prix
+  `price_1UF3bMKptlYOU0P5QDt7xbMm`, tous deux `livemode=false`.
+  Prix ponctuel de 4900 centimes EUR, `tax_behavior=unspecified` : valeur
+  d'essai technique uniquement, sans tarif commercial ni fiscalité confirmés.
+  Compte connecté : `artisan-express-ashy.vercel.app` ; produit Audit distinct
+  du produit Artisan Express existant. Aucun achat ni webhook créé.
 - [ ] Serveur HTTP Checkout démarré avec clé test, prix test, webhook test, origines,
   URLs de succès/annulation et réception HTTPS persistante.
 - [ ] Achat avec une carte Stripe de test ; conserver l'identifiant `cs_test_…`.
