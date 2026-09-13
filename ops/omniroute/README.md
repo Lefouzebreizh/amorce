@@ -1,9 +1,43 @@
 # OmniRoute — pilote privé
 
-État au 13 septembre 2026 : configuration préparée, pas encore déployée.
+État au 13 septembre 2026 : pilote Docker préparé, pas encore déployé sur VPS.
 L'accès SSH au VPS présente une empreinte différente de celle déjà connue ;
 vérifier son identité depuis la console officielle de l'hébergeur avant connexion.
 Ne pas effacer known_hosts ni désactiver StrictHostKeyChecking pour avancer.
+
+## Pilote Windows local
+
+OmniRoute 3.8.50 est installé dans `%LOCALAPPDATA%\OmniRoutePilot` sur le PC.
+Le tableau de bord écoute sur `127.0.0.1:20128`, l'API sur `127.0.0.1:20129`.
+Contrôles réussis : santé HTTP 200, connexion administrateur HTTP 200,
+paramètres authentifiés HTTP 200, accès API anonyme refusé HTTP 401.
+L'authentification et la base restent dans `.runtime`, hors git.
+
+Le client officiel Codex 0.154.0 est installé séparément dans
+`%LOCALAPPDATA%\OmniRouteCodex`. Son app-server écoute sur `127.0.0.1:1456`,
+protégé par un jeton de capacité local. Il utilise sa connexion ChatGPT existante ;
+aucun jeton ChatGPT n'est copié dans OmniRoute. Une requête directe sur
+`gpt-5.3-codex-spark` a répondu `OK`. La route OmniRoute renvoie encore une erreur
+de traduction ; son correctif est en cours de validation.
+
+Les scripts prennent le répertoire d'installation OmniRoute comme premier
+argument. `launch-codex.mjs` prend également le répertoire d'installation Codex
+comme second argument. `launch-local.mjs` récupère la configuration app-server
+si le fichier de capacité existe. Le fournisseur `cxa` est synthétique :
+ne pas tenter de créer une connexion via `POST /api/providers` et ne pas
+restreindre la clé par `allowedConnections`. `connect-codex.mjs` limite la clé
+aux modèles Spark explicitement préfixés, sans résolution automatique.
+
+La synchronisation cloud a été désactivée par `POST /api/sync/cloud`
+avec `{"action":"disable"}` puis vérifiée par deux GET : `/api/settings`
+(`cloudEnabled:false`) et `/api/sync/cloud` (`enabled:false`). Le PATCH général
+des paramètres ignore ce champ dans cette version. Le POST dédié peut répondre
+500 si aucune URL cloud n'est configurée, après avoir persisté la désactivation.
+
+`probe-codex.mjs` lit les métadonnées du compte sans génération.
+`probe-codex-turn.mjs` et `probe-route.mjs` effectuent des générations de test ;
+leur exécution consomme éventuellement du quota ou des crédits. Le pilote
+Windows n'a pas l'isolation réseau du pilote Docker décrit ci-dessous.
 
 ## Démarrage par l'opérateur
 
