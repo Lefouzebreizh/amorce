@@ -15,7 +15,7 @@ function fixture(t, version = '3.8.50') {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'omni-cxa-test-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: 'omniroute', version }));
-  const file = path.join(root, 'dist/.build/next/server/chunks/test.js');
+  const file = path.join(root, 'dist/.build/next/server/chunks/open-sse_test.js');
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, original);
   return { root, file };

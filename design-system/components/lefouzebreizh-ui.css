@@ -1,0 +1,75 @@
+@import '../tokens.css';
+
+.lfb-button {
+  --lfb-button-from: var(--lfb-cyan, #40e0d0);
+  --lfb-button-to: var(--lfb-violet, #7c3aed);
+  border: 1px solid color-mix(in srgb, var(--lfb-button-from) 60%, transparent);
+  border-radius: 999px;
+  min-height: 44px;
+  padding: .75rem 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .65rem;
+  color: #fff;
+  background: linear-gradient(110deg, color-mix(in srgb, var(--lfb-button-to) 82%, #000), var(--lfb-button-from));
+  box-shadow: 0 0 0 1px rgb(255 255 255 / .04) inset, 0 10px 30px rgb(64 224 208 / .15);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  cursor: pointer;
+  font: 600 .95rem/1 var(--lfb-font-ui, Inter, system-ui, sans-serif);
+}
+
+.lfb-button:hover { transform: translateY(-1px); box-shadow: 0 14px 38px rgb(124 58 237 / .22); }
+.lfb-button:focus-visible { outline: 3px solid color-mix(in srgb, var(--lfb-cyan, #40e0d0) 45%, white); outline-offset: 3px; }
+.lfb-button--violet { --lfb-button-from: #9a62ff; --lfb-button-to: #5f2eea; }
+.lfb-button--amber { --lfb-button-from: var(--lfb-amber, #f4b850); --lfb-button-to: #8c5b12; }
+.lfb-button--ghost { background: rgb(4 9 18 / .58); border-color: rgb(255 255 255 / .18); box-shadow: 0 12px 32px rgb(0 0 0 / .2); }
+.lfb-button__icon { display: inline-flex; }
+
+.lfb-glass-card,
+.lfb-project-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / .12);
+  border-radius: var(--lfb-radius-lg, 24px);
+  background: linear-gradient(180deg, rgb(13 24 39 / .72), rgb(5 11 20 / .84));
+  box-shadow: 0 24px 80px rgb(0 0 0 / .28), 0 1px 0 rgb(255 255 255 / .05) inset;
+  backdrop-filter: blur(18px) saturate(120%);
+}
+
+.lfb-glass-card::before,
+.lfb-project-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 58%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--lfb-cyan, #40e0d0), var(--lfb-violet, #7c3aed), transparent);
+}
+
+.lfb-glass-card { padding: clamp(1rem, 2vw, 1.5rem); }
+.lfb-eyebrow { margin: 0 0 .45rem; color: var(--lfb-cyan, #40e0d0); text-transform: uppercase; letter-spacing: .18em; font: 700 .72rem/1.2 var(--lfb-font-ui, Inter, system-ui, sans-serif); }
+.lfb-card-title { margin: 0; color: #fff; font: 600 clamp(1.2rem, 2vw, 1.7rem)/1.15 var(--lfb-font-display, 'Playfair Display', Georgia, serif); }
+.lfb-card-body { margin-top: .75rem; color: rgb(248 248 248 / .74); font: 400 .95rem/1.65 var(--lfb-font-ui, Inter, system-ui, sans-serif); }
+
+.lfb-brand { display: inline-flex; flex-direction: column; gap: .15rem; }
+.lfb-brand__name { color: #fff; font: 600 clamp(1.7rem, 3vw, 3rem)/1 var(--lfb-font-display, 'Playfair Display', Georgia, serif); letter-spacing: -.035em; }
+.lfb-brand__name span { background: linear-gradient(90deg, var(--lfb-cyan, #40e0d0), var(--lfb-violet, #7c3aed)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lfb-brand__tagline { color: rgb(248 248 248 / .62); text-transform: uppercase; letter-spacing: .22em; font: 600 .65rem/1.3 var(--lfb-font-ui, Inter, system-ui, sans-serif); }
+.lfb-brand--compact .lfb-brand__name { font-size: 1.25rem; }
+
+.lfb-project-card { min-height: 320px; display: grid; grid-template-rows: 1fr auto; }
+.lfb-project-card__media { min-height: 190px; background: radial-gradient(circle at 75% 20%, rgb(124 58 237 / .25), transparent 35%), linear-gradient(135deg, #08101d, #0e1d2b); background-size: cover; background-position: center; }
+.lfb-project-card__badge { position: absolute; top: .9rem; left: .9rem; padding: .4rem .65rem; border: 1px solid rgb(64 224 208 / .35); border-radius: 999px; background: rgb(2 8 15 / .72); color: var(--lfb-cyan, #40e0d0); font: 700 .67rem/1 var(--lfb-font-ui, Inter, system-ui, sans-serif); letter-spacing: .08em; text-transform: uppercase; }
+.lfb-project-card__content { padding: 1rem 1rem 1.15rem; }
+.lfb-project-card__content h3 { margin: 0; color: #fff; font: 600 1.35rem/1.15 var(--lfb-font-display, 'Playfair Display', Georgia, serif); }
+.lfb-project-card__content p { margin: .45rem 0 .9rem; color: rgb(248 248 248 / .66); font: 400 .9rem/1.55 var(--lfb-font-ui, Inter, system-ui, sans-serif); }
+
+.lfb-section-heading { max-width: 760px; }
+.lfb-section-heading h2 { margin: 0; color: #fff; font: 600 clamp(2rem, 5vw, 4.7rem)/.98 var(--lfb-font-display, 'Playfair Display', Georgia, serif); letter-spacing: -.04em; }
+.lfb-section-heading__copy { max-width: 62ch; color: rgb(248 248 248 / .68); font: 400 clamp(1rem, 1.8vw, 1.18rem)/1.65 var(--lfb-font-ui, Inter, system-ui, sans-serif); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lfb-button { transition: none; }
+  .lfb-button:hover { transform: none; }
+}

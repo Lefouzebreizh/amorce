@@ -57,7 +57,10 @@ function inventory(root, sourceOnly = false) {
       if (ent.isSymbolicLink()) throw new Error(`Refusing symbolic link: ${rel}`);
       if (ent.isDirectory()) { walk(rel); continue; }
       if (!ent.isFile() || !/\.(?:m?js|ts)$/.test(ent.name) || ent.name.endsWith('.d.ts')) continue;
-      if (++seen > 12000) throw new Error('Runtime inventory exceeded file limit');
+      // Runtime scan identified factories in these Next chunk families. Skip
+      // unrelated routes and vendor chunks before reading or counting bytes.
+      if (ent.name !== 'index.ts' && !/^(?:open-sse|\[root-of-the-server\]).*\.js$/.test(ent.name)) continue;
+      if (++seen > 60000) throw new Error('Runtime inventory exceeded file limit');
       const file = safePath(root, rel);
       bytes += fs.statSync(file).size;
       if (bytes > 600 * 1024 * 1024) throw new Error('Runtime inventory exceeded size limit');

@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 const root = resolve(process.argv[2]); const data = join(root, '.runtime');
 const { key } = JSON.parse(readFileSync(join(data, 'client-key.json'), 'utf8'));
@@ -14,4 +14,15 @@ for (const stream of [false, true]) {
   const check = { stream, http: r.status, valid, answer: answer.slice(0, 100) }; results.push(check); console.log(JSON.stringify(check));
   if (!valid) { process.exitCode = 1; break; }
 }
-writeFileSync(join(data, 'route-validation.json'), JSON.stringify({ at: new Date().toISOString(), model, results }, null, 2), { mode: 0o600 });
+if (results.length !== 2 || results.some(result => result.http !== 200 || result.valid !== true)) {
+  throw new Error('Route validation incomplete; previous successful proof was preserved');
+}
+const target = join(data, 'route-validation.json');
+const temporary = target + '.' + process.pid + '.tmp';
+try {
+  writeFileSync(temporary, JSON.stringify({ success: true, at: new Date().toISOString(), model, results }, null, 2), { mode: 0o600, flag: 'wx' });
+  renameSync(temporary, target);
+} catch (error) {
+  try { unlinkSync(temporary); } catch {}
+  throw error;
+}

@@ -366,6 +366,10 @@ et dit ce qui vaut désormais partout. Le détail des jetons reste dans
 `/usine-a-themes`, celui des écrans dans `/custom-frontend-designer`, celui du
 pouce dans `/tailwind-mobile-ux`. Ici, seulement ce qui traverse les projets.
 
+Le socle canonique propre à Lefouzèbreizh vit dans `design-system/` : jetons,
+règles de marque, composants et actifs maîtres réutilisables par les pages du
+site, dont `/univers` constitue la première vitrine intégrée.
+
 ### Les cinq invariants
 
 **1. Cinq rôles de surface, et les mêmes noms partout.** Du fond de page à la
@@ -582,6 +586,20 @@ violet (`#08060f`), IPTV vers le bleu-gris (`#0b0d10`). Les deux sont défendabl
 — on juge des images chez l'un, des flux vidéo chez l'autre. Ce qui est partagé
 est la **structure** et le rapport de 1,07, pas la teinte. Un produit qui n'a pas
 de raison d'en changer prend celle d'Amorce.
+
+### Exigence permanente du réseau — décision du 13 septembre 2026
+
+Le propriétaire confirme une exigence haut de gamme constante pour chaque site et application, de l’accueil au dernier formulaire. La référence approuvée associe Bretagne, zèbre en double exposition, profondeur 3D et éclairages turquoise, violets et ambrés. L’hermine doit reprendre la moucheture héraldique traditionnelle du Gwenn-ha-du ; conserver les éléments et proportions expressément validés.
+
+- **Une identité commune, un usage adapté.** Les scènes immersives portent la découverte ; les démarches et tâches sensibles restent calmes, lisibles et orientées vers une action claire. Préserver les spécificités utiles de chaque application.
+- **Décor et information ont des rôles distincts.** La palette de marque peut éclairer les scènes sans remplacer les couleurs sémantiques des actions, avertissements et erreurs. Conserver les exigences locales de contraste, de taille de texte et de cibles tactiles ; mesurer les couleurs réellement utilisées.
+- **Modernité fonctionnelle.** Choisir 3D, double exposition, transitions et fonctions d’assistance pour leur contribution à la tâche et à l’émotion. Prévoir des ressources légères, un repli sur mobile et le respect de la réduction des mouvements. Aucun effet ne doit masquer une commande ou gêner la lecture.
+- **Finition jusque dans les erreurs.** Vérifier les écrans concernés sur mobile et ordinateur, les états d’attente, les retours, la reprise et le résultat promis. Une compilation réussie ne prouve pas qu’une personne peut finir la tâche.
+- **Aucun défaut connu laissé dans un lot déclaré terminé.** Corriger le défaut ou maintenir explicitement le lot en cours avec son périmètre et ses limites. Conserver les preuves pertinentes, liées au commit réellement vérifié ; ne pas multiplier des tests inchangés pour produire des chiffres.
+- **Confiance et coût.** Protéger secrets et données, préserver les contrôles d’accès et l’audience autorisée, vérifier achat et livraison si concernés. Réutiliser les composants éprouvés et respecter le budget autorisé.
+- **Différenciation démontrée.** Comparer les concurrents sur des usages et résultats sourcés et datés. Ne pas inventer de clientèle, témoignage, performance ou supériorité. La perfection est l’objectif ; aucune absence absolue de bug ou de faille n’est garantie.
+- **Continuité.** Consigner la référence visuelle, la version de départ, les changements, les contrôles et les défauts ouverts. Lire les travaux concurrents avant intégration. Évaluer l’utilité de sous-agents et d’un pipeline en fonction des lots indépendants et des crédits, sans dupliquer une session déjà au travail.
+
 
 ## 3. MÉMOIRE
 

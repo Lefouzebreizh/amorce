@@ -18,5 +18,12 @@ if (existsSync(keyPath)) key = JSON.parse(readFileSync(keyPath, 'utf8'));
 else { key = await api('/api/keys', 'POST', { name: 'OmniRoute PC - Spark', noLog: true }); if (!key.id || !key.key) throw new Error('Unexpected key response'); writeFileSync(keyPath, JSON.stringify(key), { flag: 'wx', mode: 0o600 }); }
 await api('/api/keys/' + encodeURIComponent(key.id), 'PATCH', { modelAccessMode: 'restricted', allowedModels: ['cxa/gpt-5.3-codex-spark', 'codex-app-server/gpt-5.3-codex-spark'], allowedConnections: [], autoResolve: false, compressionEnabled: false, cacheDefaultMode: 'bypass', noLog: true });
 const check = await api('/api/keys/' + encodeURIComponent(key.id));
-if (check.modelAccessMode !== 'restricted' || check.autoResolve !== false || check.allowedConnections?.length) throw new Error('Key restrictions not verified');
+const expectedModels = ['codex-app-server/gpt-5.3-codex-spark', 'cxa/gpt-5.3-codex-spark'];
+const actualModels = Array.isArray(check.allowedModels) ? [...check.allowedModels].sort() : [];
+if (check.modelAccessMode !== 'restricted' || check.autoResolve !== false ||
+  !Array.isArray(check.allowedConnections) || check.allowedConnections.length !== 0 ||
+  JSON.stringify(actualModels) !== JSON.stringify(expectedModels) || check.noLog !== true ||
+  check.compressionEnabled !== false || check.cacheDefaultMode !== 'bypass') {
+  throw new Error('Key restrictions and privacy settings not verified');
+}
 console.log('Client key restricted to Codex Spark and stored locally. No inference performed.');

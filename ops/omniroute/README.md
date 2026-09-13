@@ -9,16 +9,37 @@ Ne pas effacer known_hosts ni désactiver StrictHostKeyChecking pour avancer.
 
 OmniRoute 3.8.50 est installé dans `%LOCALAPPDATA%\OmniRoutePilot` sur le PC.
 Le tableau de bord écoute sur `127.0.0.1:20128`, l'API sur `127.0.0.1:20129`.
-Contrôles réussis : santé HTTP 200, connexion administrateur HTTP 200,
-paramètres authentifiés HTTP 200, accès API anonyme refusé HTTP 401.
+Contrôles réussis : tableau de bord `/healthz` HTTP 200, connexion administrateur
+HTTP 200, paramètres authentifiés HTTP 200, accès API anonyme
+`/v1/models` HTTP 401. Le pont API n'expose pas `/healthz` : son contrôle de
+disponibilité vérifie le refus 401 de `/v1/models`, sans lancer de génération.
 L'authentification et la base restent dans `.runtime`, hors git.
 
 Le client officiel Codex 0.154.0 est installé séparément dans
 `%LOCALAPPDATA%\OmniRouteCodex`. Son app-server écoute sur `127.0.0.1:1456`,
 protégé par un jeton de capacité local. Il utilise sa connexion ChatGPT existante ;
 aucun jeton ChatGPT n'est copié dans OmniRoute. Une requête directe sur
-`gpt-5.3-codex-spark` a répondu `OK`. La route OmniRoute renvoie encore une erreur
-de traduction ; son correctif est en cours de validation.
+`gpt-5.3-codex-spark` a répondu `OK`. Après correction du transport WebSocket
+dans les 14 copies compilées du client de la version 3.8.50, la route
+`/v1/messages` a répondu HTTP 200 avec `OK` en mode non streaming, puis HTTP 200
+avec `OK` et l'événement terminal `message_stop` en streaming.
+Un test minimal de Claude Code 2.1.270 a également réussi via OmniRoute :
+`--print`, outils désactivés, modèle `cxa/gpt-5.3-codex-spark`, réponse
+`OMNIROUTE_OK`, `is_error:false`, code de sortie 0 et durée API de 10,65 secondes.
+Ce test valide une requête texte de bout en bout ; les appels d'outils de
+Claude Code et l'intégration OpenClaw restent à vérifier séparément.
+
+La validation a été répétée après l'arrêt contrôlé puis le redémarrage des deux
+processus du pilote. Les trois écouteurs sont restés limités à `127.0.0.1` :
+Codex sur `1456`, tableau de bord sur `20128` et API sur `20129`. Après reprise,
+la clé absente et une clé volontairement incorrecte ont toutes deux été refusées
+en HTTP 401 ; les requêtes authentifiées non streaming et streaming ont de
+nouveau répondu HTTP 200 avec `OK`. La synchronisation cloud est restée
+désactivée dans `/api/settings` et `/api/sync/cloud`.
+
+Au moment du diagnostic, le quota Codex principal était épuisé et le quota
+Spark était encore disponible. Cet état est daté ; il ne garantit pas la
+disponibilité future et ne constitue pas une jauge des crédits en direct.
 
 Les scripts prennent le répertoire d'installation OmniRoute comme premier
 argument. `launch-codex.mjs` prend également le répertoire d'installation Codex
@@ -38,6 +59,57 @@ des paramètres ignore ce champ dans cette version. Le POST dédié peut répond
 `probe-codex-turn.mjs` et `probe-route.mjs` effectuent des générations de test ;
 leur exécution consomme éventuellement du quota ou des crédits. Le pilote
 Windows n'a pas l'isolation réseau du pilote Docker décrit ci-dessous.
+
+### Lancer Claude Code depuis le bureau
+
+Le point d'entrée est `Claude-Code-OmniRoute.cmd` sur le bureau. Il appelle
+`ensure-pilot.mjs`, qui vérifie Codex (`127.0.0.1:1456/readyz`, HTTP 200) et
+OmniRoute (`127.0.0.1:20129/v1/models`, HTTP 401 anonyme), puis démarre les
+services absents et attend leur disponibilité. Il ouvre ensuite Claude Code
+dans `%USERPROFILE%\Documents\OmniRoute-Projets` via `claude-via-omniroute.mjs`.
+
+Le raccourci `OmniRoute.url` ouvre le tableau de bord local. Au besoin,
+`OmniRoute-Mot-de-passe.cmd` copie son mot de passe administrateur dans le
+presse-papiers lorsque l'utilisateur le lance ; le secret n'est pas affiché.
+
+Le lanceur utilise la clé locale dédiée et le modèle `cxa/gpt-5.3-codex-spark`,
+avec une configuration Claude séparée dans `.runtime/claude-config`. Il ne
+modifie pas la configuration Claude existante. Selon l'installation npm de
+Claude Code, le point d'entrée peut être `bin/claude.exe` plutôt que `cli.js` ;
+les deux sont pris en charge. Le test minimal ci-dessus ne valide pas encore
+l'ensemble des outils et fonctions interactives de Claude Code.
+
+### Réparer le transport Codex de la version 3.8.50
+
+`repair-cxa-client.mjs` ajoute le transport `wreq-js` existant lorsque le client
+n'en reçoit aucun. L'authentification et les politiques d'approbation restent
+inchangées. Sans liste de fichiers explicite, le script découvre toutes les
+copies du client dans les chunks `open-sse*.js` et `[root-of-the-server]*.js`
+de `dist/.build/next/server/chunks`, puis répare aussi la source TypeScript.
+Le succès constaté sur ce PC a nécessité la correction des 14 copies compilées.
+
+Arrêter les processus OmniRoute avant toute application ou restauration :
+
+```powershell
+$pilot = Join-Path $env:LOCALAPPDATA 'OmniRoutePilot'
+$package = Join-Path $pilot 'node_modules\omniroute'
+node "$pilot\repair-cxa-client.mjs" "$package" --check
+node "$pilot\repair-cxa-client.mjs" "$package" --apply
+```
+
+Redémarrer avec le lanceur, puis vérifier `/v1/messages` en mode non streaming
+et streaming. Pour revenir aux fichiers d'origine, arrêter OmniRoute puis :
+
+```powershell
+node "$pilot\repair-cxa-client.mjs" "$package" --restore
+```
+
+Conserver le dossier `.omniroute-repairs` du package : il contient les originaux.
+Le script est limité à `omniroute@3.8.50`, vérifie les empreintes SHA-256,
+préserve les sauvegardes existantes et peut être relancé sans répéter la mutation.
+Il refuse les liens symboliques, les fichiers inattendus et les changements
+concurrents détectés avant écriture. En cas de refus, examiner le fichier
+concerné ; ne pas supprimer sa sauvegarde pour forcer l'application.
 
 ## Démarrage par l'opérateur
 
@@ -70,7 +142,7 @@ Accès au tableau de bord : tunnel SSH authentifié vers 127.0.0.1:20128, de
 préférence via Tailscale lorsque la connexion est rétablie. Les ports du pilote
 écoutent uniquement sur loopback. Aucun domaine public ni tunnel public.
 
-## Étape suivante : modèle réellement utilisable
+## Étape suivante sur le VPS : modèle réellement utilisable
 
 Avant d'ouvrir les sorties réseau, choisir un fournisseur autorisé, vérifier
 son mode d'authentification et son coût, désactiver les fournisseurs inutiles,
