@@ -22,5 +22,11 @@
     "minimum_score": 7,
     "request_timeout_seconds": 12,
     "maximum_page_bytes": 1000000
+  },
+  "ai": {
+    "enabled": true,
+    "maximum_input_chars": 12000,
+    "maximum_output_tokens": 600,
+    "timeout_seconds": 25
   }
 }
