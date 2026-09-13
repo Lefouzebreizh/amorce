@@ -420,6 +420,14 @@ Cette console rend un pilote manuel de bout en bout exploitable ; elle ne
 constitue pas encore un traitement autonome. Une erreur après la prise reste
 visible à l'état `analyse` et doit être examinée, jamais rejouée aveuglément.
 
+Les URLs commandées sont contrôlées avant navigation : seuls HTTP/HTTPS sans
+identifiants sont acceptés et toute résolution vers localhost, une adresse
+privée, locale, réservée ou de métadonnées cloud est refusée. Le filtre couvre
+aussi les redirections et sous-ressources. Ce garde-fou est obligatoire lorsque
+Chromium tourne sur le VPS ; il empêche qu'un audit acheté serve à lire une
+ressource interne.
+
+
 Vérification : 47 tests Python réussis, dont 5 tests du registre (redémarrage,
 concurrence, relecture, intégrité du rapport et envoi interrompu).
 
