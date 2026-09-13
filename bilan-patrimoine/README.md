@@ -154,13 +154,19 @@ conseil qui contredisait son propre texte. `npm run exemple` est là pour ça.
 
 ---
 
-## 6. Ce que ce lot ne fait pas
+## 6. Où en est le produit
 
-Pas de site, pas de compte, pas de base de données, **rien n'est enregistré**.
-Le lot 2 posera l'interface sur le socle `agence/` ; le lot 3 les comptes et ce
-que dit la section suivante ; le lot 4 le suivi dans le temps, dont le moteur
-d'alertes existe déjà dans `paper-manager/core/abonnements.py` et sera extrait
-plutôt que réécrit.
+Ce dossier reste le moteur pur : il n'a ni site, ni compte, ni base de données.
+Le produit qui l'emploie vit dans `agence/` : l'interface publique du lot 2 y est
+en place et le bilan gratuit n'enregistre toujours rien. Le suivi FinancIA du
+lot 3 ajoute, après un geste explicite d'un utilisateur connecté, des
+instantanés privés datés et leur évolution. Les lignes sont isolées par RLS ;
+même un administrateur de l'application ne peut pas lire les montants.
+
+Le lot suivant reste le suivi actif : alertes et révisions périodiques. Il doit
+extraire le moteur existant de `paper-manager/core/abonnements.py` plutôt que le
+réécrire, et ne prétendra à aucune donnée de marché en temps réel sans source
+réellement connectée et datée.
 
 ---
 

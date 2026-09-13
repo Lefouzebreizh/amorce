@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { FormulaireBilan } from '@/components/formulaire-bilan';
+import { lireSession } from '@/lib/supabase/session';
 
 export const metadata: Metadata = {
   title: 'Bilan de patrimoine gratuit',
@@ -15,7 +16,8 @@ export const metadata: Metadata = {
  * Le lot 2 : l'interface du Bilan Patrimoine (lot 1, dans
  * `@/lib/bilan`). Public, sans session — voir `@/lib/actions/bilan.ts`.
  */
-export default function PageBilanPatrimoine() {
+export default async function PageBilanPatrimoine() {
+  const connecte = (await lireSession()) !== null;
   return (
     <article className="flex flex-col gap-6">
       <header>
@@ -26,7 +28,7 @@ export default function PageBilanPatrimoine() {
         </p>
       </header>
 
-      <FormulaireBilan />
+      <FormulaireBilan connecte={connecte} />
     </article>
   );
 }

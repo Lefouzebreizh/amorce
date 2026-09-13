@@ -31,7 +31,10 @@ declare
     'Un administrateur lit tous les profils',
     'Un utilisateur modifie son propre profil',
     'Un utilisateur gère ses propres projets',
-    'Un administrateur lit tous les projets'
+    'Un administrateur lit tous les projets',
+    'Un utilisateur lit ses propres bilans',
+    'Un utilisateur crée ses propres bilans',
+    'Un utilisateur efface ses propres bilans'
   ];
 begin
   -- 1. La RLS est-elle encore active ? Une politique reste visible dans le
@@ -40,14 +43,14 @@ begin
   from pg_class c
   join pg_namespace n on n.oid = c.relnamespace
   where n.nspname = 'public'
-    and c.relname in ('profiles', 'projects')
+    and c.relname in ('profiles', 'projects', 'patrimony_snapshots')
     and not c.relrowsecurity;
 
   if table_sans_rls is not null then
     raise exception 'RLS désactivée sur : %. Tout le contenu de ces tables est lisible par n''importe quel porteur de la clé publique.', table_sans_rls;
   end if;
 
-  -- 2. Les cinq politiques du socle sont-elles toutes là ?
+  -- 2. Les huit politiques du socle sont-elles toutes là ?
   foreach politique in array attendues loop
     if not exists (
       select 1 from pg_policies
@@ -62,7 +65,7 @@ begin
   select string_agg(policyname, ', ') into politique
   from pg_policies
   where schemaname = 'public'
-    and tablename in ('profiles', 'projects')
+    and tablename in ('profiles', 'projects', 'patrimony_snapshots')
     and not (policyname = any (attendues));
 
   if politique is not null then
@@ -121,6 +124,6 @@ begin
     raise exception 'Une fonction du socle est exécutable par « public » : le droit a été réaccordé après la livraison.';
   end if;
 
-  raise notice 'Base conforme au socle : RLS active, cinq politiques, rôle verrouillé, fonctions intactes.';
+  raise notice 'Base conforme au socle : RLS active, huit politiques, rôle verrouillé, fonctions intactes.';
 end
 $$;

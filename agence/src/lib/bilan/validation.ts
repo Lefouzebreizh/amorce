@@ -102,3 +102,25 @@ export const schemaBilan = z
   );
 
 export type DonneesBilan = z.infer<typeof schemaBilan>;
+
+/** Forme persistée après un geste explicite dans l'espace privé. Elle valide à
+ * nouveau le JSON venu du navigateur : une Server Action reste une route POST
+ * publique, même quand l'interface n'envoie que des données déjà calculées. */
+export const schemaSituationEnregistree = z.object({
+  age: z.enum(TRANCHES_AGE),
+  foyer: z.object({
+    adultes: z.union([z.literal(1), z.literal(2)]),
+    enfants: z.number().int().min(0).max(20),
+  }),
+  revenuMensuelNetEur: z.number().min(0).max(PLAFOND_SAISIE_EUR),
+  horizon: z.enum(HORIZONS),
+  livretsEur: z.number().min(0).max(PLAFOND_SAISIE_EUR).nullable(),
+  tauxLivretsPct: z.number().min(0).max(100).nullable(),
+  assuranceVieEur: z.number().min(0).max(PLAFOND_SAISIE_EUR).nullable(),
+  tauxAssuranceViePct: z.number().min(0).max(100).nullable(),
+  bourseEur: z.number().min(0).max(PLAFOND_SAISIE_EUR).nullable(),
+  logement: z.object({
+    valeurEur: z.number().min(0).max(PLAFOND_SAISIE_EUR),
+    capitalRestantDuEur: z.number().min(0).max(PLAFOND_SAISIE_EUR),
+  }).nullable(),
+});
