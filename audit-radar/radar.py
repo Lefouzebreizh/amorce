@@ -297,6 +297,75 @@ def upsert_lead(db: sqlite3.Connection, url: str, source: str, query: str = "", 
     return int(lead_id)
 
 
+def import_leads(db: sqlite3.Connection, path: Path, config: dict[str, Any]) -> int:
+    """Importe un lot privé, y compris des dossiers déjà qualifiés humainement.
+
+    Le statut ``review`` n'est accepté que si le score atteint le seuil configuré
+    et qu'un fait public vérifiable est fourni. Cela évite qu'un simple CSV place
+    silencieusement une cible faible dans la file de validation.
+    """
+    minimum_score = int(config.get("limits", {}).get("minimum_score", 7))
+    imported = 0
+    with path.open(newline="", encoding="utf-8-sig") as handle:
+        reader = csv.DictReader(handle)
+        required = {"url", "source", "snippet", "product"}
+        if not reader.fieldnames or not required.issubset(reader.fieldnames):
+            missing = ", ".join(sorted(required - set(reader.fieldnames or [])))
+            raise ValueError(f"Colonnes CSV absentes: {missing}")
+        for line_number, item in enumerate(reader, start=2):
+            try:
+                lead_id = upsert_lead(
+                    db,
+                    item["url"],
+                    item["source"],
+                    snippet=item["snippet"],
+                    product=item["product"],
+                )
+                status = (item.get("status") or "new").strip()
+                if status not in {"new", "review"}:
+                    raise ValueError("statut CSV interdit")
+                score = int((item.get("score") or "0").strip())
+                public_fact = (item.get("public_fact") or "").strip()
+                reasons_raw = (item.get("score_reasons") or "[]").strip()
+                reasons = json.loads(reasons_raw)
+                if not isinstance(reasons, list) or not all(isinstance(reason, str) for reason in reasons):
+                    raise ValueError("score_reasons doit être une liste JSON de textes")
+                if status == "review" and (score < minimum_score or not public_fact):
+                    raise ValueError("un dossier en review exige le score minimal et un fait public")
+                db.execute(
+                    """UPDATE leads SET status=?, score=?, score_reasons=?, public_fact=?,
+                       contact_name=?, contact_email=?, checked_at=? WHERE id=?""",
+                    (
+                        status,
+                        max(0, min(score, 10)),
+                        json.dumps(reasons, ensure_ascii=False),
+                        public_fact[:500],
+                        (item.get("contact_name") or "")[:120],
+                        (item.get("contact_email") or "")[:254],
+                        utcnow() if status == "review" else None,
+                        lead_id,
+                    ),
+                )
+                row = db.execute("SELECT * FROM leads WHERE id=?", (lead_id,)).fetchone()
+                subject, body = make_draft(row, config)
+                subject = (item.get("draft_subject") or subject).strip()
+                body = (item.get("draft_body") or body).strip()
+                db.execute(
+                    "UPDATE leads SET draft_subject=?, draft_body=? WHERE id=?",
+                    (subject[:300], body[:10_000], lead_id),
+                )
+                db.execute(
+                    "INSERT INTO events(lead_id,kind,detail,created_at) VALUES(?,?,?,?)",
+                    (lead_id, "imported", path.name, utcnow()),
+                )
+                db.commit()
+                imported += 1
+            except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+                db.rollback()
+                raise ValueError(f"CSV ligne {line_number}: {exc}") from exc
+    return imported
+
+
 def brave_discover(db: sqlite3.Connection, config: dict[str, Any]) -> int:
     api_key = os.environ.get("BRAVE_SEARCH_API_KEY", "").strip()
     if not api_key:
@@ -455,6 +524,8 @@ def main() -> int:
     add.add_argument("--source", default="Ajout manuel")
     add.add_argument("--snippet", default="")
     add.add_argument("--product", default="")
+    batch = sub.add_parser("import")
+    batch.add_argument("input", type=Path)
     run = sub.add_parser("run")
     run.add_argument("--skip-discovery", action="store_true")
     run.add_argument("--limit", type=int, default=50)
@@ -473,6 +544,8 @@ def main() -> int:
     elif args.command == "add":
         lead_id = upsert_lead(db, args.url, args.source, snippet=args.snippet, product=args.product)
         print(f"Prospect #{lead_id} ajouté")
+    elif args.command == "import":
+        print(f"{import_leads(db, args.input, config)} prospects importés depuis {args.input}")
     elif args.command == "run":
         discovered = 0 if args.skip_discovery else brave_discover(db, config)
         checked, queued = process_pending(db, config, args.limit)
