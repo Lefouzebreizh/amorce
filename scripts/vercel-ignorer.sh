@@ -152,20 +152,16 @@
 racine=$(git rev-parse --show-toplevel 2>/dev/null) || exit 1
 cd "$racine" || exit 1
 
-# Vercel peut fournir le SHA qui précédait le push courant. C'est la seule base
-# qui couvre correctement un push contenant plusieurs commits. On ne lui fait
-# confiance que s'il existe et est bien un ancêtre de HEAD. Sinon, repli prudent
-# sur le parent immédiat ; si même lui manque, on déploie (fail-open).
+# Vercel fournit le SHA du dernier déploiement réussi, pas celui du dernier
+# push : https://vercel.com/docs/environment-variables/system-environment-variables
+# Sans cette base, HEAD^ ne prouve rien sur les changements restés non déployés
+# (push multi-commits, historique tronqué ou réécrit). On déploie donc en cas
+# de doute, sans chercher d'identifiant ni télécharger d'historique.
 base="${VERCEL_GIT_PREVIOUS_SHA:-}"
-if [ -n "$base" ]; then
-  git cat-file -e "$base^{commit}" >/dev/null 2>&1 || base=""
-  if [ -n "$base" ] && ! git merge-base --is-ancestor "$base" HEAD; then
-    base=""
-  fi
-fi
-
-if [ -z "$base" ]; then
-  base=$(git rev-parse --verify HEAD^ 2>/dev/null) || exit 1
+if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null ||
+   ! git merge-base --is-ancestor "$base" HEAD 2>/dev/null; then
+  echo "Dernier déploiement réussi non comparable — déploiement lancé."
+  exit 1
 fi
 
 # `git diff --quiet` implique `--exit-code` : 0 s'il n'y a aucune différence,

@@ -13,20 +13,36 @@ git -C "$depot" add .
 git -C "$depot" commit -qm initial
 base=$(git -C "$depot" rev-parse HEAD)
 
+verifier() {
+  local attendu="$1" libelle="$2" precedent="$3" chemin="$4" code=0
+  (cd "$depot" && VERCEL_GIT_PREVIOUS_SHA="$precedent" bash vercel-ignorer.sh "$chemin") || code=$?
+  if [ "$code" -ne "$attendu" ]; then
+    echo "$libelle : sortie $code au lieu de $attendu." >&2
+    exit 1
+  fi
+}
+
+verifier 1 "Premier déploiement" "" app
+
 echo changement > "$depot/app/fichier.txt"
 git -C "$depot" commit -qam application
 echo documentation > "$depot/README.md"
 git -C "$depot" add README.md
 git -C "$depot" commit -qm documentation
 
-if (cd "$depot" && VERCEL_GIT_PREVIOUS_SHA="$base" bash vercel-ignorer.sh app); then
-  echo "Le filtre a ignoré un changement multi-commit." >&2
-  exit 1
-fi
+verifier 1 "Changement multi-commit" "$base" app
+verifier 0 "Chemin inchangé" "$base" dossier-absent
+verifier 1 "Base absente après plusieurs commits" "" app
+verifier 1 "Objet absent de l'historique" "0000000000000000000000000000000000000000" app
 
-if ! (cd "$depot" && VERCEL_GIT_PREVIOUS_SHA="$base" bash vercel-ignorer.sh dossier-absent); then
-  echo "Le filtre a déployé un chemin inchangé." >&2
-  exit 1
-fi
+# Un déploiement réussi peut appartenir à une branche réécrite.
+arbre=$(git -C "$depot" rev-parse 'HEAD^{tree}')
+divergent=$(git -C "$depot" commit-tree "$arbre" -p "$base" -m divergence)
+verifier 1 "Base divergente" "$divergent" app
+verifier 0 "Même version déjà déployée" "$(git -C "$depot" rev-parse HEAD)" app
 
-echo "Filtre Vercel validé, y compris sur un push multi-commit."
+# Documentation seule après le dernier déploiement applicatif.
+application=$(git -C "$depot" rev-parse HEAD^)
+verifier 0 "Documentation seule depuis le déploiement" "$application" app
+
+echo "Filtre Vercel validé : 8 cas, dont historique absent ou divergent."

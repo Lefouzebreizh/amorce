@@ -34,5 +34,7 @@ jobs:
           node-version: '22'
       - name: Vérifier le registre
         run: node scripts/vercel-verifier-registre.mjs
+      - name: Tester les refus du registre
+        run: node --test scripts/vercel-tester-registre.mjs
       - name: Tester le filtre de déploiement
         run: bash scripts/vercel-tester-filtre.sh
