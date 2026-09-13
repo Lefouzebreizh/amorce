@@ -4,6 +4,7 @@
     "nom": "IA RH",
     "emoji": "👥",
     "actif": false,
+    "activation_automatique": true,
     "domaine": "https://lefouzebreizh.github.io/amorce/rh/",
     "metier": "recruteurs et responsables des ressources humaines",
     "h1_accent": "L'IA des RH",
