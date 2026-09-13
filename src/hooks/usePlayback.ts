@@ -123,61 +123,48 @@ type ContextCache = { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; 
 /** Écart en deçà duquel un rush est considéré déjà au bon endroit. */
 const TOLERANCE_HORS_LIGNE = 0.004;
 
-/**
- * Délai au-delà duquel on renonce à attendre un déplacement.
- *
- * Un `seeked` qui n'arrive jamais figerait l'export entier. Mieux vaut une
- * image prise un peu tôt qu'un export qui ne rend jamais la main — et le cas
- * ne se produit que sur un fichier abîmé, où l'image d'après sera fausse de
- * toute façon.
- */
-const ATTENTE_MAX_MS = 3000;
+/** Une attente expirée doit interrompre l'export, jamais figer un plan. */
+const ATTENTE_MAX_MS = 10000;
 
-/**
- * Place un rush à l'instant voulu et attend que l'image y soit réellement.
- *
- * Régler `currentTime` ne change pas l'image tout de suite : le décodeur doit
- * atteindre la position demandée. Dessiner sans attendre `seeked` grave donc
- * l'image **précédente** — et comme l'écart est d'une fraction de seconde, le
- * défaut ne se voit qu'en regardant le film, jamais dans une mesure.
- *
- * Une image fixe n'a rien à déplacer : `getVideo` ne rend que les rushes, et
- * c'est voulu — brancher quoi que ce soit sur un `<img>` lèverait.
- */
-function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Promise<void> {
-  const video = pool.getVideo(item.clip.id);
-  if (!video) return Promise.resolve();
-
-  const visible = temps >= item.start && temps < item.end;
-  if (!visible) {
-    if (!video.paused) video.pause();
-    return Promise.resolve();
-  }
-
-  // Hors ligne, un rush ne joue jamais : on le déplace image par image. Le
-  // laisser jouer le ferait dériver entre deux compositions.
-  if (!video.paused) video.pause();
-
-  if (!Number.isFinite(video.duration) || video.readyState === 0) return Promise.resolve();
-
-  const vise = item.clip.inPoint + (temps - item.start) * item.clip.speed;
-  const borne = Math.max(0, Math.min(vise, video.duration - 0.02));
-
-  if (Math.abs(video.currentTime - borne) <= TOLERANCE_HORS_LIGNE) return Promise.resolve();
-
-  return new Promise<void>((resoudre) => {
-    let fini = false;
-    const finir = () => {
-      if (fini) return;
-      fini = true;
-      video.removeEventListener('seeked', finir);
-      clearTimeout(minuteur);
-      resoudre();
+function attendreVideo(video: HTMLVideoElement, evenement: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const nettoyer = () => {
+      clearTimeout(timer);
+      video.removeEventListener(evenement, terminer);
+      video.removeEventListener('error', echouer);
     };
-    const minuteur = setTimeout(finir, ATTENTE_MAX_MS);
-    video.addEventListener('seeked', finir, { once: true });
-    video.currentTime = borne;
+    const terminer = () => { nettoyer(); resolve(); };
+    const echouer = () => {
+      nettoyer();
+      reject(new Error('Le rush ne peut pas être décodé à cet instant. Réessaie l’export.'));
+    };
+    const timer = setTimeout(echouer, ATTENTE_MAX_MS);
+    video.addEventListener(evenement, terminer, { once: true });
+    video.addEventListener('error', echouer, { once: true });
+    if (video.error) echouer();
   });
+}
+
+/** Positionne une image réelle ; la durée validée à l'import reste la référence. */
+async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Promise<void> {
+  const video = pool.getVideo(item.clip.id);
+  if (!video) return;
+  const visible = temps >= item.start && temps < item.end;
+  if (!video.paused) video.pause();
+  if (!visible) return;
+
+  if (video.readyState < 2) await attendreVideo(video, 'loadeddata');
+  // Les WebM MediaRecorder peuvent annoncer Infinity sur ce nouveau décodeur,
+  // alors que l'import a déjà mesuré leur durée. Les ignorer figeait le plan.
+  const fin = item.clip.outPoint;
+  const vise = item.clip.inPoint + (temps - item.start) * item.clip.speed;
+  const borne = Math.max(0, Math.min(vise, fin - 0.02));
+  if (video.seeking) await attendreVideo(video, 'seeked');
+  if (Math.abs(video.currentTime - borne) <= TOLERANCE_HORS_LIGNE) return;
+  const pret = attendreVideo(video, 'seeked');
+  video.currentTime = borne;
+  await pret;
+  if (video.readyState < 2) await attendreVideo(video, 'loadeddata');
 }
 
 export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {

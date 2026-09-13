@@ -136,6 +136,7 @@ jobs:
           name: amorce-captures
           path: |
             .fixtures/captures/
+            .fixtures/rushes/
             /tmp/dev.log
           if-no-files-found: warn
           retention-days: 7
