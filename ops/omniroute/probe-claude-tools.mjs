@@ -5,7 +5,7 @@ const root=path.resolve(process.argv[2]),data=path.join(root,'.runtime'),work=pa
 fs.mkdirSync(work,{recursive:true});
 const file=path.join(work,'omniroute-tool-test.txt'),expected='OMNI_TOOL_'+randomBytes(8).toString('hex');
 fs.writeFileSync(file,expected,{mode:0o600});
-const args=[path.join(root,'claude-via-omniroute.mjs'),root,'--print','--tools','Read','--allowedTools','Read','--strict-mcp-config','--no-session-persistence','--setting-sources','','--max-turns','3','--output-format','stream-json','--verbose','Utilise une seule fois ton outil Read pour lire '+file+'. Reponds uniquement par le contenu exact. Ne lis aucun autre fichier et n utilise aucun autre outil.'];
+const args=[path.join(root,'claude-via-omniroute.mjs'),root,'--print','--tools','Read','--allowedTools','Read','--strict-mcp-config','--no-session-persistence','--setting-sources','','--max-turns','3','--output-format','stream-json','--verbose','Utilise une seule fois ton outil Read pour lire '+file+'. Reponds uniquement par le jeton commencant par OMNI_TOOL_. Ignore les numeros de ligne ajoutes par Read : aucun numero, tabulation, guillemet ou commentaire dans ta reponse. Ne lis aucun autre fichier et n utilise aucun autre outil.'];
 const child=spawn(process.execPath,args,{cwd:work,stdio:['ignore','pipe','pipe']});let out='',timedOut=false;
 child.stdout.on('data',b=>out+=b);child.stderr.resume();
 const timer=setTimeout(()=>{timedOut=true;if(process.platform==='win32')spawnSync('taskkill',['/PID',String(child.pid),'/T','/F'],{stdio:'ignore'});else child.kill('SIGTERM');},90000);
