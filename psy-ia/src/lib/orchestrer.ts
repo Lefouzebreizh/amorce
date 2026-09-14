@@ -19,6 +19,7 @@ import { detecterCrise } from './crisisDetection';
 import { construireMessageCrise } from './crisisMessage';
 import { PROMPT_SYSTEME } from './systemPrompt';
 import { evaluerLimitesSession, type EtatSession } from './sessionLimits';
+import { masquerSecrets, validerCleAnthropic } from './secrets';
 
 export type Tour = { role: 'user' | 'assistant'; texte: string };
 
@@ -65,7 +66,8 @@ export async function traiterMessage(
   // --- Couche 3 : limites structurelles de session. ---
   const limites = session ? evaluerLimitesSession(session) : { rappelDiscret: false, redirectionFerme: false };
 
-  if (!cleAnthropic) {
+  const validationCle = validerCleAnthropic(cleAnthropic);
+  if (!validationCle.valide && validationCle.raison === 'absent') {
     // Échec explicite plutôt qu'une réponse simulée : faire semblant de
     // répondre coûterait plus cher qu'un message d'erreur honnête.
     return {
@@ -80,8 +82,7 @@ export async function traiterMessage(
   // `TypeError: Headers.append: … is an invalid header value` qui ne dit
   // rien de la cause, et le message d'erreur brut finit dans les journaux —
   // exactement l'endroit où une clé ne doit jamais apparaître deux fois.
-  const cleNettoyee = cleAnthropic.trim();
-  if (/\s/.test(cleNettoyee)) {
+  if (!validationCle.valide) {
     return {
       corps: {
         reponse: '',
@@ -97,7 +98,7 @@ export async function traiterMessage(
   const reponseAnthropic = await appelerLlm('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
-      'x-api-key': cleNettoyee,
+      'x-api-key': validationCle.valeur,
       'anthropic-version': '2023-06-01',
       'content-type': 'application/json',
     },
@@ -115,7 +116,7 @@ export async function traiterMessage(
     // inconnu, quota) rend tous le même message générique et un diagnostic
     // à distance devient impossible.
     const corpsErreur = await reponseAnthropic.text().catch(() => '(corps illisible)');
-    console.error(`Anthropic a refusé la requête : ${reponseAnthropic.status} ${corpsErreur}`);
+    console.error(`Anthropic a refusé la requête : ${reponseAnthropic.status} ${masquerSecrets(corpsErreur, [validationCle.valeur])}`);
     return { corps: { reponse: '', crise: false, erreur: 'Le fournisseur LLM a refusé la requête.' }, statut: 502 };
   }
   const resultat = await reponseAnthropic.json();
