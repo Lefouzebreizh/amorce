@@ -715,6 +715,13 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   citant l'autre plutôt qu'en la recopiant.
 - **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
 - **audit-radar/** — radar d’acquisition semi-automatique en Python standard. Il découvre ou importe des signaux publics, refuse les hôtes privés, qualifie avec un score explicable et prépare des brouillons soumis à validation humaine. Il n’envoie aucun message. Se vérifie avec `python3 -m unittest discover -s audit-radar/tests`.
+- **qa-release/** — sas de sortie transversal, piloté par
+  `projects.json`. Il vérifie chaque URL déclarée sur mobile, Redmi Note 12,
+  tablette et ordinateur, puis produit captures et rapports d'accessibilité,
+  réseau, console et mise en page. `npm test` valide le manifeste et le moteur
+  sans navigateur ; `npm run qa -- --project <id>` conduit les navigateurs
+  installés et ne doit jamais transformer un navigateur absent en faux feu
+  vert.
 - **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
 - **moteur-administratif/** — le moteur partagé d'une famille de produits
   personnels (Le Coffre, Le Dossier, Le Recours, Le Classeur, La Relève), Python.
