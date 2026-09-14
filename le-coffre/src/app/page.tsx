@@ -58,7 +58,7 @@ export default function PageAccueil() {
       </header>
       <div className={styles.content}>
         <section className={styles.intro} aria-labelledby="titre-accueil">
-          <h1 id="titre-accueil" className="sr-only">Mon Tiroir Secret, coffre ouvert sur la mer</h1>
+          <h1 id="titre-accueil" className="sr-only">Mon Tiroir Secret, espace privé lumineux</h1>
           <CoffreMer ouvert={coffreOuvert} onBasculer={() => setCoffreOuvert((ouvert) => !ouvert)} />
         </section>
         <section id="connexion" tabIndex={-1} className={styles.access} aria-labelledby="titre-connexion">
