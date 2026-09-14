@@ -2,11 +2,40 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { EnregistrerServiceWorker } from './EnregistrerServiceWorker';
 
+const URL_PUBLIQUE = 'https://coffre-puce.vercel.app';
+
 export const metadata: Metadata = {
-  title: 'Mon Tiroir Secret — tes papiers, tes échéances',
+  metadataBase: new URL(URL_PUBLIQUE),
+  title: {
+    default: 'Mon Tiroir Secret — tes papiers, tes échéances',
+    template: '%s | Mon Tiroir Secret',
+  },
   description:
     'Tes documents chiffrés avant stockage, tes papiers et tes échéances au même endroit. Les fonctions IA transmettent les informations nécessaires à leur traitement.',
-  robots: { index: true, follow: true },
+  alternates: { canonical: '/' },
+  applicationName: 'Mon Tiroir Secret',
+  creator: 'Lefouzèbreizh Studio',
+  publisher: 'Lefouzèbreizh Studio',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'fr_FR',
+    url: '/',
+    siteName: 'Mon Tiroir Secret',
+    title: 'Mon Tiroir Secret — tes papiers, tes échéances',
+    description:
+      'Un espace personnel pour retrouver ses papiers et ses échéances, avec chiffrement dans le navigateur avant stockage.',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Mon Tiroir Secret — tes papiers, tes échéances',
+    description:
+      'Un espace personnel pour retrouver ses papiers et ses échéances, avec chiffrement dans le navigateur avant stockage.',
+  },
   // PWA installable, lancée sans chrome de navigateur visible — voir
   // `manifest.ts` pour les icônes et `sw.js` pour ce qui la rend
   // installable et rechargeable hors ligne.

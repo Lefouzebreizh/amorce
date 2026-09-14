@@ -6,6 +6,27 @@ import { supabase } from '@/lib/supabase';
 import { CoffreMer } from './coffre/CoffreMer';
 import styles from './accueil.module.css';
 
+const donneesStructurees = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Mon Tiroir Secret',
+  url: 'https://coffre-puce.vercel.app/',
+  description:
+    'Un espace personnel pour retrouver ses papiers et ses échéances, avec chiffrement dans le navigateur avant stockage.',
+  applicationCategory: 'ProductivityApplication',
+  operatingSystem: 'Navigateur web',
+  inLanguage: 'fr-FR',
+  creator: {
+    '@type': 'Organization',
+    name: 'Lefouzèbreizh Studio',
+  },
+  featureList: [
+    'Chiffrement des documents dans le navigateur avant stockage',
+    'Classement de papiers',
+    'Suivi des échéances',
+  ],
+};
+
 export default function PageAccueil() {
   const routeur = useRouter();
   const [identifiant, setIdentifiant] = useState('');
@@ -49,6 +70,10 @@ export default function PageAccueil() {
 
   return (
     <main className={styles.page}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(donneesStructurees) }}
+      />
       <header className={styles.header}>
         <div className={styles.brandBlock}>
           <p className={styles.brand}>Mon Tiroir Secret</p>
