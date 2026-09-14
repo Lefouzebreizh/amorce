@@ -116,6 +116,14 @@ function verifierRegistre() {
       if (!estObjet(json) || typeof json.ignoreCommand !== 'string' || !json.ignoreCommand.trim()) {
         erreurs.push(`${projet.name} : ignoreCommand doit être une commande non vide`);
       }
+      // Convention versionnée du dépôt : vérifier le préfixe littéral sans
+      // exécuter une commande arbitraire fournie par une PR dans le validateur.
+      const gardePreview = 'if [ "$VERCEL_ENV" != "preview" ]; then exit 0; fi; ';
+      if (projet.mode === 'preview-only' &&
+          (json.git?.deploymentEnabled?.main !== false ||
+           typeof json.ignoreCommand !== 'string' || !json.ignoreCommand.startsWith(gardePreview))) {
+        erreurs.push(`${projet.name} : protection preview-only requise (main exclue et garde VERCEL_ENV canonique)`);
+      }
       if (projet.mode === 'disabled-vercel' && json.ignoreCommand !== 'exit 0') {
         erreurs.push(`${projet.name} : coupe-circuit Vercel attendu`);
       }

@@ -82,3 +82,32 @@ for (const [nom, modifier, message] of refus) {
     assert.match(resultat.stderr, message);
   });
 }
+
+const gardePreview = 'if [ "$VERCEL_ENV" != "preview" ]; then exit 0; fi; ';
+function preview({ manifeste, depot }, configuration) {
+  manifeste.projects[0].mode = 'preview-only';
+  writeFileSync(join(depot, 'app/vercel.json'), JSON.stringify(configuration));
+}
+
+test('preview-only avec garde environnement et branche main exclue est accepté', () => {
+  const resultat = verifier((contexte) => preview(contexte, {
+    git: { deploymentEnabled: { main: false } },
+    ignoreCommand: gardePreview + 'exit 1',
+  }));
+  assert.equal(resultat.status, 0, resultat.stderr);
+});
+
+for (const [nom, configuration] of [
+  ['aucune protection', { ignoreCommand: 'exit 1' }],
+  ['main seule exclue', { git: { deploymentEnabled: { main: false } }, ignoreCommand: 'exit 1' }],
+  ['garde environnement seule', { ignoreCommand: gardePreview + 'exit 1' }],
+  ['main réactivée', { git: { deploymentEnabled: { main: true } }, ignoreCommand: gardePreview + 'exit 1' }],
+  ['garde inversée', { git: { deploymentEnabled: { main: false } }, ignoreCommand: 'if [ "$VERCEL_ENV" = "preview" ]; then exit 0; fi; exit 1' }],
+  ['garde commentée', { git: { deploymentEnabled: { main: false } }, ignoreCommand: '# ' + gardePreview + '\nexit 1' }],
+]) {
+  test(`refus preview-only : ${nom}`, () => {
+    const resultat = verifier((contexte) => preview(contexte, configuration));
+    assert.equal(resultat.status, 1, resultat.stdout + resultat.stderr);
+    assert.match(resultat.stderr, /protection preview-only/);
+  });
+}
