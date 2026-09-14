@@ -1,0 +1,67 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { selectionner, preparer } from './preparer-prospects.mjs';
+
+const verificationRecente = { status: 'absent', checked_at: new Date().toISOString().slice(0, 10), sources: ['https://example.com/recherche'] };
+const p = { id: 'atelier-test', name: 'Atelier TEST fictif', city: 'Rennes', observation: 'Votre fiche de test présente la menuiserie.', sources: ['https://example.com'], phone: '02 99 00 00 00', phone_source: 'https://example.com', services: 'Menuiserie', metier: 'menuisier', site_check: verificationRecente };
+const input = prospects => ({ prospects, exclusions: [], signature: 'Équipe de test' });
+test('les oppositions couvrent les formats français et internationaux', () => {
+  for (const phone of ['+33 2 99 00 00 00', '0033 2 99 00 00 00', '+33 (0)2 99 00 00 00']) {
+    assert.equal(selectionner({ ...input([{ ...p, phone }]), exclusions: [{ phone: p.phone }] })[0].reason, 'exclusion');
+    assert.equal(selectionner({ ...input([p]), exclusions: [phone] })[0].reason, 'exclusion');
+  }
+});
+test('une opposition se propage aux alias indirects indépendamment de leur ordre', () => {
+  const a = { ...p, id: 'a', name: 'Atelier Alpha', email: 'alpha@example.com', phone: '', opposition: true };
+  const b = { ...p, id: 'b', name: 'Atelier Beta', email: a.email };
+  const c = { ...p, id: 'c', name: 'Atelier Gamma', phone: '+33 2 99 00 00 00' };
+  assert(selectionner(input([c, b, a])).every(x => x.reason === 'exclusion'));
+});
+test('opposition ultérieure et contacts déjà envoyés bloquent tous leurs doublons', () => {
+  assert(selectionner(input([p, { ...p, opposition: true }])).every(x => x.reason === 'exclusion'));
+  assert.equal(selectionner(input([{ ...p, sent: true }]))[0].reason, 'exclusion');
+  assert.equal(selectionner({ ...input([p]), exclusions: ['Atelier Test fictif'] })[0].reason, 'exclusion');
+});
+test('déduplication et refus des chemins injectés', () => {
+  assert.equal(selectionner(input([p, { ...p, id: 'autre' }]))[1].reason, 'doublon');
+  assert.equal(selectionner(input([{ ...p, id: '../../ailleurs' }]))[0].reason, 'identifiant invalide');
+});
+test('un site existant, une absence non sourcée ou une vérification ancienne bloquent la préparation', () => {
+  const maintenant = new Date('2026-09-13T12:00:00Z');
+  assert.equal(selectionner(input([{ ...p, site_check: { ...verificationRecente, status: 'present' } }]), maintenant)[0].reason, 'site existant');
+  assert.equal(selectionner(input([{ ...p, site_check: undefined }]), maintenant)[0].reason, 'absence de site non vérifiée');
+  assert.equal(selectionner(input([{ ...p, site_check: { status: 'absent', checked_at: '2026-09-13', sources: [] } }]), maintenant)[0].reason, 'source de vérification du site manquante');
+  assert.equal(selectionner(input([{ ...p, site_check: { status: 'absent', checked_at: '2026-02-30', sources: ['https://example.com'] } }]), maintenant)[0].reason, 'date de vérification du site invalide');
+  assert.equal(selectionner(input([{ ...p, site_check: { status: 'absent', checked_at: '2026-09-14', sources: ['https://example.com'] } }]), maintenant)[0].reason, 'vérification du site périmée');
+  assert.equal(selectionner(input([{ ...p, site_check: { status: 'absent', checked_at: '2026-08-13', sources: ['https://example.com'] } }]), maintenant)[0].reason, 'vérification du site périmée');
+  assert.equal(selectionner(input([{ ...p, site_check: { status: 'absent', checked_at: '2026-08-14', sources: ['https://example.com'] } }]), maintenant)[0].reason, '');
+  assert.equal(selectionner(input([{ ...p, site_check: { status: 'absent', checked_at: '2026-09-13', sources: ['https://example.com'] } }]), maintenant)[0].reason, '');
+});
+test('un profil avec site existant ne produit ni message ni démo', async () => {
+  const temp = await mkdtemp(path.join(tmpdir(), 'prospects-site-'));
+  try {
+    const out = path.join(temp, 'lot');
+    const result = await preparer(input([{ ...p, site_check: { ...verificationRecente, status: 'present' } }]), out);
+    assert.deepEqual(result, [{ id: p.id, status: 'exclu', reason: 'site existant' }]);
+    await assert.rejects(readFile(path.join(out, p.id, 'message.txt')), /ENOENT/);
+  } finally { await rm(temp, { recursive: true, force: true }); }
+});
+test('parcours réel, dossier incomplet, plafond et conservation du lot existant', async () => {
+  const temp = await mkdtemp(path.join(tmpdir(), 'prospects-'));
+  try {
+    const out = path.join(temp, 'lot');
+    const candidats = [p, { ...p, id: 'incomplet', name: 'Autre atelier', phone: '', phone_source: '' }, ...Array.from({ length: 5 }, (_, i) => ({ ...p, id: `reserve-${i}`, name: `Réserve ${i}`, phone: '', services: '' }))];
+    const result = await preparer(input(candidats), out);
+    assert.equal(result[0].status, 'a_valider');
+    assert.equal(result[1].status, 'a_completer');
+    assert.equal(result.filter(x => x.status === 'differe').length, 2);
+    assert.match(await readFile(path.join(out, p.id, 'index.html'), 'utf8'), /noindex/);
+    assert.doesNotMatch(result[1].message, /J’ai préparé/);
+    assert(result.filter(x => x.message).every(x => x.approved === false && x.sent === false));
+    await assert.rejects(preparer(input([p]), out), /EEXIST/);
+    assert.equal(JSON.parse(await readFile(path.join(out, 'file.json'), 'utf8')).envois, 0);
+  } finally { await rm(temp, { recursive: true, force: true }); }
+});

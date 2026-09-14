@@ -1,0 +1,20 @@
+{
+  "name": "@lefouzebreizh/qa-release",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Sas de sortie multi-projets avec preuves visuelles",
+  "scripts": {
+    "qa": "node runner.mjs",
+    "check": "node --check runner.mjs && node runner.mjs --validate",
+    "test": "npm run check",
+    "install:browsers": "playwright install chromium webkit"
+  },
+  "dependencies": {
+    "axe-core": "4.13.0",
+    "playwright": "1.63.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

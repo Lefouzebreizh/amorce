@@ -30,10 +30,25 @@ inventé. **Ce qui manque avant tout déploiement réel** :
 4. `secrets.ANTHROPIC_API_KEY` sur ce dépôt GitHub, pour que
    `audit-landing-lancer-audit.yml` puisse appeler `analyser_captures.py`.
 5. Le déploiement lui-même (Cloudflare Worker, comme `licence-serveur/`) —
-   **pas fait depuis cette session**, et volontairement : c'est un geste
-   d'infrastructure sur un compte auquel cette session n'a pas la main, et
-   toucher aux paiements est une zone sensible du dépôt (`CLAUDE.md`,
-   section Git) qui attend l'accord du propriétaire même une fois vert.
+   le raccord est prêt dans `src/worker.ts` et `wrangler.toml`, mais aucun
+   compte ni secret n'est modifié par le dépôt. Le déploiement reste un geste
+   d'infrastructure et de paiement à faire avec les valeurs ci-dessus.
+
+## Déployer quand les réglages existent
+
+```bash
+cd audit-landing/serveur-paiement
+npx wrangler secret put CLE_SECRETE_STRIPE
+npx wrangler secret put SECRET_WEBHOOK
+npx wrangler secret put JETON_DECLENCHEMENT
+# renseigner les quatre variables non secrètes dans wrangler.toml
+npx wrangler deploy
+```
+
+Puis reporter l'URL du Worker dans `site/index.html` à la place de
+`serveur-paiement-a-configurer.exemple`, et créer l'endpoint `/webhook` dans
+Stripe. Tant que cette adresse de repli reste en place, la page dit honnêtement
+que le paiement est bientôt disponible.
 
 ## Ce qui est vérifié, et comment
 

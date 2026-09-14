@@ -1,0 +1,43 @@
+{
+  "gateway": {
+    "mode": "local",
+    "bind": "loopback",
+    "port": 19001,
+    "auth": {
+      "mode": "token",
+      "token": "${OPENCLAW_GATEWAY_TOKEN}"
+    }
+  },
+  "browser": {"enabled": false},
+  "tools": {
+    "profile": "minimal",
+    "elevated": {"enabled": false}
+  },
+  "memory": {"search": {"provider": "none"}},
+  "agents": {
+    "defaults": {
+      "workspace": "${OPENCLAW_WORKSPACE}",
+      "model": {"primary": "omniroute/cxa/gpt-5.3-codex-spark"}
+    }
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "omniroute": {
+        "baseUrl": "http://127.0.0.1:20129",
+        "apiKey": "${OMNIROUTE_API_KEY}",
+        "api": "anthropic-messages",
+        "timeoutSeconds": 120,
+        "models": [{
+          "id": "cxa/gpt-5.3-codex-spark",
+          "name": "Codex Spark via OmniRoute",
+          "reasoning": true,
+          "input": ["text"],
+          "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
+          "contextWindow": 200000,
+          "maxTokens": 8192
+        }]
+      }
+    }
+  }
+}

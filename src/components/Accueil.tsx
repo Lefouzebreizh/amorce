@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { serveurConfigure } from '../licence/etat';
 
 import { BandeSure } from './BandeSure';
 import { RevealFooter, RevealLink, Section } from './RevealArea';
@@ -49,6 +50,10 @@ const CONCURRENTS = [
 ];
 
 export function Accueil() {
+  // La page suit la même disponibilité que le studio : avant l'ouverture
+  // des licences, le 1080p sans signature est déjà offert à tout le monde.
+  const licencesOuvertes = serveurConfigure();
+
   return (
     <div className="min-h-dvh bg-ink text-mist">
       {/*
@@ -89,31 +94,31 @@ export function Accueil() {
             style={{ animationDelay: '210ms' }}
           >
             <div>
-              <dt className="text-sm text-muted">Le studio complet</dt>
+              <dt className="text-sm text-muted">{licencesOuvertes ? 'Le studio complet' : 'Prix prévu à l’ouverture'}</dt>
               <dd className="text-2xl font-semibold text-mist">49 € une fois</dd>
             </div>
             <div>
-              <dt className="text-sm text-muted">Pour essayer</dt>
+              <dt className="text-sm text-muted">{licencesOuvertes ? 'Pour essayer' : 'Le studio aujourd’hui'}</dt>
               <dd className="text-2xl font-semibold text-accent">Gratuit</dd>
             </div>
           </dl>
 
           {/*
-            La preuve tient dans le premier écran, et c'est mesuré.
+            Le format proposé tient dans le premier écran.
 
             `/page-qui-vend` contrôle que promesse, prix, preuve et bouton
             cohabitent au-dessus de 873 px : sans elle, il faut décider de
             faire défiler avant d'avoir une raison de le faire. Ce sont les
-            valeurs relevées sur le dernier export, pas des arrondis.
+            formats proposés, pas une garantie sur chaque fichier produit.
           */}
           <p
             className="entree text-base leading-relaxed text-muted"
             style={{ animationDelay: '280ms' }}
           >
             <span className="font-semibold tabular-nums text-mist">
-              1080 × 1920, 30 images par seconde
+              {licencesOuvertes ? 'Essai en 720 × 1280 avec signature' : '1080 × 1920 sans signature, gratuitement'}
             </span>{' '}
-            — mesuré sur chaque fichier qui sort, pas estimé.
+            — {licencesOuvertes ? '1080 × 1920 sans signature avec la licence.' : 'avant l’ouverture des licences.'}
           </p>
 
           <Link
@@ -188,17 +193,17 @@ export function Accueil() {
         </Section>
 
         {/* --- La preuve, en chiffres vérifiables --------------------------- */}
-        <Section titre="Ce que le fichier qui sort vaut vraiment">
+        <Section titre="Les réglages de ton export">
           <p className="text-lg leading-relaxed text-muted">
-            Chaque export est mesuré, pas estimé. Ce sont les valeurs relevées
-            sur le dernier fichier produit :
+            Tu choisis la définition à l’étape Exporter. Les réglages prévus
+            pour le fichier sont :
           </p>
           <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-edge">
             {[
-              ['Définition', '1080 × 1920'],
-              ['Cadence', '30 i/s exactes'],
-              ['Images perdues', 'aucune'],
-              ['Pic sonore', 'sous −1 dBFS'],
+              ['Définition maximale gratuite', licencesOuvertes ? '720 × 1280' : '1080 × 1920'],
+              ['Cadence cible', '30 i/s'],
+              ['Format vertical', '9:16'],
+              ['Plafond sonore visé', '−1 dBFS'],
             ].map(([label, valeur]) => (
               <div key={label} className="bg-slab p-4">
                 <dt className="text-sm text-muted">{label}</dt>
@@ -210,8 +215,8 @@ export function Accueil() {
           </dl>
           <p className="text-base leading-relaxed text-muted">
             L’export encode image par image, hors ligne. Il ne filme pas ton
-            écran — c’est pourquoi un téléphone lent met plus longtemps sans
-            jamais perdre une image.
+            écran. Un téléphone lent peut allonger le rendu. Relis ton fichier
+            avant de le publier pour vérifier l’image et le son.
           </p>
         </Section>
 
@@ -262,7 +267,7 @@ export function Accueil() {
         </RevealLink>
 
         {/* --- Le prix, comparé pour de vrai ------------------------------- */}
-        <Section titre="49 €, une seule fois">
+        <Section titre={licencesOuvertes ? '49 €, une seule fois' : 'À l’ouverture des licences : 49 €, une seule fois'}>
           <p className="text-lg leading-relaxed text-muted">
             Ce que coûtent les outils qui font à peu près la même chose, relevé
             le 31 août 2026 :
@@ -291,10 +296,9 @@ export function Accueil() {
             </li>
           </ul>
           <p className="text-lg leading-relaxed text-muted">
-            Ce sont de bons outils. Ils se paient tous les mois, et ils
-            travaillent sur leurs serveurs. Amorce se paie une fois et travaille
-            sur ton appareil — c’est la seule différence, et elle explique le
-            prix dans les deux sens.
+            Ces offres ont des modes de paiement différents : abonnement ou
+            achat unique. Amorce prévoit un paiement unique de 49 €, et le
+            montage se fait sur ton appareil.
           </p>
         </Section>
 
@@ -305,8 +309,9 @@ export function Accueil() {
             exporter un fichier fini. Rien n’est bridé dans l’outil de travail.
           </p>
           <p className="text-lg leading-relaxed text-muted">
-            Les 49 € ouvrent la pleine définition et l’export sans signature.
-            Sur cet appareil, définitivement.
+            {licencesOuvertes
+              ? 'Sans licence, tu exportes jusqu’en 720 × 1280 avec la signature « monté avec Amorce ». Les 49 € ouvrent le 1080 × 1920 et retirent cette signature.'
+              : 'Aujourd’hui, tu exportes gratuitement jusqu’en 1080 × 1920, sans signature. À l’ouverture des licences, l’essai sera limité au 720 × 1280 avec signature ; la licence à 49 € ouvrira le 1080 × 1920 sans signature.'}
           </p>
         </Section>
 
@@ -319,7 +324,7 @@ export function Accueil() {
           contre l'identifiant de session Stripe, `LicenceBloc` la reçoit — et
           non un chemin souhaité.
         */}
-        <Section titre="Ce qui se passe quand tu paies">
+        <Section titre={licencesOuvertes ? 'Ce qui se passe quand tu paies' : 'Le fonctionnement prévu à l’ouverture des licences'}>
           <ol className="flex flex-col gap-4">
             {[
               'Tu paies par carte, chez Stripe. Amorce ne voit jamais ton numéro.',
@@ -378,7 +383,7 @@ export function Accueil() {
             Le bloc d'achat n'apparaît que le jour où il mène quelque part.
             Voir le bloc de tête : un bouton mort coûte un client convaincu.
           */}
-          {LIEN_ACHAT !== '' && (
+          {licencesOuvertes && LIEN_ACHAT !== '' && (
             <a
               href={LIEN_ACHAT}
               className="flex min-h-14 items-center justify-center rounded-2xl border border-edge px-6 text-lg font-semibold text-mist transition-colors hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
@@ -426,9 +431,9 @@ export function Accueil() {
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-edge bg-slab/95 px-5 py-3 backdrop-blur sm:hidden">
         <div className="mx-auto flex max-w-2xl items-center gap-4">
           <p className="flex-1 text-base leading-tight text-muted">
-            Gratuit pour essayer
+            {licencesOuvertes ? 'Gratuit en 720p signé' : 'Gratuit en 1080p'}
             <br />
-            <span className="text-mist">49 € pour tout ouvrir</span>
+            <span className="text-mist">{licencesOuvertes ? '49 € : 1080p sans signature' : 'Sans signature'}</span>
           </p>
           <Link
             href="/studio"

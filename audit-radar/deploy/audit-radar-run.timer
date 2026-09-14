@@ -1,0 +1,10 @@
+[Unit]
+Description=Lancer le Radar Reprise IA chaque matin
+
+[Timer]
+OnCalendar=Mon..Fri *-*-* 07:15:00 Europe/Paris
+Persistent=true
+RandomizedDelaySec=900
+
+[Install]
+WantedBy=timers.target

@@ -307,7 +307,7 @@ export const EXPORT_PRESETS: ExportPreset[] = [
   {
     id: 'light',
     label: '720 × 1280',
-    description: 'Deux fois moins de pixels : à choisir si l’export saccade.',
+    description: 'Moins de pixels à encoder : une définition réduite pour alléger le rendu.',
     scale: 2 / 3,
   },
   {

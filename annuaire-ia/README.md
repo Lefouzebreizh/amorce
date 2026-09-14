@@ -35,6 +35,15 @@ Deux travaux automatisés à la racine du dépôt :
 
 ## Les onze sites
 
+Deux sites sont actuellement actifs : `generaliste` et `education`. Les neuf
+autres bases restent prêtes mais en pause jusqu'à la pose d'au moins un lien
+commercial réel ; elles ne sont alors ni construites ni publiées.
+
+Pour `ecomm`, `immobilier`, `restauration`, `comptabilite`, `rh` et `btp`, la
+commande qui pose le premier vrai lien d'affiliation active aussi la niche. Les
+secteurs sensibles ou peu adaptés à l'affiliation restent exclus de ce
+lancement automatique.
+
 | Niche | Métier visé | Domaine prévu |
 | --- | --- | --- |
 | `immobilier` | Agents et négociateurs | ia-immobilier.fr |

@@ -31,6 +31,9 @@ def echapper(texte: str) -> str:
     qu'on vient de poser. Une virgule non protégée coupe la valeur en deux, et
     l'agenda affiche la moitié d'une consigne — ce qui est pire que rien.
     """
+    # Les textes copiés peuvent mélanger CRLF, CR et LF.
+    # Normaliser avant l'échappement pour ne garder aucun CR brut dans l'ICS.
+    texte = texte.replace("\r\n", "\n").replace("\r", "\n")
     return (texte.replace("\\", "\\\\")
                  .replace(";", "\\;")
                  .replace(",", "\\,")

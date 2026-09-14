@@ -8,8 +8,8 @@
 # cohérence du dépôt qui a réclamé ce fichier, le jour où le projet a gagné un
 # script `test` : « sait se tester mais aucun workflow ne le surveille ».
 #
-# Pas d'étape `build` : ce qui compte ici est le chiffrement et les opérations
-# du coffre, et `typecheck` couvre déjà ce que le build vérifierait du code.
+# Le build complète les tests et le typage : c'est la preuve que Next.js peut
+# réellement produire l'artefact que Vercel devra servir.
 #
 # Les trois étapes sont séparées pour que le résumé dise laquelle a cassé, et
 # `!cancelled()` les laisse toutes parler : un test rouge n'empêche pas de
@@ -45,7 +45,7 @@ defaults:
 
 jobs:
   verifier:
-    name: Tests, types et lint
+    name: Tests, types, lint et build
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -98,3 +98,12 @@ jobs:
       - name: Lint
         if: ${{ !cancelled() }}
         run: npm run lint
+
+      - name: Build de production
+        if: ${{ !cancelled() }}
+        run: npm run build
+        env:
+          # Valeurs publiques factices : le build vérifie l'artefact sans
+          # dépendre du projet Supabase réel ni exposer ses identifiants.
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-only-placeholder

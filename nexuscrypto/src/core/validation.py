@@ -18,6 +18,7 @@ module ne fait qu'empêcher de démarrer tant que la case n'est pas cochée.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -61,21 +62,30 @@ def charger(chemin: Path | str | None = None) -> EtatValidation:
         # supposer une validation qu'on ne peut pas lire.
         return EtatValidation()
 
-    brut = yaml.safe_load(chemin.read_text(encoding="utf-8")) or {}
+    try:
+        brut = yaml.safe_load(chemin.read_text(encoding="utf-8")) or {}
+    except (OSError, UnicodeError, yaml.YAMLError):
+        return EtatValidation()
     if not isinstance(brut, Mapping):
         return EtatValidation()
 
     def _bool(cle: str, defaut: bool = False) -> bool:
-        return bool(brut.get(cle, defaut))
+        # Une chaîne "false" est vraie pour bool(), mais n'est pas un accord.
+        return brut.get(cle, defaut) is True
 
     def _flottant(cle: str, defaut: float = 0.0) -> float:
         try:
-            return float(brut.get(cle, defaut))
-        except (TypeError, ValueError):
+            valeur = brut.get(cle, defaut)
+            if isinstance(valeur, bool):
+                return defaut
+            nombre = float(valeur)
+            return nombre if isfinite(nombre) and nombre >= 0 else defaut
+        except (TypeError, ValueError, OverflowError):
             return defaut
 
     def _texte(cle: str) -> str:
-        return str(brut.get(cle, "") or "")
+        valeur = brut.get(cle, "")
+        return valeur.strip() if isinstance(valeur, str) else ""
 
     return EtatValidation(
         backtest_multi_regimes_fait=_bool("backtest_multi_regimes_fait"),
@@ -96,24 +106,24 @@ def pret_pour_production(
 
     manques: list[str] = []
 
-    if not etat.backtest_multi_regimes_fait:
+    if etat.backtest_multi_regimes_fait is not True:
         manques.append(
             "aucun backtest multi-régimes déclaré fait "
             "(`backtest_multi_regimes_fait: true` dans config/validation.yaml, "
             "avec la note qui dit sur quels régimes)"
         )
-    if etat.paper_trading_jours < jours_minimum:
+    if not isfinite(etat.paper_trading_jours) or etat.paper_trading_jours < jours_minimum:
         manques.append(
             f"paper trading de {etat.paper_trading_jours:g} jour(s) déclaré(s), "
             f"sous le plancher de {jours_minimum:g} — une période trop courte ne "
             "traverse aucun régime de marché"
         )
-    if not etat.paper_trading_concluant:
+    if etat.paper_trading_concluant is not True:
         manques.append(
             "le paper trading n'est pas déclaré concluant "
             "(`paper_trading_concluant: true`, avec la note qui dit pourquoi)"
         )
-    if not etat.valide_par:
+    if not isinstance(etat.valide_par, str) or not etat.valide_par.strip():
         manques.append(
             "aucun nom dans `valide_par` : cet état doit être signé par la "
             "personne qui a regardé les résultats, pas généré seul"

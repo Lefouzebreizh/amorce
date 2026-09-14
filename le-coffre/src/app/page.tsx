@@ -3,12 +3,36 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { CoffreMer } from './coffre/CoffreMer';
+import styles from './accueil.module.css';
+
+const donneesStructurees = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Mon Tiroir Secret',
+  url: 'https://coffre-puce.vercel.app/',
+  description:
+    'Un espace personnel pour retrouver ses papiers et ses échéances, avec chiffrement dans le navigateur avant stockage.',
+  applicationCategory: 'ProductivityApplication',
+  operatingSystem: 'Navigateur web',
+  inLanguage: 'fr-FR',
+  creator: {
+    '@type': 'Organization',
+    name: 'Lefouzèbreizh Studio',
+  },
+  featureList: [
+    'Chiffrement des documents dans le navigateur avant stockage',
+    'Classement de papiers',
+    'Suivi des échéances',
+  ],
+};
 
 export default function PageAccueil() {
   const routeur = useRouter();
-  const [email, setEmail] = useState('');
+  const [identifiant, setIdentifiant] = useState('');
+  const [motDePasse, setMotDePasse] = useState('');
+  const [coffreOuvert, setCoffreOuvert] = useState(false);
   const [enCours, setEnCours] = useState(false);
-  const [envoye, setEnvoye] = useState(false);
   const [erreur, setErreur] = useState('');
 
   useEffect(() => {
@@ -17,74 +41,105 @@ export default function PageAccueil() {
     });
   }, [routeur]);
 
-  async function envoyerLien(e: React.FormEvent) {
+  async function seConnecter(e: React.FormEvent) {
     e.preventDefault();
     setErreur('');
     setEnCours(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/coffre` : undefined },
+    const { data, error: erreurFonction } = await supabase.functions.invoke('connexion-coffre', {
+      body: { identifiant, motDePasse },
     });
+    const error = erreurFonction || (data?.error ? new Error(data.error) : null);
+    if (!error && data?.access_token && data?.refresh_token) {
+      const { error: erreurSession } = await supabase.auth.setSession({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
+      });
+      if (erreurSession) {
+        setEnCours(false);
+        setErreur('Connexion indisponible. Réessaie.');
+        return;
+      }
+    }
     setEnCours(false);
     if (error) {
-      setErreur(error.message);
+      setErreur(error.message === 'Trop de tentatives. Réessaie dans quelques minutes.' ? error.message : 'Identifiant ou mot de passe incorrect.');
       return;
     }
-    setEnvoye(true);
+    routeur.replace('/coffre');
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center gap-8 bg-gradient-to-b from-paper via-paper to-vert/5 px-6 py-16">
-      <div>
-        <p className="text-base font-semibold tracking-widest text-accent uppercase">Le Tiroir Secret</p>
-        <h1 className="mt-2 font-affiche text-4xl leading-tight texte-degrade">Tes papiers, tes corvées administratives</h1>
-        <p className="mt-4 text-ink-soft">
-          Dépose tes documents administratifs — chiffrés entièrement dans ton navigateur avant
-          d&apos;être envoyés. Ni nous, ni personne d&apos;autre, ne pouvons les lire sans ta phrase
-          secrète. C&apos;est ce que ni Digiposte ni Google Drive ne te promettent.
-        </p>
-      </div>
-
-      {envoye ? (
-        <div className="rounded-2xl border border-line bg-paper-raised p-6">
-          <p className="font-semibold">Lien envoyé.</p>
-          <p className="mt-2 text-sm text-ink-soft">
-            Regarde ta boîte mail (« {email} ») et clique sur le lien pour entrer — pas de mot de
-            passe à retenir pour ton compte. Ta phrase secrète du coffre, elle, se choisit à
-            l&apos;étape suivante et reste toujours entre toi et ton navigateur.
-          </p>
+    <main className={styles.page}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(donneesStructurees) }}
+      />
+      <header className={styles.header}>
+        <div className={styles.brandBlock}>
+          <p className={styles.brand}>Mon Tiroir Secret</p>
+          <span className={styles.signature}>Lefouzèbreizh Studio · accès privé</span>
         </div>
-      ) : (
-        <form onSubmit={envoyerLien} className="flex flex-col gap-3">
-          <label htmlFor="email" className="text-sm text-ink-soft">
-            Ton adresse e-mail
+        <a href="#connexion" className={styles.accessLink}>Ouvrir mon espace <span aria-hidden="true">↗</span></a>
+      </header>
+      <div className={styles.content}>
+        <section className={styles.intro} aria-labelledby="titre-accueil">
+          <h1 id="titre-accueil" className="sr-only">Mon Tiroir Secret, espace privé lumineux</h1>
+          <CoffreMer ouvert={coffreOuvert} onBasculer={() => setCoffreOuvert((ouvert) => !ouvert)} />
+        </section>
+        <section id="connexion" tabIndex={-1} className={styles.access} aria-labelledby="titre-connexion">
+          <div className={styles.accessHeading}>
+            <p className={styles.eyebrow}>Accès personnel</p>
+            <h2 id="titre-connexion">Entre quand tu es prêt.</h2>
+          </div>
+          <p className={styles.accessIntro}>Entre directement dans ton espace. Aucun lien à attendre dans ta boîte mail.</p>
+
+        <form onSubmit={seConnecter} className={styles.form} aria-busy={enCours}>
+          <label htmlFor="identifiant" className="text-sm text-ink-soft">
+            Ton identifiant
           </label>
           <input
-            id="email"
-            type="email"
+            id="identifiant"
+            type="text"
             required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="rounded-xl border border-line bg-paper-raised px-4 py-3 text-ink outline-none focus:border-accent focus:ring-1 focus:ring-accent"
-            placeholder="toi@exemple.fr"
+            autoComplete="username"
+            value={identifiant}
+            onChange={(e) => setIdentifiant(e.target.value)}
+            className={styles.input}
+            aria-invalid={!!erreur}
+            aria-describedby={erreur ? 'erreur-connexion' : undefined}
+            placeholder="lefouzebreizh"
           />
-          {erreur && <p className="text-sm text-wine">{erreur}</p>}
+          <label htmlFor="mot-de-passe" className="text-sm text-ink-soft">Ton mot de passe</label>
+          <input
+            id="mot-de-passe"
+            type="password"
+            required
+            autoComplete="current-password"
+            value={motDePasse}
+            onChange={(e) => setMotDePasse(e.target.value)}
+            className={styles.input}
+          />
+          {erreur && <p id="erreur-connexion" role="alert" className={styles.error}>{erreur}</p>}
           <button
             type="submit"
             disabled={enCours}
-            className="rounded-xl bg-bleu px-4 py-3 font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60"
+            className={styles.submit}
           >
-            {enCours ? 'Envoi…' : 'Recevoir un lien de connexion'}
+            {enCours ? 'Connexion…' : 'Entrer dans mon espace'}
           </button>
         </form>
-      )}
 
-      <p className="text-xs text-ink-soft">
-        Aucun mot de passe de compte à retenir : un lien à usage unique par e-mail. La phrase
-        secrète qui protège le contenu du coffre est une chose entièrement différente — elle
-        n&apos;atteint jamais nos serveurs, et personne ne peut la récupérer si tu l&apos;oublies.
-      </p>
+          <div className={styles.privacy}>
+            <h3>Ta phrase secrète protège le stockage.</h3>
+            <p>Tu la choisis à l&apos;étape suivante. Elle chiffre les documents dans ton navigateur avant stockage. Garde-la précieusement : personne ne peut la récupérer.</p>
+            <details>
+              <summary>Et les fonctions d&apos;intelligence artificielle ?</summary>
+              <p>Le classement automatique transmet les documents analysés en clair à notre serveur, puis au fournisseur d&apos;IA. L&apos;assistant transmet ta question et un résumé de tes papiers au fournisseur d&apos;IA via notre serveur.</p>
+            </details>
+          </div>
+        </section>
+      </div>
+      <footer className={styles.footer}>Moins de papiers dans la tête. Plus de place pour la vie.</footer>
     </main>
   );
 }

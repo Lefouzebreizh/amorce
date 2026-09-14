@@ -1,6 +1,6 @@
 import { captionSet, captionsFor } from './autoFinish.ts';
 import { uid } from './id.ts';
-import { MOUVEMENTS_ALTERNES, totalDuration } from './timeline.ts';
+import { MOUVEMENTS_ALTERNES, effectiveTransition, totalDuration } from './timeline.ts';
 import {
   DEFAULT_CLIP,
   type Caption,
@@ -20,12 +20,22 @@ import {
  * c'est de faire passer quelqu'un qui n'a jamais monté d'une pile de fichiers à
  * un résultat regardable, qu'il pourra ensuite retoucher plan par plan.
  *
- * Les choix appliqués sont ceux que l'analyse récompense : plans courts,
- * ouverture qui bouge, transitions ponctuées de bruitages, rendu cinéma dosé.
+ * Par défaut, conserve les vidéos entières, leur caméra et leur son. Le moteur
+ * ne détecte pas encore les événements : un prélèvement arbitraire de 2,1 s
+ * peut supprimer la révélation finale. Découpage court et habillage sont donc
+ * des choix explicites, jamais des preuves de pertinence ou de rétention.
  */
 
-/** Durée visée pour un plan. Au-delà de 3 s sans évènement, l'attention lâche. */
+/** Durée conventionnelle du prélèvement court, pas une mesure d'attention. */
 const TARGET_SHOT = 2.1;
+
+export type AutoEditOptions = {
+  /** Prélève le début des rushes ; ne détecte pas les meilleurs moments. */
+  shorten?: boolean;
+  visualEffects?: boolean;
+  soundEffects?: boolean;
+  captionGuide?: boolean;
+};
 
 /**
  * Durée visée pour le montage entier.
@@ -141,6 +151,7 @@ function cutFromAsset(
   index: number,
   keepWhole: boolean,
   visee = TARGET_SHOT,
+  visualEffects = false,
 ): Clip | null {
   if (asset.duration <= 0.2) return null;
 
@@ -150,7 +161,8 @@ function cutFromAsset(
   // premiers mots.
   const lead = keepWhole ? 0 : Math.min(asset.duration * 0.08, 0.4);
   const available = asset.duration - lead;
-  const length = keepWhole ? available : Math.max(MIN_SHOT, Math.min(visee, available));
+  const length = keepWhole ? available
+    : Math.max(visualEffects ? MIN_SHOT : MIN_SHOT_VU, Math.min(visee, available));
 
   if (length < 0.3) return null;
 
@@ -162,11 +174,13 @@ function cutFromAsset(
     outPoint: Math.min(asset.duration, lead + length),
     // Le premier plan doit démarrer sec : une transition sur du vide ne veut
     // rien dire, et ferait perdre les précieuses premières images.
-    transition: index === 0 ? 'cut' : TRANSITION_CYCLE[(index - 1) % TRANSITION_CYCLE.length],
-    transitionDuration: 0.3,
-    // Une ouverture qui avance vaut mieux qu'un plan fixe, et aucun plan ne
-    // reste immobile ensuite : voir `MOUVEMENTS_ALTERNES`.
-    motion: index === 0 ? 'zoomIn' : MOUVEMENTS_ALTERNES[index % MOUVEMENTS_ALTERNES.length],
+    transition: index === 0 || !visualEffects ? 'cut' : TRANSITION_CYCLE[(index - 1) % TRANSITION_CYCLE.length],
+    transitionDuration: visualEffects ? 0.3 : 0,
+    // Ce mouvement supplémentaire appartient à l'habillage facultatif. Une
+    // vidéo peut déjà porter sa caméra ; `none` respecte alors ce mouvement.
+    motion: visualEffects
+      ? (index === 0 ? 'zoomIn' : MOUVEMENTS_ALTERNES[index % MOUVEMENTS_ALTERNES.length])
+      : 'none',
   };
 }
 
@@ -177,11 +191,11 @@ export type AutoEditResult = {
 };
 
 /** Construit un montage complet à partir des rushes. */
-export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
+export function buildAutoEdit(assets: MediaAsset[], options: AutoEditOptions = {}): AutoEditResult {
   /*
    * Un seul rush : tout le propos y est, y compris ce qu'on y entend. On le
-   * garde entier. Avec plusieurs rushes, on est face à une suite de plans à
-   * enchaîner, et les couper court est précisément ce qu'on attend.
+   * garde entier. Plusieurs vidéos restent elles aussi entières par défaut ;
+   * seul le choix explicite `shorten` active les prélèvements courts.
    *
    * Une image fixe ne relève pas de ce raisonnement : elle ne porte aucune
    * parole qu'on couperait en plein milieu, et la garder entière donnerait
@@ -197,18 +211,24 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
    * `TARGET_SHOT` l'attention lâche. Entre les deux, on vise la durée du film
    * plutôt que celle du plan.
    */
-  const retenus = keepWhole ? assets : assets.slice(0, PLANS_MAX);
+  const retenus = keepWhole || !options.shorten ? assets : assets.slice(0, PLANS_MAX);
   const utilisables = Math.max(1, retenus.filter((a) => a.duration > 0.2).length);
   const visee = keepWhole
     ? TARGET_SHOT
-    : Math.max(MIN_SHOT, Math.min(TARGET_SHOT, DUREE_VISEE / utilisables));
+    : Math.max(options.visualEffects ? MIN_SHOT : MIN_SHOT_VU, Math.min(TARGET_SHOT, DUREE_VISEE / utilisables));
 
   const clips = retenus
-    .map((asset, index) => cutFromAsset(asset, index, keepWhole, visee))
+    .map((asset, index) => cutFromAsset(
+      asset, index, (keepWhole || !options.shorten) && asset.kind !== 'image',
+      visee, options.visualEffects,
+    ))
     .filter((clip): clip is Clip => clip !== null)
     // Le premier plan retenu doit porter les réglages d'ouverture, même si des
     // rushes trop courts ont été écartés en amont.
-    .map((clip, index) => (index === 0 ? { ...clip, transition: 'cut' as const, motion: 'zoomIn' as const } : clip));
+    .map((clip, index) => (index === 0 ? {
+      ...clip, transition: 'cut' as const,
+      motion: options.visualEffects ? 'zoomIn' as const : 'none' as const,
+    } : clip));
 
   if (clips.length === 0) return { clips: [], captions: [], cues: [] };
 
@@ -247,10 +267,12 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
     y: 0.28,
   };
 
-  const captions: Caption[] = [
+  const captions: Caption[] = options.captionGuide ? [
     accroche,
     ...captionsFor(captionSet('trame-neutre'), [accroche], duration, () => uid('cap')),
-  ];
+  ] : [];
+
+  if (!options.soundEffects) return { clips, captions, cues: [] };
 
   /*
    * Les bruitages ponctuent, ils ne tapissent pas.
@@ -296,7 +318,7 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
    * finale tombent tous sur de l'image et du son qui existent.
    */
   const porteSonPropre = (clip: Clip) =>
-    assets.find((asset) => asset.id === clip.assetId)?.hasAudio === true;
+    assets.find((asset) => asset.id === clip.assetId)?.hasAudio !== false;
 
   const cues: SoundCue[] = [];
   let cursor = 0;
@@ -313,7 +335,7 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
     const muet = !porteSonPropre(clip);
 
     if (index > 0) {
-      cursor -= clip.transitionDuration;
+      cursor -= effectiveTransition(clips[index - 1], clip);
       const at = Math.max(0, cursor);
 
       // Un raccord sur `pasBruitage` reçoit un souffle : c'est ce qui
@@ -364,13 +386,12 @@ export function buildAutoEdit(assets: MediaAsset[]): AutoEditResult {
 }
 
 /** Applique le montage express à un projet, en conservant les rushes. */
-export function applyAutoEdit(project: Project): Project {
-  const { clips, captions, cues } = buildAutoEdit(project.assets);
+export function applyAutoEdit(project: Project, options: AutoEditOptions = {}): Project {
+  const { clips, captions, cues } = buildAutoEdit(project.assets, options);
   return {
     ...project,
     clips,
     captions,
     cues,
-    cinema: { ...project.cinema, look: project.cinema.look === 'naturel' ? 'cinema' : project.cinema.look },
   };
 }

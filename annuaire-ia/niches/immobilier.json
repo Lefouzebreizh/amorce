@@ -4,6 +4,7 @@
     "nom": "IA Immobilier",
     "emoji": "🏠",
     "actif": false,
+    "activation_automatique": true,
     "domaine": "https://lefouzebreizh.github.io/amorce/immobilier/",
     "metier": "agents et négociateurs immobiliers",
     "h1_accent": "L'IA des agents",

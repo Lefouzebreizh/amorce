@@ -1,0 +1,30 @@
+name: Sas de sortie
+
+on:
+  push:
+    paths:
+      - "qa-release/**"
+      - ".github/workflows/qa-release.yml"
+  pull_request:
+    paths:
+      - "qa-release/**"
+      - ".github/workflows/qa-release.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  controle-statique:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: qa-release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: qa-release/package-lock.json
+      - run: npm ci
+      - run: npm test

@@ -66,7 +66,22 @@ function urlPlausible(valeur: unknown): valeur is string {
   if (typeof valeur !== 'string') return false;
   try {
     const u = new URL(valeur);
-    return u.protocol === 'http:' || u.protocol === 'https:';
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+    if (u.username || u.password) return false;
+
+    // L'URL est ensuite ouverte depuis un runner GitHub : laisser passer une
+    // adresse locale transformerait le produit en sonde de réseau interne.
+    const hote = u.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+    if (hote === 'localhost' || hote.endsWith('.localhost')) return false;
+    if (hote === '::1' || hote.startsWith('fc') || hote.startsWith('fd') || hote.startsWith('fe80:')) return false;
+
+    const morceaux = hote.split('.').map(Number);
+    if (morceaux.length === 4 && morceaux.every(Number.isInteger)) {
+      const [a, b] = morceaux;
+      if (a === 0 || a === 10 || a === 127 || a === 169 || a === 192) return false;
+      if (a === 172 && b >= 16 && b <= 31) return false;
+    }
+    return true;
   } catch {
     return false;
   }

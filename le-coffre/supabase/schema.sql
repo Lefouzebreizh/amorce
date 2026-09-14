@@ -25,6 +25,30 @@
 -- écrit dans le JavaScript se contourne en ouvrant les outils de développement.
 
 -- ---------------------------------------------------------------------------
+-- 0. Identifiant de connexion public, sans exposer l'adresse e-mail.
+-- ---------------------------------------------------------------------------
+create table if not exists public.coffre_identifiants (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  alias text not null unique,
+  cree_le timestamptz not null default now(),
+  constraint coffre_identifiants_alias_format check (alias ~ '^[a-z0-9][a-z0-9._-]{2,31}$')
+);
+alter table public.coffre_identifiants enable row level security;
+create policy "identifiant_proprietaire_lit" on public.coffre_identifiants for select to authenticated using ((select auth.uid()) = user_id);
+create policy "identifiant_proprietaire_cree" on public.coffre_identifiants for insert to authenticated with check ((select auth.uid()) = user_id);
+create policy "identifiant_proprietaire_modifie" on public.coffre_identifiants for update to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+
+-- Les empreintes de tentatives, sans mot de passe ni adresse e-mail, limitent
+-- l'endpoint d'authentification à dix essais par quart d'heure.
+create table if not exists public.coffre_connexion_tentatives (
+  empreinte text not null,
+  cree_le timestamptz not null default now()
+);
+alter table public.coffre_connexion_tentatives enable row level security;
+revoke all on table public.coffre_connexion_tentatives from anon, authenticated;
+create index if not exists coffre_connexion_tentatives_empreinte_date_idx on public.coffre_connexion_tentatives (empreinte, cree_le desc);
+
+-- ---------------------------------------------------------------------------
 -- 1. Les informations de clé : un coffre par compte.
 -- ---------------------------------------------------------------------------
 -- `sel` et `iterations` servent à redériver la clé ; `verificateur_*` est un

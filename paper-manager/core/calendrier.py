@@ -76,6 +76,9 @@ def echapper(texte: str) -> str:
     Une virgule non protégée coupe la valeur en deux, et l'agenda affiche la
     moitié d'une consigne — ce qui est pire que rien.
     """
+    # Une consigne copiée depuis Windows peut contenir CRLF, ou CR seul.
+    # Normaliser avant l'échappement évite un retour chariot brut dans l'ICS.
+    texte = texte.replace("\r\n", "\n").replace("\r", "\n")
     return (texte.replace("\\", "\\\\")
                  .replace(";", "\\;")
                  .replace(",", "\\,")

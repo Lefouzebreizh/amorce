@@ -1,0 +1,22 @@
+[Unit]
+Description=Radar Reprise IA — collecte quotidienne
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/amorce/audit-radar
+EnvironmentFile=/opt/amorce/audit-radar/.env
+ExecStart=/usr/bin/python3 /opt/amorce/audit-radar/radar.py run
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/amorce/audit-radar/data
+IPAddressDeny=127.0.0.0/8
+IPAddressDeny=10.0.0.0/8
+IPAddressDeny=172.16.0.0/12
+IPAddressDeny=192.168.0.0/16
+IPAddressDeny=169.254.0.0/16
+IPAddressDeny=::1/128
+IPAddressDeny=fc00::/7
+IPAddressDeny=fe80::/10

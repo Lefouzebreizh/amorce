@@ -549,3 +549,11 @@ alors `?` avec son adresse. Ce n'est pas une perte grave : une adresse est un
 meilleur identifiant qu'un nom, qui se copie à l'identique par n'importe qui.
 La colonne est ajoutée par migration à l'ouverture de la base — une base qui
 tourne depuis des semaines la gagne sans rien perdre de ses lignes.
+
+## Journaux sous Windows
+
+Une tâche planifiée peut rediriger la console en `cp1252`. Le point d'entrée
+conserve cet encodage et échappe les caractères non représentables (par exemple
+`\u2192` pour une flèche), afin qu'un affichage ne fasse pas échouer un scan
+terminé. En UTF-8, les accents et symboles restent affichés tels quels.
+Le rapport Markdown conserve son propre encodage UTF-8.

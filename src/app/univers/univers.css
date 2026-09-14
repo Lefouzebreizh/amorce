@@ -1,0 +1,71 @@
+@import '../../../design-system/tokens.css';
+
+.univers-page { min-height: 100vh; color: var(--lfb-ivory); background: #0b1a29; scroll-behavior: smooth; }
+.univers-section { position: relative; overflow: hidden; padding: clamp(5rem, 10vw, 9rem) max(1rem, calc((100vw - 1180px) / 2)); }
+.univers-section::before { content: ''; position: absolute; width: 34rem; height: 34rem; border-radius: 50%; filter: blur(90px); opacity: .12; pointer-events: none; }
+.univers-signature { background: radial-gradient(circle at 78% 30%, rgb(124 58 237 / .18), transparent 32%), linear-gradient(180deg, #0d2737, #13273a); }
+.univers-signature::before { right: -16rem; bottom: -18rem; background: var(--lfb-violet); }
+.univers-master { position: relative; padding: clamp(4rem, 8vw, 7rem) max(1rem, calc((100vw - 1380px) / 2)); background: radial-gradient(circle at 50% 0, rgb(64 224 208 / .18), transparent 32%), linear-gradient(135deg, #0d2c3b, #12233c); }
+.univers-master__heading { width: min(1180px, 100%); margin: 0 auto clamp(2rem, 4vw, 3.5rem); }
+.univers-master__heading h2 { max-width: 11ch; margin: .5rem 0 1rem; color: #fff; font: 600 clamp(2.5rem, 6vw, 5rem)/.95 var(--lfb-font-display); letter-spacing: -.05em; }
+.univers-master__heading > p:last-child { max-width: 64ch; color: rgb(248 248 248 / .68); font: 400 clamp(1rem, 1.8vw, 1.15rem)/1.65 var(--lfb-font-ui); }
+.univers-master__frame { position: relative; width: 100%; margin: 0; overflow: hidden; border: 1px solid rgb(64 224 208 / .34); border-radius: clamp(1rem, 2vw, 1.75rem); background: #050a12; box-shadow: 0 40px 120px rgb(0 0 0 / .5), 0 0 70px rgb(64 224 208 / .08); }
+.univers-master__frame + .univers-master__frame { margin-top: clamp(1.25rem, 3vw, 2.5rem); }
+.univers-master__frame img { display: block; width: 100%; height: auto; }
+.univers-master__frame figcaption { position: absolute; right: 1rem; bottom: 1rem; padding: .5rem .75rem; border: 1px solid rgb(255 255 255 / .14); border-radius: 999px; color: rgb(255 255 255 / .78); background: rgb(2 6 12 / .78); backdrop-filter: blur(12px); font: 600 .65rem/1 var(--lfb-font-ui); letter-spacing: .12em; text-transform: uppercase; }
+.univers-master__frame--ecosystem { width: min(1180px, 100%); margin-inline: auto; }
+.univers-pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: clamp(2rem, 5vw, 4.5rem); }
+.univers-pillars .lfb-glass-card:nth-child(2) { transform: translateY(2rem); }
+
+.univers-projects { background: linear-gradient(180deg, #13273a, #102035); }
+.univers-projects::before { left: -16rem; top: 12rem; background: var(--lfb-cyan); }
+.univers-project-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; margin-top: clamp(2.5rem, 6vw, 5rem); }
+.univers-project-grid > div { min-width: 0; }
+.univers-project-grid .lfb-project-card__media { position: relative; overflow: hidden; }
+.univers-project-grid .lfb-project-card__media::before,
+.univers-project-grid .lfb-project-card__media::after { content: ''; position: absolute; inset: 0; }
+.univers-project-grid .lfb-project-card__media::before { background: radial-gradient(circle at 70% 34%, rgb(255 255 255 / .22), transparent 3%), radial-gradient(ellipse at 65% 50%, rgb(64 224 208 / .24), transparent 30%), linear-gradient(125deg, transparent 35%, rgb(124 58 237 / .18) 55%, transparent 72%); transform: scale(1.1); transition: transform .7s ease; }
+.univers-project-grid .lfb-project-card__media::after { inset: 48% -15% -55%; border-radius: 50%; border-top: 1px solid rgb(64 224 208 / .45); box-shadow: 0 -18px 40px rgb(64 224 208 / .08); }
+.univers-project-grid > div:hover .lfb-project-card__media::before { transform: scale(1.16) translate3d(1%, -1%, 0); }
+.univers-card--ensemble .lfb-project-card__media { background: radial-gradient(circle at 72% 38%, rgb(244 184 80 / .32), transparent 18%), linear-gradient(135deg, #06121d, #172238 58%, #251637); }
+.univers-card--tiroir .lfb-project-card__media { background: radial-gradient(circle at 34% 62%, rgb(64 224 208 / .2), transparent 16%), linear-gradient(145deg, #02060c, #11112a 55%, #321763); }
+.univers-card--amorce .lfb-project-card__media { background: repeating-linear-gradient(118deg, transparent 0 12%, rgb(64 224 208 / .1) 12.5% 13%, transparent 13.5% 22%), radial-gradient(circle at 70% 36%, rgb(64 224 208 / .38), transparent 19%), linear-gradient(145deg, #102a3b, #243c67); }
+.univers-card--phare .lfb-project-card__media { background: linear-gradient(164deg, transparent 0 48%, rgb(244 184 80 / .28) 49%, transparent 54%), radial-gradient(circle at 75% 26%, rgb(244 184 80 / .42), transparent 8%), linear-gradient(145deg, #030912, #11182b 58%, #241335); }
+.univers-card--roussy .lfb-project-card__media { background: radial-gradient(circle at 70% 30%, rgb(255 211 129 / .46), transparent 13%), radial-gradient(circle at 30% 74%, rgb(213 130 57 / .5), transparent 20%), linear-gradient(145deg, #57324d, #876244 55%, #40366d); }
+.univers-card--audit .lfb-project-card__media { background: repeating-linear-gradient(90deg, rgb(255 255 255 / .09) 0 1px, transparent 1px 58px), radial-gradient(circle at 72% 34%, rgb(64 224 208 / .4), transparent 15%), linear-gradient(145deg, #113246, #20495e 58%, #3a2761); }
+.univers-project-link, .univers-project-status { display: inline-flex; align-items: center; gap: .45rem; min-height: 42px; padding: .65rem .85rem; border-radius: 999px; font: 700 .8rem/1 var(--lfb-font-ui); text-decoration: none; }
+.univers-project-link { border: 1px solid rgb(64 224 208 / .55); color: #fff; background: rgb(64 224 208 / .12); transition: transform .18s ease, background .18s ease; }
+.univers-project-link:hover { transform: translateY(-2px); background: rgb(64 224 208 / .24); }
+.univers-project-link:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.univers-project-status { border: 1px solid rgb(255 255 255 / .18); color: rgb(248 248 248 / .68); background: rgb(255 255 255 / .06); }
+
+.univers-quality { display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(2rem, 8vw, 8rem); align-items: start; background: radial-gradient(circle at 12% 25%, rgb(124 58 237 / .2), transparent 28%), #152840; }
+.univers-quality h2 { max-width: 9ch; margin: .6rem 0 0; color: #fff; font: 600 clamp(2.5rem, 6vw, 5.5rem)/.95 var(--lfb-font-display); letter-spacing: -.05em; }
+.univers-quality-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid rgb(255 255 255 / .12); }
+.univers-quality-list li { display: grid; grid-template-columns: 3rem 10rem 1fr; gap: 1rem; align-items: baseline; padding: 1.4rem 0; border-bottom: 1px solid rgb(255 255 255 / .12); }
+.univers-quality-list span { color: var(--lfb-cyan); font: 700 .7rem/1 var(--lfb-font-ui); letter-spacing: .16em; }
+.univers-quality-list strong { color: #fff; font: 600 1.1rem/1.2 var(--lfb-font-display); }
+.univers-quality-list p { margin: 0; color: rgb(248 248 248 / .68); font: 400 .94rem/1.6 var(--lfb-font-ui); }
+
+@media (max-width: 800px) {
+  .univers-pillars, .univers-project-grid, .univers-quality { grid-template-columns: 1fr; }
+  .univers-pillars .lfb-glass-card:nth-child(2) { transform: none; }
+  .univers-quality h2 { max-width: 12ch; }
+  .univers-quality-list li { grid-template-columns: 2.4rem 1fr; }
+  .univers-quality-list p { grid-column: 2; }
+}
+
+@media (max-width: 480px) {
+  .univers-master { padding-inline: .65rem; }
+  .univers-master__heading { padding-inline: .35rem; }
+  .univers-master__frame { border-radius: .8rem; }
+  .univers-master__frame figcaption { position: static; display: block; border: 0; border-radius: 0; background: #07111b; }
+  .univers-quality-list li { grid-template-columns: 2rem 1fr; gap: .65rem; }
+  .univers-project-grid { gap: .9rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .univers-page { scroll-behavior: auto; }
+  .univers-project-grid .lfb-project-card__media::before { transition: none; }
+  .univers-project-grid > div:hover .lfb-project-card__media::before { transform: scale(1.1); }
+}

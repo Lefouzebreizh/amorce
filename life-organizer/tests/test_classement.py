@@ -204,7 +204,7 @@ class TestCompter(unittest.TestCase):
             regles.decider(fiche("b.jpg"), CONFIG, "exif"),
             regles.decider(fiche("c.inconnu"), CONFIG, "exif"),
         ]
-        self.assertEqual(regles.compter(rangements), {"Photos/2024/03 - mars": 2})
+        self.assertEqual(regles.compter(rangements), {str(Path("Photos/2024/03 - mars")): 2})
 
 
 if __name__ == "__main__":
