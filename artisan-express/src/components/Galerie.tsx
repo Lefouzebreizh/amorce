@@ -8,11 +8,8 @@ import { CARTE, MESURE, SECTION, TITRE_SECTION } from '@/components/ui';
  *
  * « Voilà ce que je produis », jamais « voilà mes clients ». Les six
  * entreprises sont inventées, et chaque page le dit dans sa propre
- * présentation — pas en petits caractères en bas. C'est la condition pour que
- * cette section coexiste avec `Temoignage`, qui dit courageusement que la
- * place du premier client est vide : une galerie de six « réalisations »
- * démentirait cette phrase à trois écrans d'intervalle, et c'est la phrase qui
- * a raison.
+ * présentation — pas en petits caractères en bas. La galerie montre des
+ * exemples de sites, jamais des références clients.
  *
  * Le dépôt n'a pourtant pas manqué de matière : dix-sept pages nominatives
  * existent, préparées pour de vraies entreprises qui n'ont rien demandé. Les
@@ -116,8 +113,7 @@ export function Galerie() {
         <p>
           Voilà ce que je produis. Ce ne sont pas mes clients :{' '}
           <strong className="text-encre">ces six entreprises n’existent pas</strong>, et chaque page
-          le dit d’elle-même, en toutes lettres. Le jour où un vrai artisan sera là, il sera plus bas
-          — à la place qui l’attend.
+          le dit d’elle-même, en toutes lettres.
         </p>
         <p>
           Ce qui change d’une page à l’autre, c’est la couleur et les mots du métier. Ce qui ne

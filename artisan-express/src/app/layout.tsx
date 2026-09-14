@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   metadataBase: adresseDuSite ? new URL(adresseDuSite) : undefined,
   title: 'Site vitrine artisan express — 300 €, livré en 48 h',
   description:
-    'Maçon, couvreur, électricien : un site qui te trouve des chantiers, livré en 48 h. 300 € une fois, pas d’abonnement.',
+    'Tes réalisations et tes services sur un site clair. Création : 300 €, sans abonnement à Artisan Express. Domaine en supplément. 48 h après réception des éléments.',
   keywords: [
     'site internet artisan',
     'site vitrine maçon',
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     locale: 'fr_FR',
     title: 'Ton site artisan, livré en 48 h — 300 €',
     description:
-      'Un site d’une page qui te trouve des chantiers. 300 € une fois, pas d’abonnement, livré en 48 h.',
+      'Un site pour présenter ton activité. Création : 300 €, domaine en supplément. Sans abonnement à Artisan Express. 48 h après réception des éléments.',
     ...(adresseDuSite ? { url: adresseDuSite } : {}),
   },
   robots: { index: true, follow: true },

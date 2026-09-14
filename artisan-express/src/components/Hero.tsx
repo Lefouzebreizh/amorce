@@ -18,15 +18,16 @@ export function Hero() {
             soleil doit savoir de quoi il s'agit avant d'avoir lu la ligne.
           */}
           <h1 className="mt-4 font-titre text-[2.5rem] font-extrabold leading-[1.02] tracking-[-0.04em] text-encre sm:text-[4rem]">
-            Ton site qui trouve des chantiers, livré en 48&nbsp;h.
+            Tes réalisations sur un site clair, livré en 48&nbsp;h.
           </h1>
 
           <p className="mt-4 text-2xl font-bold text-accent sm:text-3xl">
-            300&nbsp;€ une fois. Pas d’abonnement.
+            300&nbsp;€ pour la création.
           </p>
 
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-ardoise">
-            Je suis artisan du code, ex-routier. Je te fais le site que j’aurais voulu avoir.
+            Sans abonnement à Artisan Express. Nom de domaine en supplément.
+            Le délai démarre à réception de tes informations et photos.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -50,8 +51,8 @@ export function Hero() {
           */}
           <dl className="mt-8 grid max-w-lg grid-cols-3 gap-4 border-t border-edge pt-6">
             {[
-              ['48 h', 'de délai, pas six semaines'],
-              ['0 €', 'par mois, rien à résilier'],
+              ['48 h', 'une fois tes éléments reçus'],
+              ['0 €', 'd’abonnement à Artisan Express'],
               ['1', 'modification offerte'],
             ].map(([chiffre, quoi]) => (
               <div key={chiffre}>
