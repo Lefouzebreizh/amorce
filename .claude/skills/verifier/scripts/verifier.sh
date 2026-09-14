@@ -109,6 +109,8 @@ while IFS= read -r f; do
     annuaire-ia/*)   inscrire annuaire ;;
     psy-ia/*)        inscrire psyia ;;
     renov-facile/*)  inscrire renov ;;
+    qa-release/*) inscrire qarelease ;;
+    .github/workflows/qa-release.yml) inscrire qarelease ;;
     # Avant la découverte Python plus bas, qui inscrira *aussi* la suite
     # `chat-traducteur` : c'est voulu. Le Python fait foi, et les témoins de
     # conformité du portage sont engendrés depuis lui — toucher au TypeScript
@@ -308,6 +310,16 @@ lancer_renov() {
   # build. Les tests tournent en `node:vm`, sans rien installer.
   local d="renov-facile"; local j="$journal/renov"
   ( cd "$d" || exit 1; etape "$j.test" "tests" npm test ) || return 1
+  cat "$j".test > "$j" 2>/dev/null
+  return 0
+}
+
+lancer_qarelease() {
+  # Le contrôle statique valide le manifeste et le moteur sans télécharger de
+  # navigateur. L'audit réel reste volontairement séparé : une CI sans
+  # Chromium ne doit jamais se faire passer pour un feu vert visuel.
+  local d="qa-release"; local j="$journal/qarelease"
+  ( cd "$d" || exit 1; etape "$j.test" "contrôle statique" npm test ) || return 1
   cat "$j".test > "$j" 2>/dev/null
   return 0
 }
@@ -575,6 +587,7 @@ for p in $projets; do
     annuaire) lancer_annuaire & pid_de[annuaire]=$! ;;
     psyia)   lancer_psyia  & pid_de[psyia]=$! ;;
     renov)   lancer_renov  & pid_de[renov]=$! ;;
+    qarelease) lancer_qarelease & pid_de[qarelease]=$! ;;
     outillage) lancer_outillage & pid_de[outillage]=$! ;;
     py:*)    dossier="${p#py:}"; lancer_python "$dossier" & pid_de["$p"]=$! ;;
   esac
@@ -607,6 +620,7 @@ nom_lisible() {
     annuaire) echo "Réseau d'annuaires IA" ;;
     psyia)   echo "Psy IA (squelette architectural)" ;;
     renov)   echo "Rénov Facile" ;;
+    qarelease) echo "Sas de sortie multi-projets" ;;
     outillage) echo "Outillage du dépôt (syntaxe seule)" ;;
     py:*)    echo "${1#py:}" ;;
   esac
