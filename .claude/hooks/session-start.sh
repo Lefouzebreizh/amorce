@@ -65,11 +65,17 @@ commandes=(
   "Kits (index des sons) : cd kits && python3 -m unittest discover -s tests"
   "Audit de page de vente : (dans audit-landing/) python3 -m unittest discover -s tests"
   "Radar Reprise IA : python3 -m unittest discover -s audit-radar/tests"
+  "Sas de sortie : (dans qa-release/) npm test, puis npm run qa -- --project <id> avec les navigateurs installés"
 )
 
 echo "── Amorce : dépendances npm"
 cd "$racine"
 npm install --no-audit --no-fund --silent
+
+echo "── Sas de sortie : dépendances npm"
+cd "$racine/qa-release"
+npm install --no-audit --no-fund --silent
+cd "$racine"
 
 echo "── Le Coffre : dépendances npm"
 # Projet Next.js indépendant, même raison que le socle agence : ses dépendances

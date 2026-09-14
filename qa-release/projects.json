@@ -1,0 +1,156 @@
+{
+  "version": 1,
+  "thresholds": {
+    "minimumBodyTextPx": 18,
+    "minimumTargetPx": 44,
+    "contrastNormal": 4.5,
+    "contrastLarge": 3,
+    "accentContrast": 7,
+    "maximumOverflowPx": 1,
+    "maximumLinksPerPage": 80
+  },
+  "viewports": [
+    {
+      "id": "mobile-etroit",
+      "label": "Mobile étroit",
+      "width": 360,
+      "height": 800,
+      "deviceScaleFactor": 2,
+      "isMobile": true,
+      "hasTouch": true
+    },
+    {
+      "id": "redmi-reference",
+      "label": "Redmi Note 12 Plus",
+      "width": 393,
+      "height": 873,
+      "deviceScaleFactor": 2,
+      "isMobile": true,
+      "hasTouch": true
+    },
+    {
+      "id": "tablette",
+      "label": "Tablette portrait",
+      "width": 768,
+      "height": 1024,
+      "deviceScaleFactor": 1,
+      "isMobile": false,
+      "hasTouch": true
+    },
+    {
+      "id": "ordinateur",
+      "label": "Ordinateur",
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 1,
+      "isMobile": false,
+      "hasTouch": false
+    }
+  ],
+  "projects": {
+    "amorce": {
+      "label": "Amorce",
+      "directory": "..",
+      "baseUrl": null,
+      "routes": ["/", "/studio"],
+      "browsers": ["chromium"],
+      "accentSelectors": ["[data-qa-accent]"]
+    },
+    "lefouzebreizh-studio": {
+      "label": "Lefouzèbreizh Studio",
+      "directory": null,
+      "baseUrl": "https://lefouzebreizh.github.io/",
+      "routes": ["/"],
+      "browsers": ["chromium"],
+      "accentSelectors": ["[data-qa-accent]", ".cta", ".button-primary"]
+    },
+    "orientation-express": {
+      "label": "Orientation Express",
+      "directory": null,
+      "baseUrl": "https://orientation-express.vercel.app/",
+      "routes": ["/"],
+      "browsers": ["chromium"],
+      "accentSelectors": ["[data-qa-accent]", ".cta", ".button-primary"]
+    },
+    "artisan-express": {
+      "label": "Artisan Express",
+      "directory": "../artisan-express",
+      "baseUrl": "https://artisan-express-ashy.vercel.app/",
+      "routes": ["/", "/mentions-legales", "/cgv"],
+      "browsers": ["chromium"],
+      "accentSelectors": ["[data-qa-accent]"]
+    },
+    "titan-builder": {
+      "label": "TITAN Builder",
+      "directory": "../titan-builder",
+      "baseUrl": null,
+      "routes": ["/"],
+      "browsers": ["chromium"],
+      "accentSelectors": ["[data-qa-accent]"]
+    },
+    "agence": {
+      "label": "Socle Agence",
+      "directory": "../agence",
+      "baseUrl": null,
+      "routes": ["/"],
+      "browsers": ["chromium"],
+      "accentSelectors": ["[data-qa-accent]"]
+    },
+    "le-coffre": {
+      "label": "Mon Tiroir Secret",
+      "directory": "../le-coffre",
+      "baseUrl": null,
+      "routes": ["/"],
+      "browsers": ["chromium"],
+      "accentSelectors": ["[data-qa-accent]"]
+    },
+    "psy-ia": {
+      "label": "Psy IA",
+      "directory": "../psy-ia",
+      "baseUrl": null,
+      "routes": ["/"],
+      "browsers": ["chromium"],
+      "accentSelectors": ["[data-qa-accent]"]
+    },
+    "hypersensible-bienveillance": {
+      "label": "Hypersensible & Bienveillance",
+      "directory": "../hypersensible-bienveillance",
+      "baseUrl": null,
+      "routes": ["/"],
+      "browsers": ["chromium"],
+      "accentSelectors": ["[data-qa-accent]"]
+    },
+    "annuaire-ia": {
+      "label": "Réseau Annuaria",
+      "directory": "../annuaire-ia",
+      "baseUrl": null,
+      "routes": ["/"],
+      "browsers": ["chromium"],
+      "accentSelectors": [".bouton-accent", "[data-qa-accent]"]
+    },
+    "iptv": {
+      "label": "IPTV / VOD",
+      "directory": "../iptv",
+      "baseUrl": null,
+      "routes": ["/", "/direct", "/films", "/series", "/recherche"],
+      "browsers": ["chromium"],
+      "accentSelectors": ["[data-qa-accent]"]
+    },
+    "renov-facile": {
+      "label": "Rénov Facile",
+      "directory": "../renov-facile",
+      "baseUrl": "https://renov-facile-erwannchevallier-6916s-projects.vercel.app/",
+      "routes": ["/"],
+      "browsers": ["chromium"],
+      "accentSelectors": ["[data-qa-accent]"]
+    },
+    "ensemble-mdph": {
+      "label": "Ensemble face aux démarches",
+      "directory": null,
+      "baseUrl": "https://ensemble-mdph.vercel.app/",
+      "routes": ["/"],
+      "browsers": ["chromium"],
+      "accentSelectors": ["[data-qa-accent]", ".cta", ".button-primary"]
+    }
+  }
+}

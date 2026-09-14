@@ -62,7 +62,7 @@ qui **devine** dans quel dossier elle est et ce qui s'y est déjà passé.
 
 ## Terrain existant (base du critère « Alignement »)
 
-Ce dépôt héberge vingt-cinq chantiers actifs, plus un en sommeil, et dix
+Ce dépôt héberge vingt-cinq chantiers actifs, plus un en sommeil, et onze
 ressources transverses qui ne sont pas des projets mais servent à tous. Une
 idée nouvelle s'évalue aussi à sa capacité à s'y greffer plutôt qu'à ouvrir un
 front de plus. La liste vieillit vite — recompter avant de noter.
@@ -143,6 +143,7 @@ dans lesquelles les chantiers puisent.
 | `inbox/` | La boîte aux lettres entre sessions — un fichier par chantier — **et** la porte d'entrée des idées non triées. Les deux se distinguent à l'en-tête `De :`. |
 | `projets-actifs/` | Les fiches d'exécution des idées validées. |
 | `archives-backlog/` | Les fiches des idées bonnes mais pas maintenant, et `mon-app-audio/`, en sommeil. |
+| `qa-release/` | Sas de sortie multi-projets : contrôle quatre formats d'écran, accessibilité, réseau, console et captures sans modifier les produits. |
 
 ## À faire sur le dépôt lui-même
 

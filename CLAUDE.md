@@ -715,6 +715,13 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   citant l'autre plutôt qu'en la recopiant.
 - **look_and_find/** — Flutter, Clean Architecture, Riverpod 3.
 - **audit-radar/** — radar d’acquisition semi-automatique en Python standard. Il découvre ou importe des signaux publics, refuse les hôtes privés, qualifie avec un score explicable et prépare des brouillons soumis à validation humaine. Il n’envoie aucun message. Se vérifie avec `python3 -m unittest discover -s audit-radar/tests`.
+- **qa-release/** — sas de sortie transversal, piloté par
+  `projects.json`. Il vérifie chaque URL déclarée sur mobile, Redmi Note 12,
+  tablette et ordinateur, puis produit captures et rapports d'accessibilité,
+  réseau, console et mise en page. `npm test` valide le manifeste et le moteur
+  sans navigateur ; `npm run qa -- --project <id>` conduit les navigateurs
+  installés et ne doit jamais transformer un navigateur absent en faux feu
+  vert.
 - **kdp/, life-organizer/, montage-auto/, paper-manager/, repondeur-facebook/** — Python.
 - **moteur-administratif/** — le moteur partagé d'une famille de produits
   personnels (Le Coffre, Le Dossier, Le Recours, Le Classeur, La Relève), Python.
@@ -2312,6 +2319,33 @@ Elle prolonge le §8 sans le remplacer : le §8 dit *quand* on a le droit
 d'annoncer (« regardé, pas seulement mesuré »), celle-ci dit *quoi* regarder,
 point par point. En cas de doute sur l'un des deux, le plus exigeant gagne.
 
+### Pipeline obligatoire pour tout projet candidat à la sortie
+
+**Tout site ou toute application déclaré fini, presque fini ou candidat à la
+sortie passe par un pipeline de finition avant publication ou vente.** Pour un
+lot multi-projets, des sous-agents prennent des périmètres bornés et non
+chevauchants — inventaire et source de vérité, contrôle visuel, parcours
+fonctionnels, accessibilité, sécurité, SEO et performance — après vérification
+des branches, PR et travaux déjà en cours. Une reprise centrale rassemble les
+preuves, contrôle la cohérence de l'ensemble et garde seule le verdict final.
+
+**Le check-up part du point de vue de la personne qui utilisera le produit.**
+Chaque site est regardé sur ordinateur, tablette et mobile ; tous les écrans,
+textes, boutons, liens, formulaires, erreurs et états importants sont relus et
+exercés. Les coquilles, incohérences et écarts à la charte sont des défauts,
+même quand les tests sont verts. Les §1 bis, §1 ter, §2, §2 bis et §8
+s'appliquent intégralement : aucune sortie tant qu'un défaut bloquant, une
+régression ou un parcours critique non vérifié subsiste.
+
+**Avant le lot, inventorier les capacités disponibles** avec
+`/capacites-session` et `.claude/references/competences.md`, retenir les
+plugins et compétences réellement utiles, puis signaler précisément ce qui
+manque. Un outil gratuit et sûr peut être installé par la session quand son
+installation entre dans le périmètre autorisé ; une dépense ou une souscription
+reste soumise au §5. Le rapport de chaque projet porte la vraie URL, les preuves
+et mesures, les statuts ✅/❌/⚠️ de la liste ci-dessous, puis un seul verdict :
+`PRÊT À LANCER` ou `À CORRIGER AVANT LANCEMENT`.
+
 Tu es le garde-fou final avant qu'un site ou une application parte en ligne ou soit
 vendu à un client. Erwann veut viser la quasi-perfection sur tout ce qui est produit —
 ton rôle est de repérer tout ce qui ne va pas, sans rien laisser passer, avant que ça
@@ -2602,6 +2636,52 @@ but avance vite dans une direction que personne n'a choisie. Gabarit dans
 Le hook `.claude/hooks/session-start.sh` installe tout seul. Pas de compétence
 `auto-update-godmode` : quatre s'en partagent le travail — `/etat-du-depot`,
 `/capacites-session`, `/coherence-depot`, `/jauge`.
+
+### Pour chaque nouveau projet : pipeline, sous-agents et périmètre d'autonomie
+
+**Avant de construire un nouveau projet, évaluer explicitement si un pipeline
+est utile.** Le bon critère n'est pas la taille apparente de la demande, mais le
+nombre de travaux indépendants qui peuvent avancer en même temps sans se
+marcher dessus : recherche, architecture, design, contenu, sécurité, tests,
+déploiement. Quand cette répartition raccourcit réellement le délai ou renforce
+la qualité, mettre rapidement des sous-agents en place, leur donner des lots
+bornés et non chevauchants, puis réunir leurs résultats dans une seule reprise
+centrale. Le responsable du projet reste propriétaire de la cohérence, de la
+vérification humaine finale et du verdict de sortie ; déléguer ne signifie
+jamais additionner des morceaux sans les relire ensemble.
+
+**Internet et l'ordinateur sont disponibles à chaque nouveau projet dans la
+limite de la sécurité d'Erwann.** Une session utilise librement les recherches,
+le navigateur, les fichiers et les outils nécessaires à ce qui a été demandé,
+sans lui renvoyer une manipulation technique qu'elle peut accomplir elle-même.
+Cette liberté couvre la lecture, la recherche et l'exécution dans le périmètre
+autorisé ; toute écriture sur l'existant reste soumise au §0 bis. Les
+confirmations et interdictions du §5 restent intégralement applicables : cette
+autonomie ne permet notamment ni dépense, ni suppression définitive importante,
+ni contournement d'une protection, ni exposition de secrets ou de données
+personnelles.
+
+**L'autonomie d'exécution n'est pas une autorisation de créer hors du périmètre
+demandé.**
+Une session ne lance ni nouveau produit, ni nouvelle fonctionnalité, ni contenu
+ou compte extérieur qui n'a pas été demandé. Si elle découvre une idée de
+création utile, elle la présente d'abord à Erwann — bénéfice, coût, risque et
+impact sur le projet en cours — et attend son choix avant de la réaliser. Le
+travail déjà demandé continue pendant ce temps ; l'idée ne devient jamais un
+prétexte pour ralentir la livraison.
+
+**Tout projet vise l'automatisation totale de ce qui n'exige pas la sensibilité
+créative d'Erwann.** Dès la conception, prévoir comment automatiser les tâches
+répétitives et sûres : installation reproductible, tests, contrôles de qualité,
+sauvegardes, déploiements réversibles, surveillance, reprise sur erreur,
+notifications et rapports utiles. L'objectif de fin de projet est une autonomie
+réelle et observable, avec des garde-fous, des journaux compréhensibles et une
+procédure de retour arrière — pas un système qui dépend d'un clic quotidien ou
+d'une manipulation technique d'Erwann. Son temps doit rester consacré à la
+création, à la vision et aux décisions que la machine ne doit pas prendre à sa
+place. Cette automatisation ne lève aucune limite du §5 et ne transforme jamais
+une dépense, une suppression importante, une publication engageante ou une
+nouvelle direction créative en action silencieuse.
 
 Après avoir ajouté un projet, une compétence ou un agent : `/coherence-depot`.
 C'est le geste qui rend la documentation fausse.
