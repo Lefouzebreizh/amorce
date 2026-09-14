@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Autorise l'exploration destinée aux résultats de recherche de ChatGPT.
+User-agent: OAI-SearchBot
+Allow: /
+
+# L'indexation publique reste autorisée sans ouvrir le contenu à l'entraînement.
+User-agent: GPTBot
+Disallow: /
+
+Sitemap: https://renov-facile-erwannchevallier-6916s-projects.vercel.app/sitemap.xml
