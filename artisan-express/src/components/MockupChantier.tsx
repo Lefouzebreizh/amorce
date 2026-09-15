@@ -4,6 +4,17 @@ import { ApercuSite } from '@/components/ApercuSite';
  * Scène signature d’Artisan Express : les plans et les matières mettent en
  * relief un aperçu de site réellement livrable, sans simuler un faux chantier.
  */
+export function AtelierIntro() {
+  return (
+    <div className="atelier-intro" aria-hidden="true">
+      <span className="atelier-intro__halo" />
+      <span className="atelier-intro__plan" />
+      <span className="atelier-intro__roof" />
+      <span className="atelier-intro__dot" />
+    </div>
+  );
+}
+
 export function MockupChantier() {
   return (
     <div className="atelier-scene" aria-hidden="true">
