@@ -716,7 +716,6 @@ export default function PageCoffre() {
     const CHECKPOINT_TRI_AUTO = 8;
 
     const nonClasses = Object.keys(index.objets).filter((n) => !index.objets[n]?.categorie?.trim());
-    if (nonClasses.length === 0) return;
 
     setTriAutoEnCours(true);
     setTriAutoProgres(null);
@@ -732,8 +731,12 @@ export default function PageCoffre() {
     }
     let indexCourant: IndexCoffre;
     try {
-      indexCourant = await modifierPlusieursObjets(utilisateur.id, cle, instantanes, index);
-      setIndex(indexCourant);
+      // Une relance peut ne contenir que des fichiers déjà classés localement.
+      // Elle doit atteindre la passe IA sans réécrire un index inchangé.
+      indexCourant = nonClasses.length > 0
+        ? await modifierPlusieursObjets(utilisateur.id, cle, instantanes, index)
+        : index;
+      if (nonClasses.length > 0) setIndex(indexCourant);
     } catch (err) {
       setTriAutoBilan({ erreursTechniques: [err instanceof Error ? err.message : String(err)], abandonnes: [] });
       setTriAutoEnCours(false);
