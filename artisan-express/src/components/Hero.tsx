@@ -30,6 +30,11 @@ export function Hero() {
             Après réception de tes informations et photos, je te confirme un créneau de réalisation.
           </p>
 
+          <p className="mt-4 max-w-xl text-base font-medium leading-relaxed text-encre">
+            Des plans, tes photos et tes couleurs : un site qui ressemble à ton travail,
+            pas à un modèle anonyme.
+          </p>
+
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <a className={BOUTON_PRINCIPAL} href="#offre">
               Je parle de mon site
