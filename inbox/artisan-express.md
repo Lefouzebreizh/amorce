@@ -11,3 +11,14 @@
   la voix après la scène du dragon.
 
 **Logo en refonte.** Piste retenue à tester : **l'hermine bretonne.**
+
+
+## [2026-09-15 09:00] De : Coordination Codex — pôle commercial
+
+**Périmètre réservé : Artisan Express.**
+
+- Refonte visuelle « chantier premium » : scène signature utile, profondeur, éclairage, démos plus immersives, sans régression du devis ni du téléphone.
+- SEO et partage : canonique, robots, sitemap, données structurées et aperçus sociaux cohérents avec l’offre réelle.
+- Recette : mobile, bureau, mouvement réduit et parcours de demande ; aucun envoi externe automatique.
+
+**Hors périmètre :** Audit Landing, Radar, Coffre, FinancIA et Amorce. Les PR ouvertes #953, #959, #976, #983 et #993 ne seront pas modifiées.
