@@ -8,9 +8,14 @@ export function AtelierIntro() {
   return (
     <div className="atelier-intro" aria-hidden="true">
       <span className="atelier-intro__halo" />
-      <span className="atelier-intro__plan" />
+      <span className="atelier-intro__blueprint" />
+      <span className="atelier-intro__floor" />
+      <span className="atelier-intro__wall atelier-intro__wall--left" />
+      <span className="atelier-intro__wall atelier-intro__wall--right" />
+      <span className="atelier-intro__window" />
       <span className="atelier-intro__roof" />
-      <span className="atelier-intro__dot" />
+      <span className="atelier-intro__light" />
+      <span className="atelier-intro__measure">ton atelier</span>
     </div>
   );
 }
