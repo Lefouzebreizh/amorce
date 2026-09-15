@@ -178,6 +178,7 @@ html {
 }
 
 body {
+  overflow-x: clip;
   background-color: var(--color-ink);
   color: var(--color-encre);
   font-family: var(--font-sans);
