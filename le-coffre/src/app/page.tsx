@@ -32,6 +32,7 @@ export default function PageAccueil() {
   const [motDePasse, setMotDePasse] = useState('');
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState('');
+  const [recuperationEnvoyee, setRecuperationEnvoyee] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -64,6 +65,15 @@ export default function PageAccueil() {
       return;
     }
     routeur.replace('/coffre');
+  }
+
+  async function recupererCode() {
+    setErreur('');
+    setEnCours(true);
+    const { error } = await supabase.functions.invoke('recuperer-code-coffre', { body: { identifiant: 'lefouzebreizh' } });
+    setEnCours(false);
+    if (error) { setErreur('La récupération est momentanément indisponible. Réessaie un peu plus tard.'); return; }
+    setRecuperationEnvoyee(true);
   }
 
   return (
@@ -125,6 +135,9 @@ export default function PageAccueil() {
             {enCours ? 'Connexion…' : 'Entrer dans mon espace'}
           </button>
         </form>
+        <button type="button" onClick={recupererCode} disabled={enCours || recuperationEnvoyee} className={styles.recovery}>
+          {recuperationEnvoyee ? 'Un lien de récupération a été envoyé.' : 'J’ai oublié mon code'}
+        </button>
 
           <div className={styles.privacy}>
             <h3>Ta phrase secrète protège le stockage.</h3>
