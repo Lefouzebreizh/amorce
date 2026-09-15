@@ -3,6 +3,7 @@ import './globals.css';
 import { EnregistrerServiceWorker } from './EnregistrerServiceWorker';
 
 const URL_PUBLIQUE = 'https://coffre-puce.vercel.app';
+const IMAGE_PARTAGE = '/brand/tiroir-secret-coffre-mer-phare-v2.jpg';
 
 export const metadata: Metadata = {
   metadataBase: new URL(URL_PUBLIQUE),
@@ -29,12 +30,21 @@ export const metadata: Metadata = {
     title: 'Mon Tiroir Secret — tes papiers, tes échéances',
     description:
       'Un espace personnel pour retrouver ses papiers et ses échéances, avec chiffrement dans le navigateur avant stockage.',
+    images: [
+      {
+        url: IMAGE_PARTAGE,
+        width: 1536,
+        height: 864,
+        alt: 'Un coffre secret ouvert sur la mer et un phare, symbole de rangement calme et privé.',
+      },
+    ],
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'Mon Tiroir Secret — tes papiers, tes échéances',
     description:
       'Un espace personnel pour retrouver ses papiers et ses échéances, avec chiffrement dans le navigateur avant stockage.',
+    images: [IMAGE_PARTAGE],
   },
   // PWA installable, lancée sans chrome de navigateur visible — voir
   // `manifest.ts` pour les icônes et `sw.js` pour ce qui la rend

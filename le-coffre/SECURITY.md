@@ -32,10 +32,10 @@ lire ou d'écrire les lignes ou les objets d'un autre — vérifiées à chaque
 requête, côté serveur, jamais laissées à la bonne volonté du client.
 
 **Un compte technique s'ajoute, distinct de la phrase secrète.** Supabase Auth
-gère qui peut se connecter (lien magique par e-mail, pas de mot de passe de
-compte). La phrase secrète du coffre reste un secret entièrement différent, qui
-n'atteint jamais ce service — perdre l'un ne compromet pas l'autre, et
-retrouver l'accès au compte (en cas d'e-mail changé, par exemple) ne redonne
+gère qui peut se connecter (identifiant public + mot de passe de compte, sans
+exposer l'adresse e-mail à l'écran de connexion). La phrase secrète du coffre
+reste un secret entièrement différent, qui n'atteint jamais ce service —
+perdre l'un ne compromet pas l'autre, et retrouver l'accès au compte ne redonne
 jamais accès au contenu si la phrase secrète est oubliée.
 
 ## Ce que Supabase peut voir, techniquement
@@ -49,68 +49,45 @@ accès infrastructure. Ce qu'il ne cache pas, comme en local (voir
 dépôt, et — nouveau ici — l'adresse e-mail associée au compte (nécessaire pour
 l'authentification, jamais liée au contenu déchiffré).
 
-## Le classement automatique : une exception explicite à « rien de lisible ne sort »
+## Mode privé par défaut : aucune analyse IA automatique
 
-Depuis l'ajout de la fonction `classer-document` (04/09/2026), un document
-déposé est envoyé **en clair** à cette fonction Supabase, qui le transmet à
-l'API Claude (lecture en vision) pour proposer une catégorie, un nom, et une
-échéance éventuelle — avant chiffrement. C'est la seule exception à « ce
-serveur ne voit jamais le contenu en clair » de tout ce projet, et elle est
-volontaire : impossible de proposer un classement sans lire le document.
+Depuis le 15/09/2026, le parcours publiable ne transmet plus les documents ni
+leur résumé à une IA externe par défaut.
 
-Ce qui limite cette exception : la fonction ne conserve rien (pas d'écriture
-disque, pas de trace en base — voir le commentaire en tête de
-`supabase/functions/classer-document/index.ts`), le fichier est chiffré côté
-navigateur juste après comme avant, et **rien n'est jamais appliqué sans
-validation explicite** — l'utilisateur voit la proposition (catégorie, nom,
-échéance) avant que le dépôt n'ait lieu, jamais après coup.
+Au dépôt d'un fichier, le navigateur attribue seulement une catégorie générale
+selon le type MIME (`Papiers`, `Images`, `Vidéos`, `Audio`, `Autre`). Il ne lit
+pas le contenu pour deviner un émetteur, un montant ou une échéance. Ces champs
+restent donc à confirmer ou compléter par l'utilisateur.
 
-**Le modèle peut se tromper, et l'a fait à l'essai** : testé sur une image
-sans contenu, `claude-sonnet-4-5` a d'abord inventé une catégorie, un nom de
-fichier et une échéance avec « confiance haute » — un vrai risque pour une
-fonctionnalité dont le métier est justement d'annoncer des dates limites.
-Corrigé en ajoutant un champ `lisible` explicite au format attendu, une
-consigne stricte de ne jamais deviner, et `temperature: 0`. Revérifié ensuite
-sur la même image : plus aucune invention. Cela ne garantit pas l'absence
-totale d'erreur sur un vrai document ambigu — d'où l'obligation de validation
-humaine avant tout dépôt, qui reste la vraie garde-fou, pas le prompt.
+La barre « Qu'est-ce que je cherche pour toi ? » fonctionne aussi localement :
+elle interroge l'index déjà déchiffré dans le navigateur avec
+`interpreterQuestion`, sans appeler `assistant-coffre`. Elle peut retrouver des
+papiers, ouvrir la vue dossiers ou ouvrir le module de formulaire, mais elle ne
+propose plus d'action automatique de classement, de suppression ou de recherche
+web.
 
-## L'assistant conversationnel : une deuxième exception, plus étroite
+Les fonctions historiques `classer-document`, `assistant-coffre` et
+`suggerer-champs-formulaire` restent présentes dans le dépôt pour audit et
+éventuelle option future sous consentement explicite. Elles ne sont plus appelées
+par le parcours par défaut.
 
-Depuis l'ajout de la fonction `assistant-coffre` (06/09/2026), une question posée
-dans le panneau « Demander au coffre » part vers cette fonction, qui la transmet
-à l'API Claude — **jamais les fichiers eux-mêmes**, seulement un résumé par
-document (`digestIndex` dans `src/lib/coffre.ts`) : nom, catégorie, type,
-émetteur, montant, libellé et date d'échéance, et jusqu'à 200 caractères du
-`texteExtrait` (lui-même déjà plafonné à 500 caractères à l'analyse — voir plus
-bas). C'est plus étroit que l'exception de `classer-document` : celle-là voit le
-document entier une fois, à l'instant du dépôt ; celle-ci ne voit jamais que ce
-résumé, à chaque question posée, aussi longtemps que le panneau reste ouvert.
+L'avantage produit est volontaire : Mon Tiroir Secret n'est pas un coffre
+numérique qui aspire les papiers dans une IA ; c'est un tiroir d'attention qui
+aide à ranger, retrouver et préparer, tout en gardant les documents privés.
 
-**Ce que ça permet** : retrouver un papier par une question en langage courant
-(« mes photos », « le papier de la mutuelle »), et — via l'outil de recherche
-web hébergé par Claude, plafonné à trois recherches par question
-(`RECHERCHES_WEB_MAX`) — répondre à une vraie question générale (démarche
-administrative, définition) qui déborde de la paperasse personnelle. La
-fonction ne conserve rien, comme `classer-document`, et la réponse précise
-elle-même si elle s'appuie sur une recherche web (`rechercheWebEffectuee`)
-plutôt que de laisser confondre les deux sources.
+## Anciennes fonctions IA conservées hors parcours par défaut
 
-**Ce que le prompt interdit explicitement** : citer un document (`documentsCites`)
-qui n'est pas dans la liste transmise, ou deviner un fait sur un papier plutôt
-que de répondre qu'il ne le trouve pas. Le client revérifie quand même côté
-navigateur (`nomExistant` dans `AssistantCoffre.tsx`) avant d'afficher un lien
-cliquable vers un document cité — une garantie de plus, indépendante du prompt,
-si jamais Claude recopiait mal un nom.
+Avant le 15/09/2026, `classer-document` lisait un document en clair côté
+fonction Supabase puis le transmettait à Claude pour proposer catégorie, nom et
+échéance. `assistant-coffre` recevait un résumé de l'index pour répondre en
+langage courant. Ce comportement est désormais désactivé dans l'interface
+publiable, précisément pour éviter une promesse de confidentialité ambiguë.
 
-**Depuis le 09/09/2026, l'assistant peut aussi proposer une action** — classer
-un document précis dans une catégorie (existante ou nouvelle, ce qui crée un
-dossier) ou en supprimer un — jamais l'exécuter : la fonction serveur n'a
-toujours ni la clé de chiffrement ni le fichier, elle ne fait que renvoyer un
-champ `actions` dans sa réponse JSON. L'exécution reste entièrement côté
-navigateur, après un clic de confirmation explicite sur chaque action, par les
-mêmes fonctions qu'un geste manuel (`modifierObjet`, `modifierPlusieursObjets`,
-`supprimerFichier`). Trois gardes-fous, dans l'ordre où ils interviennent :
+Si cette capacité revient un jour, elle devra être présentée comme option
+explicite, avec consentement par document ou par action, jamais comme automatisme
+silencieux.
+
+Trois gardes-fous resteront alors indispensables :
 
 1. Le serveur ne retient une action que si son `nom` figure mot pour mot dans
    la liste transmise — un nom halluciné ou approché est rejeté avant même de
@@ -137,19 +114,16 @@ date d'engagement, pas de durée de préavis — donc pas de calcul de date
 d'effet fiable, et un seul gabarit générique, jamais un article de loi cité.
 
 **Le texte du gabarit est fixe, écrit dans le code — jamais généré librement
-par Claude.** Seuls les champs (émetteur, référence, date, identité)
-viennent du modèle ou de l'utilisateur ; la formulation elle-même ne varie
-pas. C'est le même principe que `paper-manager` : *le gabarit garantit le
-fond, jamais le modèle.*
+par Claude.** En mode privé par défaut, les champs sensibles utiles à cette
+lettre (émetteur, référence, date) doivent venir de l'utilisateur ou d'une
+fiche déjà validée, jamais d'une lecture IA automatique. La formulation
+elle-même ne varie pas. C'est le même principe que `paper-manager` : *le
+gabarit garantit le fond, jamais le modèle.*
 
-`emetteur`, `referenceClient`, `montant` et, depuis le même jour,
-`texteExtrait` (jusqu'à 500 caractères du texte lisible sur le document)
-sont désormais aussi demandés à `classer-document`, dans le même appel que
-la catégorie et l'échéance — pas un second moment d'exposition. La
-consigne de ne jamais deviner s'applique pareil : `null` plutôt qu'un
-champ recalculé ou déduit. Tous restent dans l'index chiffré comme le
-reste ; aucun ne part vers une table en clair (contrairement à la date
-d'échéance, seule donnée qui sort pour permettre l'alerte).
+`emetteur`, `referenceClient`, `montant` et `texteExtrait` restent dans l'index
+chiffré comme le reste quand ils existent. Aucun ne part vers une table en clair
+(contrairement à la date d'échéance, seule donnée qui sort pour permettre
+l'alerte).
 
 `texteExtrait` sert uniquement à `rechercheCorrespond` (`src/lib/coffre.ts`) :
 une recherche filtre les documents déjà déchiffrés, entièrement côté
@@ -207,11 +181,9 @@ dans le calendrier du téléphone, avec un rappel avant l'heure. Deux voies
 existaient — une vraie intégration à un service de calendrier (Google
 Agenda, iCloud), ou un fichier généré localement. La première aurait exigé
 d'envoyer le libellé du rendez-vous (« Dentiste, cabinet Martin ») à un
-service tiers, ce que rien d'autre dans ce projet ne fait — la seconde
-exception explicite, après le classement automatique et l'assistant, mais
-plus large qu'elles deux : celles-ci ne gardent rien après lecture, une
-intégration calendrier **stockerait** le rendez-vous chez le tiers en
-continu. Écartée pour cette raison.
+service tiers. Une intégration calendrier **stockerait** le rendez-vous chez
+ce tiers en continu, ce qui dépasse la promesse privée du produit. Écartée
+pour cette raison.
 
 `genererICS` (dans `coffre.ts`) construit donc un fichier iCalendar
 (RFC 5545) **entièrement dans le navigateur**, à partir de ce que
@@ -323,7 +295,8 @@ est simulé (`vi.mock('./supabase', ...)`) pour observer ce que
 
 ## Ce qui reste fragile — non corrigé pour l'instant
 
-- **Le lien magique de connexion expire et se régénère par e-mail** : un compte
-  e-mail compromis permet de se reconnecter, mais pas de lire le coffre sans la
-  phrase secrète — cohérent avec la séparation des deux secrets ci-dessus, à
-  garder en tête si l'un des deux est un jour affaibli.
+- **Le mot de passe du compte et la phrase secrète restent deux secrets
+  séparés** : un compte compromis permet de se connecter à l'espace, mais pas
+  de lire le coffre sans la phrase secrète — cohérent avec la séparation des
+  deux secrets ci-dessus, à garder en tête si l'un des deux est un jour
+  affaibli.

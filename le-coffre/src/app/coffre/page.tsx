@@ -13,7 +13,7 @@ import {
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
   enregistrerIdentite, composerLettreResiliation, modifierObjet, modifierPlusieursObjets, ecarterEcheance, statutEcheance,
   interpreterQuestion, genererICS, SEUIL_BIENTOT_JOURS, clesParNomAffiche,
-  categorieInstantanee, affinableParIA, recupererFormulaireCerfa, suggererChampsFormulaire,
+  categorieInstantanee, recupererFormulaireCerfa, suggererChampsFormulaire,
   type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex, type ActionAssistant,
 } from '@/lib/coffre';
 import { champsFormulaire } from '@/lib/formulaire';
@@ -381,27 +381,6 @@ export default function PageCoffre() {
   // plus que les vrais échecs techniques (réseau, quota).
   const [triAutoBilan, setTriAutoBilan] = useState<{ erreursTechniques: string[]; abandonnes: string[] } | null>(null);
   const [triAutoDetailOuvert, setTriAutoDetailOuvert] = useState(false);
-  // Clés de stockage déjà passées par l'IA cette session, verdict positif ou
-  // négatif peu importe — jamais remises en question tant que la page reste
-  // ouverte. Sans cette mémoire, « Réessayer » après un échec technique ne
-  // retrouvait plus le fichier concerné : la passe 1 lui avait déjà donné
-  // une catégorie instantanée (Images/Papiers), donc il ne comptait plus
-  // parmi les « non classés » que le prochain appel recalculait — mesuré le
-  // 10/09/2026, 7 fichiers restés bloqués sur un lot de 89, le bouton
-  // Réessayer ne faisant plus rien. Un échec technique ne rejoint PAS cet
-  // ensemble : c'est justement ce qui le rend réessayable.
-  const triAutoDejaAffines = useRef<Set<string>>(new Set());
-
-  // Combien de fois un même fichier a déjà échoué techniquement à l'affinage,
-  // toutes tentatives « Réessayer » cumulées cette session — posé le
-  // 10/09/2026 après une demande explicite : un fichier qui échouera pour de
-  // bon à chaque essai (ex. corrompu, format que classer-document a fini par
-  // refuser) ne doit jamais boucler sans fin. Au-delà du plafond, on
-  // l'ajoute à triAutoDejaAffines pour de bon : il garde sa catégorie
-  // instantanée (Images/Papiers/Vidéos/Audio), rien n'est perdu, seule la
-  // resoumission automatique s'arrête.
-  const triAutoTentatives = useRef<Map<string, number>>(new Map());
-  const TENTATIVES_TRI_AUTO_MAX = 3;
   // Dossiers dépliés dans la vue « Ranger en dossiers » — vide par défaut,
   // donc tous repliés : voir le rendu de `dossiers.map` plus bas.
   const [dossiersOuverts, setDossiersOuverts] = useState<Set<string>>(new Set());
@@ -512,11 +491,10 @@ export default function PageCoffre() {
     }
   }
 
-  // Un fichier choisi ne se dépose pas tout de suite : on propose d'abord une
-  // catégorie, un nom et une échéance éventuelle (fonction classer-document,
-  // qui lit le fichier une fraction de seconde côté serveur puis ne garde
-  // rien — voir SECURITY.md), et rien ne bouge tant que l'utilisateur n'a
-  // pas validé chaque proposition.
+  // Un fichier choisi ne se dépose pas tout de suite : on prépare d'abord une
+  // fiche simple, classée localement par type de fichier. Aucun document ne
+  // part vers un modèle externe par défaut ; rien ne bouge tant que
+  // l'utilisateur n'a pas validé chaque fiche.
   async function surDepot(fichiers: File[]) {
     if (!fichiers.length || !utilisateur || !cle) return;
     setErreur('');
@@ -567,24 +545,16 @@ export default function PageCoffre() {
     setAValider((precedent) => [...precedent, ...nouveaux]);
     if (entreeFichier.current) entreeFichier.current.value = '';
 
-    // En parallèle, pas un par un : dix fichiers analysés en série, à
-    // deux ou trois secondes chacun, rendaient un dossier « interminable ».
+    // En parallèle, pas un par un : même sans IA externe, laisser chaque
+    // fichier terminer sa préparation indépendamment rend les gros dépôts
+    // plus fluides.
     // Chaque `setAValider` porte sa propre clé et utilise la forme
     // fonctionnelle — les réponses qui reviennent dans le désordre ne
     // s'écrasent jamais entre elles.
     //
-    // Un fichier qu'on sait déjà illisible par l'IA (un SVG, par exemple —
-    // voir affinableParIA) n'est même pas soumis : l'appel échouerait à coup
-    // sûr, pour rien. Il garde directement sa catégorie instantanée, prête à
-    // être ajustée à la main dans la liste d'attente.
+    // La voie privée est la règle : proposerClassement reste une fonction de
+    // confort locale, jamais un envoi automatique du document.
     await Promise.all(nouveaux.map(async (item) => {
-      const categorieLocale = categorieInstantanee(item.fichier.type);
-      if (!affinableParIA(categorieLocale, item.fichier.type)) {
-        setAValider((precedent) => precedent.map((p) => (p.cle === item.cle
-          ? { ...p, enAnalyse: false, categorie: categorieLocale }
-          : p)));
-        return;
-      }
       const proposition = await proposerClassement(item.fichier);
       setAValider((precedent) => precedent.map((p) => (p.cle === item.cle ? {
         ...p, enAnalyse: false,
@@ -635,9 +605,8 @@ export default function PageCoffre() {
   // ajouter.
   //
   // Boucle plutôt qu'une seule passe sur `prets` : sur un gros lot, la
-  // lecture de chaque fichier (proposerClassement, un appel IA par fichier
-  // dans surDepot) prend plusieurs secondes et se termine en désordre —
-  // le bouton reste cliquable dès qu'UN SEUL fichier est prêt, pas tous. Une
+  // préparation de chaque fiche peut se terminer en désordre. Le bouton
+  // reste cliquable dès qu'UN SEUL fichier est prêt, pas tous. Une
   // seule passe déposait alors ce sous-ensemble et abandonnait les fichiers
   // encore « en lecture » à cet instant : ils restaient coincés dans la
   // liste d'attente pour de bon, jamais redéposés tout seuls, et un tri
@@ -685,36 +654,15 @@ export default function PageCoffre() {
     setEnCours(false);
   }
 
-  // Tri automatique en deux passes bien distinctes — voir le plan du
-  // 10/09/2026 (bilan point 10) : la première est gratuite, instantanée et
-  // sans appel réseau, la seconde affine avec l'IA. Aucun fichier ne reste
-  // jamais « non classé » après cet appel, quel que soit son type.
+  // Tri automatique privé : une passe locale pose un dossier général sur
+  // chaque fichier. Aucun fichier ne reste « non classé » après cet appel,
+  // quel que soit son type.
   //
-  // Passe 1 — locale : chaque fichier sans catégorie reçoit tout de suite
-  // une catégorie générique selon son type (categorieInstantanee), sans
-  // solliciter personne. Couvre tout le retard d'un coup, quel que soit le
-  // nombre de fichiers — plus de plafond par lot, ce n'est plus nécessaire
-  // puisque rien ici ne coûte de temps réseau.
-  //
-  // Passe 2 — IA, seulement sur ce que classer-document sait lire (image,
-  // PDF — voir CATEGORIES_AFFINABLES_PAR_IA) : propose une catégorie
-  // administrative précise si elle en reconnaît une ; sinon le fichier garde
-  // la catégorie posée à la passe 1. Menée en parallèle, borné par
-  // CONCURRENCE_TRI_AUTO — mesuré sur ce compte le 10/09/2026 via le journal
-  // des en-têtes anthropic-ratelimit-* posé sur classer-document (et non
-  // plus supposé depuis la doc publique) : 10 000 requêtes/minute et
-  // 10 000 000 de jetons d'entrée/minute, jamais entamés même sur un lot de
-  // 89 fichiers. Le débit n'est donc pas la limite d'Anthropic ; 25 en vol
-  // reste très en dessous, avec de la marge pour un compte moins généreux.
-  // `modifierPlusieursObjets` regroupe plusieurs affinages en une seule
-  // sauvegarde ; `CHECKPOINT_TRI_AUTO` en déclenche une toutes les huit
-  // réussites plutôt qu'une seule à la fin, pour ne pas tout reperdre si la
-  // page se ferme en cours de lot.
+  // Une ancienne seconde passe IA peut revenir un jour sous consentement
+  // explicite. Elle est désactivée par défaut : la promesse du produit est
+  // d'abord de créer un repère fiable sans exposer les papiers.
   async function trierAutomatiquement() {
     if (!utilisateur || !cle) return;
-    const CONCURRENCE_TRI_AUTO = 25;
-    const CHECKPOINT_TRI_AUTO = 8;
-
     const nonClasses = Object.keys(index.objets).filter((n) => !index.objets[n]?.categorie?.trim());
     if (nonClasses.length === 0) return;
 
@@ -738,117 +686,6 @@ export default function PageCoffre() {
       setTriAutoBilan({ erreursTechniques: [err instanceof Error ? err.message : String(err)], abandonnes: [] });
       setTriAutoEnCours(false);
       return;
-    }
-
-    // Passe 2 : tout ce qui est ACTUELLEMENT dans un dossier affinable et
-    // n'a pas encore reçu de verdict de l'IA cette session — jamais
-    // seulement ce qui vient d'être classé à l'instant (`nonClasses`),
-    // sinon un fichier resté en échec technique lors d'un tri précédent
-    // redevient introuvable au tri suivant : il a déjà sa catégorie
-    // instantanée, donc il ne compte plus parmi les « non classés ».
-    const aAffiner = Object.keys(indexCourant.objets).filter((n) => {
-      const info = indexCourant.objets[n];
-      if (!info || triAutoDejaAffines.current.has(n)) return false;
-      return affinableParIA(info.categorie ?? '', info.type);
-    });
-    if (aAffiner.length === 0) {
-      setTriAutoEnCours(false);
-      return;
-    }
-    setTriAutoProgres({ fait: 0, total: aAffiner.length });
-
-    const indexDepart = indexCourant;
-    let enAttente: Record<string, { categorie: string; montant?: string }> = {};
-    let flushEnVol: Promise<void> | null = null;
-    const erreursTechniques: string[] = [];
-    // Fichiers ayant atteint TENTATIVES_TRI_AUTO_MAX : distincts des erreurs
-    // techniques ci-dessus, qui restent réessayables — ceux-là ne le sont
-    // plus, « Réessayer » ne les reprendra pas, mais ils gardent leur
-    // catégorie générique (Images/Papiers), rien n'est perdu.
-    const abandonnes: string[] = [];
-
-    // Verrouillé : si un flush est déjà en vol, celui-ci se contente
-    // d'attendre — les entrées accumulées depuis seront prises par le flush
-    // suivant (le déclencheur du checkpoint, ou le flush final après la
-    // boucle), jamais perdues, jamais écrites deux fois sur un index périmé.
-    async function flush() {
-      if (flushEnVol) {
-        await flushEnVol;
-        return;
-      }
-      const nomsEnAttente = Object.keys(enAttente);
-      if (nomsEnAttente.length === 0) return;
-      const aEcrire = enAttente;
-      enAttente = {};
-      flushEnVol = (async () => {
-        indexCourant = await modifierPlusieursObjets(utilisateur!.id, cle!, aEcrire, indexCourant);
-        setIndex(indexCourant);
-      })();
-      try {
-        await flushEnVol;
-      } finally {
-        flushEnVol = null;
-      }
-    }
-
-    let curseur = 0;
-    async function suivant(): Promise<void> {
-      const i = curseur++;
-      if (i >= aAffiner.length) return;
-      const nom = aAffiner[i];
-      if (!nom) return suivant();
-      const info = indexDepart.objets[nom];
-      if (info) {
-        try {
-          const blob = await recupererFichier(utilisateur!.id, cle!, nom, info);
-          // `File` est déjà importé plus haut comme icône lucide-react, qui
-          // masque le constructeur DOM — d'où `globalThis.File` ici.
-          const fichier = new globalThis.File([blob], info.nom, { type: info.type });
-          const proposition = await proposerClassement(fichier);
-          if (proposition.erreurTechnique) {
-            // L'appel a échoué (réseau, quota, service surchargé) — le
-            // fichier garde sa catégorie instantanée. En dessous du plafond
-            // de tentatives, il reste éligible au prochain tri (pas ajouté à
-            // triAutoDejaAffines) : c'est ce qui rend « Réessayer » capable
-            // de le retrouver. Au-delà, on arrête de le resoumettre — voir
-            // TENTATIVES_TRI_AUTO_MAX.
-            const tentatives = (triAutoTentatives.current.get(nom) ?? 0) + 1;
-            triAutoTentatives.current.set(nom, tentatives);
-            if (tentatives >= TENTATIVES_TRI_AUTO_MAX) {
-              triAutoDejaAffines.current.add(nom);
-              abandonnes.push(info.nom);
-            } else {
-              erreursTechniques.push(info.nom);
-            }
-          } else {
-            // Un vrai verdict est tombé, positif ou négatif — dans les deux
-            // cas ce fichier ne sera plus jamais resoumis automatiquement.
-            triAutoDejaAffines.current.add(nom);
-            if (proposition.lisible) {
-              enAttente[nom] = { categorie: proposition.categorie, montant: proposition.montant || undefined };
-              if (Object.keys(enAttente).length >= CHECKPOINT_TRI_AUTO) await flush();
-            }
-          }
-        } catch (err) {
-          const tentatives = (triAutoTentatives.current.get(nom) ?? 0) + 1;
-          triAutoTentatives.current.set(nom, tentatives);
-          if (tentatives >= TENTATIVES_TRI_AUTO_MAX) {
-            triAutoDejaAffines.current.add(nom);
-            abandonnes.push(info.nom);
-          } else {
-            erreursTechniques.push(`${info.nom} (${err instanceof Error ? err.message : String(err)})`);
-          }
-        }
-      }
-      setTriAutoProgres((p) => (p ? { ...p, fait: p.fait + 1 } : null));
-      return suivant();
-    }
-
-    await Promise.all(Array.from({ length: Math.min(CONCURRENCE_TRI_AUTO, aAffiner.length) }, suivant));
-    await flush();
-
-    if (erreursTechniques.length > 0 || abandonnes.length > 0) {
-      setTriAutoBilan({ erreursTechniques, abandonnes });
     }
     setTriAutoEnCours(false);
     setTriAutoProgres(null);
@@ -1275,6 +1112,12 @@ export default function PageCoffre() {
     .sort((a, b) => (a.date < b.date ? -1 : 1));
   const alerte = prochaineAlerte(index);
   const prenom = (index.identite?.nom || utilisateur?.email || '').trim().split(/\s+/)[0];
+  const papiersAvecEcheance = tousLesNoms.filter((n) => index.objets[n]?.echeance?.presente).length;
+  const aCompleter = tousLesNoms.filter((n) => {
+    const objet = index.objets[n];
+    if (!objet) return false;
+    return !objet.categorie?.trim() || (objet.echeance?.presente && !objet.echeance.date);
+  }).length;
 
   return (
     <main
@@ -1307,9 +1150,8 @@ export default function PageCoffre() {
             les deux sont censés dominer à parts égales, et le turquoise
             porte déjà l'eyebrow « Bonjour » juste en dessous. */}
         <p className="text-sm font-semibold tracking-widest text-violet uppercase">Le Tiroir Secret</p>
-        <CoffreMer ouvert={coffreOuvert} onBasculer={() => setCoffreOuvert((ouvert) => !ouvert)} />
         {/* En-tête */}
-        <header className="coffre-hero studio-overview flex flex-wrap items-start justify-between gap-6 rounded-3xl border border-line bg-paper-raised p-6 sm:p-8">
+        <header className="coffre-hero coffre-hero--scene studio-overview rounded-3xl border border-line bg-paper-raised p-6 sm:p-8">
           <div className="coffre-vault" aria-hidden="true"><span className="coffre-vault__bar" /><span className="coffre-vault__dial" /></div>
           <div className="coffre-hero__content">
             <p className="text-sm font-semibold tracking-widest text-accent uppercase">
@@ -1317,13 +1159,16 @@ export default function PageCoffre() {
             </p>
             <h1 className="mt-2 font-affiche text-3xl sm:text-4xl texte-degrade">Voici où en sont tes papiers</h1>
             <p className="mt-3 max-w-md text-ink-soft">
-              Tout est déjà lu et rangé pour toi — il ne reste qu&apos;à jeter un œil.
+              Ton tiroir garde tes papiers privés, puis te montre calmement ce qui demande ton attention.
             </p>
             <p className="mt-4 flex items-center gap-2 text-sm text-vert">
-              <ShieldCheck size={16} /> Personne d&apos;autre ne peut voir tes papiers. Même nous.
+              <ShieldCheck size={16} /> Classement local par défaut : aucun papier n&apos;est envoyé à une IA externe.
             </p>
           </div>
-          <div className="flex flex-col items-end gap-5">
+          <div className="coffre-hero__scene">
+            <CoffreMer compact ouvert={coffreOuvert} onBasculer={() => setCoffreOuvert((ouvert) => !ouvert)} />
+          </div>
+          <div className="coffre-hero__actions">
             <button onClick={seDeconnecter}
               className="flex shrink-0 items-center gap-2 rounded-lg border border-line bg-paper-raised/70 px-3 py-2 text-sm text-ink-soft transition hover:border-wine/60 hover:text-wine">
               <LogOut size={16} /> Se déconnecter
@@ -1334,6 +1179,36 @@ export default function PageCoffre() {
             </dl>
           </div>
         </header>
+
+        <section className="grid gap-3 sm:grid-cols-3" aria-label="Vue d'attention du tiroir secret">
+          <div className="rounded-2xl border border-line bg-paper-raised p-5">
+            <p className="flex items-center gap-2 text-sm font-semibold tracking-widest text-accent uppercase">
+              <ShieldCheck size={15} /> Privé d&apos;abord
+            </p>
+            <p className="mt-2 font-affiche text-2xl">{tousLesNoms.length}</p>
+            <p className="mt-1 text-sm text-ink-soft">
+              papier{tousLesNoms.length > 1 ? 's' : ''} gardé{tousLesNoms.length > 1 ? 's' : ''} dans le tiroir.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-line bg-paper-raised p-5">
+            <p className="flex items-center gap-2 text-sm font-semibold tracking-widest text-violet uppercase">
+              <Bell size={15} /> À surveiller
+            </p>
+            <p className="mt-2 font-affiche text-2xl">{papiersAvecEcheance + rendezVousTries.length}</p>
+            <p className="mt-1 text-sm text-ink-soft">
+              échéance{papiersAvecEcheance + rendezVousTries.length > 1 ? 's' : ''} ou rendez-vous à garder en tête.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-line bg-paper-raised p-5">
+            <p className="flex items-center gap-2 text-sm font-semibold tracking-widest text-vert uppercase">
+              <Folder size={15} /> À clarifier
+            </p>
+            <p className="mt-2 font-affiche text-2xl">{aCompleter}</p>
+            <p className="mt-1 text-sm text-ink-soft">
+              repère{aCompleter > 1 ? 's' : ''} à nommer ou ranger à la main.
+            </p>
+          </div>
+        </section>
 
         {/* Barre « pose ta question » — hors de la grille et juste sous
             l'en-tête (10/09/2026), plus haut de page mais plus respirée :

@@ -1,40 +1,67 @@
 'use client';
 
+import Image from 'next/image';
+
 type CoffreMerProps = {
   ouvert: boolean;
-  onBasculer: () => void;
+  onBasculer?: () => void;
+  compact?: boolean;
+  actionHref?: string;
+  actionBadge?: string;
+  actionLabel?: string;
 };
 
-/**
- * Accueil abstrait et premium : on suggère l'idée d'un espace privé qui
- * s'ouvre, sans image IA littérale ni faux coffre-fort décoratif.
- */
-export function CoffreMer({ ouvert, onBasculer }: CoffreMerProps) {
-  return (
-    <section className={`coffre-mer ${ouvert ? 'coffre-mer--ouvert' : ''}`} aria-label="Mon Tiroir Secret, espace privé">
-      <div className="coffre-mer__backdrop" aria-hidden="true">
-        <span className="coffre-mer__halo coffre-mer__halo--cyan" />
-        <span className="coffre-mer__halo coffre-mer__halo--violet" />
-        <span className="coffre-mer__ray coffre-mer__ray--one" />
-        <span className="coffre-mer__ray coffre-mer__ray--two" />
-        <span className="coffre-mer__grid" />
-      </div>
+export function CoffreMer({
+  ouvert,
+  onBasculer,
+  compact = false,
+  actionHref,
+  actionBadge,
+  actionLabel,
+}: CoffreMerProps) {
+  const libelleAction = actionLabel ?? (ouvert ? 'Refermer doucement' : 'Ouvrir le tiroir');
+  const badgeAction = actionBadge ?? (ouvert ? 'Refermer' : 'Ouvrir');
 
-      <div className="coffre-mer__portal" aria-hidden="true">
-        <span className="coffre-mer__door" />
-        <span className="coffre-mer__slot coffre-mer__slot--one" />
-        <span className="coffre-mer__slot coffre-mer__slot--two" />
-        <span className="coffre-mer__slot coffre-mer__slot--three" />
+  return (
+    <section
+      className={`coffre-mer ${compact ? 'coffre-mer--compact' : ''} ${ouvert ? 'coffre-mer--ouvert' : ''}`}
+      aria-label="Mon Tiroir Secret, espace privé"
+    >
+      <Image
+        src="/brand/tiroir-secret-coffre-mer-phare-v2.jpg"
+        alt=""
+        fill
+        priority
+        sizes="(max-width: 700px) 100vw, 72vw"
+        className="coffre-mer__image"
+        aria-hidden="true"
+      />
+
+      <div className="coffre-mer__backdrop" aria-hidden="true">
+        <span className="coffre-mer__lumiere coffre-mer__lumiere--large" />
+        <span className="coffre-mer__lumiere coffre-mer__lumiere--fine" />
+        <span className="coffre-mer__phare" />
+        <span className="coffre-mer__vagues" />
+        <span className="coffre-mer__porte" />
+        <span className="coffre-mer__reflet" />
+        <span className="coffre-mer__grain" />
       </div>
 
       <div className="coffre-mer__contenu">
-        <p className="coffre-mer__eyebrow"><span /> Espace privé · studio personnel</p>
-        <h2>Ton tiroir secret.<br /><em>Tout reste rangé.</em></h2>
-        <p>Un endroit clair pour tes papiers, tes repères et les choses importantes — sans bruit, sans décor inutile.</p>
-        <button type="button" onClick={onBasculer} aria-pressed={ouvert} className="coffre-mer__commande">
-          <span aria-hidden="true">{ouvert ? '✦' : '→'}</span>
-          {ouvert ? 'Revenir au calme' : 'Allumer l’espace'}
-        </button>
+        <p className="coffre-mer__eyebrow"><span /> Espace privé · horizon clair</p>
+        <h2>Ton tiroir secret.<br /><em>La mer dehors.</em></h2>
+        <p>Un refuge personnel pour ranger tes papiers, retrouver l&apos;essentiel et respirer avant chaque démarche.</p>
+        {actionHref ? (
+          <a href={actionHref} className="coffre-mer__commande">
+            <span aria-hidden="true">{badgeAction}</span>
+            {libelleAction}
+          </a>
+        ) : (
+          <button type="button" onClick={onBasculer} aria-pressed={ouvert} className="coffre-mer__commande">
+            <span aria-hidden="true">{badgeAction}</span>
+            {libelleAction}
+          </button>
+        )}
       </div>
     </section>
   );

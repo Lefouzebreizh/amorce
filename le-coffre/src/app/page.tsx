@@ -29,9 +29,7 @@ const donneesStructurees = {
 
 export default function PageAccueil() {
   const routeur = useRouter();
-  const [identifiant, setIdentifiant] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
-  const [coffreOuvert, setCoffreOuvert] = useState(false);
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState('');
 
@@ -46,7 +44,7 @@ export default function PageAccueil() {
     setErreur('');
     setEnCours(true);
     const { data, error: erreurFonction } = await supabase.functions.invoke('connexion-coffre', {
-      body: { identifiant, motDePasse },
+      body: { identifiant: 'lefouzebreizh', motDePasse },
     });
     const error = erreurFonction || (data?.error ? new Error(data.error) : null);
     if (!error && data?.access_token && data?.refresh_token) {
@@ -84,40 +82,39 @@ export default function PageAccueil() {
       <div className={styles.content}>
         <section className={styles.intro} aria-labelledby="titre-accueil">
           <h1 id="titre-accueil" className="sr-only">Mon Tiroir Secret, espace privé lumineux</h1>
-          <CoffreMer ouvert={coffreOuvert} onBasculer={() => setCoffreOuvert((ouvert) => !ouvert)} />
+          <CoffreMer ouvert actionHref="#connexion" actionBadge="Entrer" actionLabel="Entrer dans mon espace" />
         </section>
         <section id="connexion" tabIndex={-1} className={styles.access} aria-labelledby="titre-connexion">
           <div className={styles.accessHeading}>
             <p className={styles.eyebrow}>Accès personnel</p>
             <h2 id="titre-connexion">Entre quand tu es prêt.</h2>
           </div>
-          <p className={styles.accessIntro}>Entre directement dans ton espace. Aucun lien à attendre dans ta boîte mail.</p>
+          <p className={styles.accessIntro}>Entre ton code d&apos;accès. Aucun lien à attendre dans ta boîte mail.</p>
 
-        <form onSubmit={seConnecter} className={styles.form} aria-busy={enCours}>
-          <label htmlFor="identifiant" className="text-sm text-ink-soft">
-            Ton identifiant
-          </label>
+        <form onSubmit={seConnecter} className={styles.form} aria-busy={enCours} autoComplete="on">
           <input
-            id="identifiant"
             type="text"
-            required
+            name="username"
             autoComplete="username"
-            value={identifiant}
-            onChange={(e) => setIdentifiant(e.target.value)}
-            className={styles.input}
-            aria-invalid={!!erreur}
-            aria-describedby={erreur ? 'erreur-connexion' : undefined}
-            placeholder="lefouzebreizh"
+            value="lefouzebreizh"
+            readOnly
+            tabIndex={-1}
+            aria-hidden="true"
+            className="sr-only"
           />
-          <label htmlFor="mot-de-passe" className="text-sm text-ink-soft">Ton mot de passe</label>
+          <label htmlFor="mot-de-passe" className="text-sm text-ink-soft">Ton code d&apos;accès</label>
           <input
             id="mot-de-passe"
+            name="mot-de-passe"
             type="password"
             required
             autoComplete="current-password"
             value={motDePasse}
             onChange={(e) => setMotDePasse(e.target.value)}
             className={styles.input}
+            aria-invalid={!!erreur}
+            aria-describedby={erreur ? 'erreur-connexion' : undefined}
+            placeholder="Ton code"
           />
           {erreur && <p id="erreur-connexion" role="alert" className={styles.error}>{erreur}</p>}
           <button
