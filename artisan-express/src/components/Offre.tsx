@@ -93,7 +93,7 @@ const PLACES_EN_LETTRES = EN_LETTRES[PLACES_SIMULTANEES] ?? String(PLACES_SIMULT
 
 const COMPRIS = [
   ['Paiement en une fois', '300 €, et c’est fini — aucun abonnement, aucun prélèvement ensuite.'],
-  ['Livré en 48 h', 'Le compteur part quand j’ai tes infos et tes photos, pas quand tu paies.'],
+  ['Un créneau clair', 'Après réception de tes infos et tes photos, je te confirme quand je peux réaliser ton site.'],
   ['Une modification offerte', 'Après livraison, tu regardes, tu me dis ce qui cloche, je corrige.'],
   ['Le site est à toi', 'Le code, le texte, les images : tu repars avec si un jour tu veux changer de crémerie.'],
 ] as const;
@@ -159,11 +159,10 @@ export function Offre() {
           <p className={`mt-7 rounded-xl border border-accent bg-panel p-4 text-lg leading-relaxed text-ardoise ${MESURE}`}>
             <strong className="text-encre">
               {PLACES_EN_LETTRES.charAt(0).toUpperCase() + PLACES_EN_LETTRES.slice(1)} places à la
-              fois, et c’est ce qui tient les 48&nbsp;h.
+              fois, pour garder chaque projet soigné.
             </strong>{' '}
-            Je travaille seul. Tant que {PLACES_EN_LETTRES} sites sont en cours, je n’en prends pas un de plus — c’est le seul moyen de livrer en
-            deux jours au lieu de faire attendre tout le monde. Quand les places sont prises, je te
-            le dis et on cale la suivante.
+            Je travaille seul. Tant que {PLACES_EN_LETTRES} sites sont en cours, je n’en prends pas un de plus. Quand les places sont prises, je te
+            le dis et on convient du créneau suivant.
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -171,7 +170,7 @@ export function Offre() {
               className={BOUTON_PRINCIPAL}
               href={encaisseEnLigne ? contact.stripeLien : '#formulaire'}
             >
-              {encaisseEnLigne ? 'Je veux mon site en 48\u00a0h' : 'Je réserve ma place'}
+              {encaisseEnLigne ? 'Je demande mon site' : 'Je réserve ma place'}
             </a>
             <a className={BOUTON_CONTOUR} href="#formulaire">
               J’ai une question avant
