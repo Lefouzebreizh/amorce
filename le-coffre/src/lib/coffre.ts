@@ -42,10 +42,9 @@ export type ObjetIndex = {
   // — même principe que emetteur/referenceClient : null plutôt qu'un montant
   // deviné.
   montant?: string | null;
-  // Jusqu'à 500 caractères de ce qui est réellement lisible sur le document —
-  // sert à la recherche locale (rechercheCorrespond) et, tronqué à 200
-  // caractères, part vers assistant-coffre pour répondre aux questions
-  // (digestIndex) — jamais affiché tel quel dans l'interface, voir SECURITY.md.
+  // Jusqu'à 500 caractères de ce qui est réellement lisible sur le document.
+  // Dans la version privée par défaut, ce champ reste dans l'index chiffré et
+  // sert uniquement à la recherche locale (rechercheCorrespond).
   texteExtrait?: string | null;
 };
 
@@ -96,10 +95,9 @@ export type PropositionClassement = {
   montant: string | null;
   texteExtrait: string | null;
   echeance: Echeance;
-  // Vrai seulement quand l'appel lui-même a échoué (réseau, quota, panne du
-  // service) — jamais quand Claude a répondu et jugé le document illisible.
-  // Sert au tri automatique en lot : un fichier qui a échoué techniquement
-  // mérite un nouvel essai, un vrai non-document non.
+  // Historique : utilisé par l'ancien affinage IA. En mode privé par défaut,
+  // proposerClassement ne fait plus d'appel réseau et ne renseigne pas ce
+  // champ.
   erreurTechnique?: boolean;
 };
 
@@ -249,47 +247,27 @@ export function composerLettreResiliation(
   return { objet, corps, mentionsManquantes };
 }
 
-function b64FromFichier(buf: ArrayBuffer): string {
-  // Par blocs de 32 Ko : String.fromCharCode(...octets) sur un fichier de
-  // plusieurs Mo dépasserait la pile d'appels (trop d'arguments d'un coup).
-  const octets = new Uint8Array(buf);
-  const TAILLE_BLOC = 32768;
-  let binaire = '';
-  for (let i = 0; i < octets.length; i += TAILLE_BLOC) {
-    binaire += String.fromCharCode(...octets.subarray(i, i + TAILLE_BLOC));
-  }
-  return btoa(binaire);
-}
-
-// Envoie le fichier EN CLAIR à la fonction serveur classer-document — le seul
-// instant où un document du coffre est lisible ailleurs que dans ce
-// navigateur (voir SECURITY.md). N'échoue jamais bruyamment : en cas de
-// panne, on renvoie une proposition vide plutôt que de bloquer le dépôt.
+// Classement privé par défaut : aucun octet du document ne quitte le
+// navigateur pour être analysé par un modèle externe. On pose seulement une
+// catégorie générique selon le type de fichier, puis l'utilisateur corrige si
+// besoin. C'est moins spectaculaire qu'un auto-classement IA, mais beaucoup
+// plus cohérent avec la promesse de Mon Tiroir Secret.
 export async function proposerClassement(fichier: File): Promise<PropositionClassement> {
-  const vide: PropositionClassement = {
-    lisible: false, categorie: '', nomSuggere: '', emetteur: null, referenceClient: null, montant: null,
+  return {
+    lisible: true,
+    categorie: categorieInstantanee(fichier.type || 'application/octet-stream'),
+    nomSuggere: fichier.name,
+    emetteur: null,
+    referenceClient: null,
+    montant: null,
     texteExtrait: null,
     echeance: { presente: false, date: null, libelle: null, confiance: 'basse' },
   };
-  try {
-    const buf = await fichier.arrayBuffer();
-    const { data, error } = await supabase.functions.invoke('classer-document', {
-      body: { donnees: b64FromFichier(buf), type: fichier.type || 'application/octet-stream' },
-    });
-    if (error || !data || 'erreur' in data) return { ...vide, erreurTechnique: true };
-    return data as PropositionClassement;
-  } catch {
-    return { ...vide, erreurTechnique: true };
-  }
 }
 
-// Catégorie générique posée SANS appel réseau, dès qu'un fichier n'a encore
-// aucune catégorie — voir trierAutomatiquement dans page.tsx (plan du
-// 10/09/2026). C'est elle qui garantit qu'aucun fichier n'est jamais refusé
-// ni laissé de côté : l'IA (proposerClassement) n'intervient qu'ensuite,
-// pour affiner « Images » et « Papiers » vers une catégorie administrative
-// précise quand elle en reconnaît une — si elle n'en reconnaît aucune, le
-// fichier garde la catégorie posée ici, il ne redevient jamais « non classé ».
+// Catégorie générique posée sans appel réseau. C'est elle qui garantit
+// qu'aucun fichier n'est jamais refusé ni laissé de côté : l'utilisateur peut
+// ensuite affiner le nom ou le dossier à la main.
 export function categorieInstantanee(type: string): string {
   if (type === 'application/pdf') return 'Papiers';
   if (type.startsWith('image/')) return 'Images';
@@ -298,29 +276,14 @@ export function categorieInstantanee(type: string): string {
   return 'Autre';
 }
 
-// Les deux seuls types que classer-document sait lire (voir son code) — donc
-// les deux seules catégories instantanées qu'il vaut la peine de lui
-// soumettre pour affinage. Les deux autres (Vidéos, Audio) gardent leur
-// catégorie instantanée pour de bon.
-export const CATEGORIES_AFFINABLES_PAR_IA = new Set(['Images', 'Papiers']);
+// Gardé pour compatibilité avec les anciens écrans/tests, mais vide en mode
+// privé : aucun classement automatique n'est affiné par IA par défaut.
+export const CATEGORIES_AFFINABLES_PAR_IA = new Set<string>();
 
-// Les seuls formats d'image que Claude sait effectivement lire — vérifié le
-// 10/09/2026 contre platform.claude.com/docs/en/build-with-claude/vision :
-// jpeg, png, gif, webp, jamais svg (ni bmp, tiff...). Un fichier « Images »
-// hors de cette liste échouerait à coup sûr, à chaque tentative, si on le
-// soumettait à classer-document — exactement la boucle de retry infinie
-// qu'on veut éviter. Il vaut mieux qu'il reste dans « Images », sa catégorie
-// instantanée, plutôt que de rebondir sans fin sur un appel voué à échouer.
-const TYPES_IMAGE_LISIBLES_PAR_IA = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
-
-// Remplace un simple test sur la catégorie (CATEGORIES_AFFINABLES_PAR_IA) par
-// un test qui tient compte du format réel : un PDF est toujours affinable,
-// une image seulement si son type MIME précis fait partie de ceux que Claude
-// sait lire — voir TYPES_IMAGE_LISIBLES_PAR_IA. Utilisé par
-// trierAutomatiquement (page.tsx) pour décider quoi soumettre à l'IA.
+// En mode privé, aucun document n'est soumis à une IA pour affinage.
 export function affinableParIA(categorie: string, type: string): boolean {
-  if (categorie === 'Papiers') return type === 'application/pdf';
-  if (categorie === 'Images') return TYPES_IMAGE_LISIBLES_PAR_IA.has(type);
+  void categorie;
+  void type;
   return false;
 }
 
@@ -365,13 +328,9 @@ export function clesParNomAffiche(index: IndexCoffre, nomAffiche: string): strin
     .map(([cle]) => cle);
 }
 
-// Un résumé de chaque document — jamais le fichier, jamais tout le texte
-// extrait (tronqué à 200 caractères, juste de quoi situer le document, pas de
-// quoi le reconstituer) — c'est ce qui part vers assistant-coffre pour que
-// Claude puisse répondre « où est mon papier EDF ». Voir SECURITY.md,
-// section « L'assistant ».
-// Exporté : réutilisé par suggererChampsFormulaire, qui a besoin du même
-// résumé pour rapprocher les champs d'un formulaire du contenu des papiers.
+// Résumé local de chaque document. Il ne quitte plus le navigateur dans le
+// parcours par défaut ; il reste utile pour des aides locales et pour les
+// tests de non-régression.
 export type DigestDocument = {
   nom: string; categorie: string; type: string; emetteur?: string; montant?: string | null;
   echeanceLibelle?: string | null; echeanceDate?: string | null; extrait?: string | null;
@@ -386,36 +345,25 @@ export function digestIndex(index: IndexCoffre): DigestDocument[] {
   }));
 }
 
-// Envoie une question et un résumé des documents (jamais les fichiers
-// eux-mêmes) à la fonction serveur assistant-coffre, qui répond en s'appuyant
-// sur ce résumé et, si la question déborde de la paperasse personnelle, une
-// recherche web — voir SECURITY.md. N'échoue jamais bruyamment : une panne
-// rend une réponse d'excuse plutôt que de casser le fil de discussion.
+// Assistant local par défaut : répond avec l'index déjà déchiffré dans ce
+// navigateur, sans appeler de modèle externe ni transmettre le résumé des
+// papiers. Les fonctions IA serveur peuvent rester dans le dépôt pour une
+// option future explicite, mais l'expérience publiable est d'abord privée.
 export async function demanderAuCoffre(
   question: string, historique: TourConversation[], index: IndexCoffre,
 ): Promise<ReponseAssistant> {
-  const vide: ReponseAssistant = {
-    reponse: "Je n'ai pas pu répondre à l'instant — réessaie dans un moment.",
-    documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false,
-    declencherTriAutomatique: false, rechercheWebEffectuee: false,
-    actions: [], formulaireCerfa: null,
+  void historique;
+  const resultatLocal = interpreterQuestion(index, question);
+  return {
+    reponse: resultatLocal.reponse || 'Dis-moi ce que tu cherches : un papier, un dossier, un PDF, une photo, ou un formulaire à préparer.',
+    documentsCites: resultatLocal.noms.map((nom) => index.objets[nom]?.nom).filter((nom): nom is string => Boolean(nom)),
+    ouvrirFormulaire: resultatLocal.action === 'formulaire',
+    ouvrirRangement: resultatLocal.action === 'rangement',
+    declencherTriAutomatique: false,
+    rechercheWebEffectuee: false,
+    actions: [],
+    formulaireCerfa: null,
   };
-  try {
-    const { data, error } = await supabase.functions.invoke('assistant-coffre', {
-      body: { question, historique, documents: digestIndex(index) },
-    });
-    if (error || !data || 'erreur' in data) return vide;
-    const resultat = data as ReponseAssistant;
-    // Défensif : une fonction serveur pas encore redéployée peut ne pas
-    // encore porter ce champ — un tableau vide plutôt qu'un crash au premier
-    // accès à `.map` côté interface.
-    if (!Array.isArray(resultat.actions)) resultat.actions = [];
-    resultat.declencherTriAutomatique = Boolean(resultat.declencherTriAutomatique);
-    if (!resultat.formulaireCerfa || typeof resultat.formulaireCerfa !== 'object') resultat.formulaireCerfa = null;
-    return resultat;
-  } catch {
-    return vide;
-  }
 }
 
 // Récupère les octets d'un CERFA officiel dont l'assistant a trouvé
@@ -435,25 +383,16 @@ export async function recupererFormulaireCerfa(url: string): Promise<ArrayBuffer
   return octets.buffer;
 }
 
-// Propose une valeur pour chaque champ d'un formulaire, déduite du résumé
-// des papiers déjà déposés et de l'identité — une suggestion, jamais un
-// remplissage : l'utilisateur la voit et la corrige avant de générer le PDF
-// (voir RemplirFormulaire.tsx). N'échoue jamais bruyamment : une panne rend
-// un objet vide, et les suggestions par nom de champ (identité) suffisent
-// encore à démarrer.
+// En mode privé, on ne déduit plus de valeurs depuis les papiers via une IA
+// externe. Le remplissage automatique reste local : identité, date du jour et
+// texte libre corrigé par l'utilisateur.
 export async function suggererChampsFormulaire(
   champs: string[], index: IndexCoffre, demarche?: string,
 ): Promise<Record<string, string>> {
-  try {
-    const { data, error } = await supabase.functions.invoke('suggerer-champs-formulaire', {
-      body: { champs, documents: digestIndex(index), identite: index.identite ?? null, demarche },
-    });
-    if (error || !data || 'erreur' in data) return {};
-    const { valeurs } = data as { valeurs?: Record<string, string> };
-    return valeurs && typeof valeurs === 'object' ? valeurs : {};
-  } catch {
-    return {};
-  }
+  void champs;
+  void index;
+  void demarche;
+  return {};
 }
 
 export async function coffreExiste(userId: string): Promise<boolean> {

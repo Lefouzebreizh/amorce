@@ -451,46 +451,25 @@ describe('les rendez-vous', () => {
 // ─────────────────────────────── Classement ───────────────────────────────
 
 describe('la proposition de classement', () => {
-  it('rend une proposition vide plutôt que d’échouer quand la fonction tombe', async () => {
-    // Le classement est un confort ; le dépôt est le service. Une panne du
-    // premier ne doit jamais empêcher le second.
-    poser(clientFactice({ fonction: { data: null, error: { message: 'panne' } } }));
-    const proposition = await coffre.proposerClassement(fichier());
-    assert.equal(proposition.lisible, false);
+  it('classe localement par type sans appeler de fonction serveur', async () => {
+    const f = poser(clientFactice({ fonction: { data: null, error: { message: 'panne' } } }));
+    const proposition = await coffre.proposerClassement(fichier('avis-imposition.pdf', 'application/pdf'));
+    assert.equal(proposition.lisible, true);
+    assert.equal(proposition.categorie, 'Papiers');
+    assert.equal(proposition.nomSuggere, 'avis-imposition.pdf');
     assert.equal(proposition.echeance.presente, false);
+    assert.equal(f.journal.some((entree) => entree.methode === 'invoke'), false);
   });
 
-  it('rend une proposition vide quand la fonction renvoie une erreur métier', async () => {
-    poser(clientFactice({ fonction: { data: { erreur: 'illisible' }, error: null } }));
-    assert.equal((await coffre.proposerClassement(fichier())).lisible, false);
-  });
-
-  it('marque une panne (réseau ou erreur métier) comme technique, à réessayer', async () => {
-    // Le tri automatique en lot s'en sert pour distinguer « le service n'a
-    // pas répondu, à reprendre » d'« un vrai document jugé illisible » — les
-    // deux rendaient auparavant exactement la même proposition vide.
-    poser(clientFactice({ fonction: { data: null, error: { message: 'panne' } } }));
-    assert.equal((await coffre.proposerClassement(fichier())).erreurTechnique, true);
-
-    poser(clientFactice({ fonction: { data: { erreur: 'illisible' }, error: null } }));
-    assert.equal((await coffre.proposerClassement(fichier())).erreurTechnique, true);
-  });
-
-  it('ne marque pas comme technique un document que Claude a réellement jugé illisible', async () => {
-    poser(clientFactice({ fonction: { data: { lisible: false, categorie: '' }, error: null } }));
-    const proposition = await coffre.proposerClassement(fichier());
-    assert.equal(proposition.lisible, false);
+  it('ne prétend pas lire les montants, échéances ou émetteurs', async () => {
+    poser(clientFactice());
+    const proposition = await coffre.proposerClassement(new File(['image'], 'facture-edf.jpg', { type: 'image/jpeg' }));
+    assert.equal(proposition.categorie, 'Images');
+    assert.equal(proposition.emetteur, null);
+    assert.equal(proposition.referenceClient, null);
+    assert.equal(proposition.montant, null);
+    assert.equal(proposition.texteExtrait, null);
     assert.equal(proposition.erreurTechnique, undefined);
-  });
-
-  it('transmet le fichier et son type, et rien d’autre', async () => {
-    const f = poser(clientFactice({ fonction: { data: { lisible: true }, error: null } }));
-    await coffre.proposerClassement(fichier());
-    const [nom, options] = f.premier('invoke') as [string, { body: Record<string, unknown> }];
-    assert.equal(nom, 'classer-document');
-    assert.deepEqual(Object.keys(options.body).sort(), ['donnees', 'type']);
-    // Le nom d'origine ne part pas : la fonction n'en a pas besoin pour lire.
-    assert.equal(toutCeQuiEstSorti(f.journal).includes('avis-imposition'), false);
   });
 });
 
@@ -510,29 +489,25 @@ describe('la catégorie instantanée', () => {
     assert.equal(coffre.categorieInstantanee(''), 'Autre');
   });
 
-  it('ne propose l’affinage IA que pour ce que classer-document sait lire', () => {
-    assert.equal(coffre.CATEGORIES_AFFINABLES_PAR_IA.has('Images'), true);
-    assert.equal(coffre.CATEGORIES_AFFINABLES_PAR_IA.has('Papiers'), true);
+  it('ne propose aucun affinage IA en mode privé par défaut', () => {
+    assert.equal(coffre.CATEGORIES_AFFINABLES_PAR_IA.has('Images'), false);
+    assert.equal(coffre.CATEGORIES_AFFINABLES_PAR_IA.has('Papiers'), false);
     assert.equal(coffre.CATEGORIES_AFFINABLES_PAR_IA.has('Vidéos'), false);
     assert.equal(coffre.CATEGORIES_AFFINABLES_PAR_IA.has('Audio'), false);
     assert.equal(coffre.CATEGORIES_AFFINABLES_PAR_IA.has('Autre'), false);
   });
 
-  // Posé le 10/09/2026 après un test réel : un SVG bucketé « Images » par
-  // categorieInstantanee ne doit jamais partir vers classer-document, qui le
-  // ferait échouer à coup sûr — Claude ne lit que jpeg/png/gif/webp (voir
-  // platform.claude.com/docs/en/build-with-claude/vision).
-  it('n’affine par IA que les formats d’image que Claude sait lire', () => {
-    assert.equal(coffre.affinableParIA('Images', 'image/jpeg'), true);
-    assert.equal(coffre.affinableParIA('Images', 'image/png'), true);
-    assert.equal(coffre.affinableParIA('Images', 'image/gif'), true);
-    assert.equal(coffre.affinableParIA('Images', 'image/webp'), true);
+  it('n’affine plus automatiquement les images, même lisibles par un modèle externe', () => {
+    assert.equal(coffre.affinableParIA('Images', 'image/jpeg'), false);
+    assert.equal(coffre.affinableParIA('Images', 'image/png'), false);
+    assert.equal(coffre.affinableParIA('Images', 'image/gif'), false);
+    assert.equal(coffre.affinableParIA('Images', 'image/webp'), false);
     assert.equal(coffre.affinableParIA('Images', 'image/svg+xml'), false);
     assert.equal(coffre.affinableParIA('Images', 'image/bmp'), false);
   });
 
-  it('n’affine par IA un « Papier » que si c’est vraiment un PDF', () => {
-    assert.equal(coffre.affinableParIA('Papiers', 'application/pdf'), true);
+  it('n’affine plus automatiquement les PDF', () => {
+    assert.equal(coffre.affinableParIA('Papiers', 'application/pdf'), false);
   });
 
   it('n’affine jamais Vidéos, Audio ou Autre, quel que soit le type', () => {
@@ -555,84 +530,42 @@ describe('demander au coffre', () => {
     },
   };
 
-  it('rend une réponse d’excuse plutôt que d’échouer quand la fonction tombe', async () => {
+  it('répond localement même si les fonctions serveur sont indisponibles', async () => {
     poser(clientFactice({ fonction: { data: null, error: { message: 'panne' } } }));
     const reponse = await coffre.demanderAuCoffre('où est ma facture EDF', [], INDEX_ASSISTANT);
-    assert.equal(reponse.documentsCites.length, 0);
+    assert.deepEqual(reponse.documentsCites, ['Facture EDF']);
     assert.equal(reponse.rechercheWebEffectuee, false);
     assert.ok(reponse.reponse.length > 0);
   });
 
-  it('ne transmet jamais le fichier, seulement un résumé tronqué du texte extrait', async () => {
-    const f = poser(clientFactice({
-      fonction: { data: { reponse: 'Voilà', documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: false }, error: null },
-    }));
+  it('ne transmet plus le résumé des papiers à assistant-coffre', async () => {
+    const f = poser(clientFactice());
     await coffre.demanderAuCoffre('où est ma facture EDF', [], INDEX_ASSISTANT);
-    const [nom, options] = f.premier('invoke') as [string, { body: { documents: Array<{ extrait?: string | null }> } }];
-    assert.equal(nom, 'assistant-coffre');
-    assert.deepEqual(Object.keys(options.body).sort(), ['documents', 'historique', 'question']);
-    const [document] = options.body.documents;
-    assert.ok(document?.extrait && document.extrait.length <= 200, 'le texte extrait doit être tronqué à 200 caractères');
+    assert.equal(f.journal.some((entree) => entree.methode === 'invoke'), false);
   });
 
-  it('transmet l’historique de la conversation', async () => {
-    const f = poser(clientFactice({
-      fonction: { data: { reponse: 'Voilà', documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: false }, error: null },
-    }));
+  it('garde l’historique local sans l’envoyer', async () => {
+    const f = poser(clientFactice());
     const historique = [{ role: 'user' as const, texte: 'bonjour' }, { role: 'assistant' as const, texte: 'salut' }];
     await coffre.demanderAuCoffre('et ensuite ?', historique, INDEX_ASSISTANT);
-    const [, options] = f.premier('invoke') as [string, { body: { historique: unknown } }];
-    assert.deepEqual(options.body.historique, historique);
+    assert.equal(f.journal.some((entree) => entree.methode === 'invoke'), false);
   });
 
-  it('transmet les actions proposées par la fonction serveur', async () => {
-    const actions = [{ type: 'classer' as const, nom: 'Facture EDF', categorie: 'Énergie' }];
-    poser(clientFactice({
-      fonction: {
-        data: {
-          reponse: 'Je classe ta facture.', documentsCites: ['Facture EDF'],
-          ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: false, actions,
-        },
-        error: null,
-      },
-    }));
+  it('ne propose pas d’action automatique de classement ou suppression', async () => {
+    poser(clientFactice());
     const reponse = await coffre.demanderAuCoffre('classe ma facture EDF dans Énergie', [], INDEX_ASSISTANT);
-    assert.deepEqual(reponse.actions, actions);
-  });
-
-  it('rend un tableau d’actions vide plutôt qu’un champ absent, sur une réponse serveur antérieure au champ', async () => {
-    poser(clientFactice({
-      fonction: {
-        data: { reponse: 'Voilà', documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: false },
-        error: null,
-      },
-    }));
-    const reponse = await coffre.demanderAuCoffre('où est ma facture EDF', [], INDEX_ASSISTANT);
     assert.deepEqual(reponse.actions, []);
   });
 
-  it('transmet le CERFA trouvé par la fonction serveur', async () => {
-    const formulaireCerfa = { demarche: 'Carte grise', url: 'https://www.service-public.fr/cerfa.pdf' };
-    poser(clientFactice({
-      fonction: {
-        data: {
-          reponse: 'J’ai trouvé le CERFA de la carte grise.', documentsCites: [],
-          ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: true, formulaireCerfa,
-        },
-        error: null,
-      },
-    }));
-    const reponse = await coffre.demanderAuCoffre('il me faut le formulaire de carte grise', [], INDEX_ASSISTANT);
-    assert.deepEqual(reponse.formulaireCerfa, formulaireCerfa);
+  it('ouvre seulement le module formulaire local quand l’intention est reconnue', async () => {
+    poser(clientFactice());
+    const reponse = await coffre.demanderAuCoffre('remplir le formulaire de carte grise', [], INDEX_ASSISTANT);
+    assert.equal(reponse.ouvrirFormulaire, true);
+    assert.equal(reponse.formulaireCerfa, null);
   });
 
-  it('rend formulaireCerfa à null plutôt qu’un champ absent, sur une réponse serveur antérieure au champ', async () => {
-    poser(clientFactice({
-      fonction: {
-        data: { reponse: 'Voilà', documentsCites: [], ouvrirFormulaire: false, ouvrirRangement: false, rechercheWebEffectuee: false },
-        error: null,
-      },
-    }));
+  it('rend formulaireCerfa à null en mode local', async () => {
+    poser(clientFactice());
     const reponse = await coffre.demanderAuCoffre('où est ma facture EDF', [], INDEX_ASSISTANT);
     assert.equal(reponse.formulaireCerfa, null);
   });
@@ -675,20 +608,16 @@ describe('suggérer des valeurs pour un formulaire à partir des papiers', () =>
     },
   };
 
-  it('rend les valeurs proposées par la fonction serveur', async () => {
+  it('ne propose plus de valeurs depuis les papiers via une fonction serveur', async () => {
     poser(clientFactice({ fonction: { data: { valeurs: { numero_client: '123456789' } }, error: null } }));
     const valeurs = await coffre.suggererChampsFormulaire(['numero_client'], INDEX_SUGGESTION, 'Carte grise');
-    assert.deepEqual(valeurs, { numero_client: '123456789' });
+    assert.deepEqual(valeurs, {});
   });
 
-  it('transmet les noms de champs, le résumé des papiers, l’identité et la démarche', async () => {
+  it('ne transmet pas les noms de champs, les papiers ou l’identité', async () => {
     const f = poser(clientFactice({ fonction: { data: { valeurs: {} }, error: null } }));
     await coffre.suggererChampsFormulaire(['numero_client'], INDEX_SUGGESTION, 'Carte grise');
-    const [nom, options] = f.premier('invoke') as [string, { body: Record<string, unknown> }];
-    assert.equal(nom, 'suggerer-champs-formulaire');
-    assert.deepEqual(Object.keys(options.body).sort(), ['champs', 'demarche', 'documents', 'identite']);
-    assert.deepEqual(options.body.champs, ['numero_client']);
-    assert.equal(options.body.demarche, 'Carte grise');
+    assert.equal(f.journal.some((entree) => entree.methode === 'invoke'), false);
   });
 
   it('rend un objet vide plutôt que d’échouer quand la fonction tombe', async () => {

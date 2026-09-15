@@ -12,10 +12,27 @@
 const CLE_ANTHROPIC = Deno.env.get("ANTHROPIC_API_KEY");
 const MODELE = "claude-sonnet-4-5-20250929";
 
-const ENTETES_CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ORIGINES_AUTORISEES = new Set([
+  "https://coffre-puce.vercel.app",
+  "https://coffre-erwannchevallier-6916s-projects.vercel.app",
+  "https://coffre-git-main-erwannchevallier-6916s-projects.vercel.app",
+]);
+
+function origineAutorisee(origin: string | null): boolean {
+  return !origin || ORIGINES_AUTORISEES.has(origin);
+}
+
+function entetesCors(origin: string | null): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    Vary: "Origin",
+  };
+  if (origin && ORIGINES_AUTORISEES.has(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+  return headers;
+}
 
 type DigestDocument = {
   nom: string; categorie: string; type: string; emetteur?: string; montant?: string | null;
@@ -24,30 +41,34 @@ type DigestDocument = {
 
 type Identite = { nom: string; adresse: string; codePostal: string; ville: string };
 
-function reponseJson(corps: unknown, statut = 200): Response {
+function reponseJson(corps: unknown, statut = 200, origin: string | null = null): Response {
   return new Response(JSON.stringify(corps), {
     status: statut,
-    headers: { ...ENTETES_CORS, "Content-Type": "application/json" },
+    headers: { ...entetesCors(origin), "Content-Type": "application/json" },
   });
 }
 
 Deno.serve(async (requete: Request) => {
+  const origin = requete.headers.get("origin");
+  if (!origineAutorisee(origin)) {
+    return reponseJson({ erreur: "Origine non autorisée." }, 403, origin);
+  }
   if (requete.method === "OPTIONS") {
-    return new Response("ok", { headers: ENTETES_CORS });
+    return new Response("ok", { headers: entetesCors(origin) });
   }
   if (!CLE_ANTHROPIC) {
-    return reponseJson({ erreur: "ANTHROPIC_API_KEY absente côté serveur." }, 500);
+    return reponseJson({ erreur: "ANTHROPIC_API_KEY absente côté serveur." }, 500, origin);
   }
 
   let corps: { champs?: string[]; documents?: DigestDocument[]; identite?: Identite; demarche?: string };
   try {
     corps = await requete.json();
   } catch {
-    return reponseJson({ erreur: "Corps JSON attendu : { champs, documents, identite?, demarche? }." }, 400);
+    return reponseJson({ erreur: "Corps JSON attendu : { champs, documents, identite?, demarche? }." }, 400, origin);
   }
   const { champs, documents, identite, demarche } = corps;
   if (!Array.isArray(champs) || champs.length === 0) {
-    return reponseJson({ erreur: "Champ 'champs' (tableau de noms non vide) requis." }, 400);
+    return reponseJson({ erreur: "Champ 'champs' (tableau de noms non vide) requis." }, 400, origin);
   }
 
   const aujourdhui = new Date().toISOString().slice(0, 10);
@@ -85,7 +106,7 @@ Deno.serve(async (requete: Request) => {
 
   if (!reponse.ok) {
     const detail = await reponse.text();
-    return reponseJson({ erreur: `Appel Claude en échec (${reponse.status}) : ${detail.slice(0, 300)}` }, 502);
+    return reponseJson({ erreur: `Appel Claude en échec (${reponse.status}) : ${detail.slice(0, 300)}` }, 502, origin);
   }
 
   const donneesReponse = await reponse.json();
@@ -102,8 +123,8 @@ Deno.serve(async (requete: Request) => {
     for (const [nom, valeur] of Object.entries(valeursBrutes)) {
       if (nomsConnus.has(nom) && typeof valeur === "string" && valeur.trim()) valeurs[nom] = valeur;
     }
-    return reponseJson({ valeurs });
+    return reponseJson({ valeurs }, 200, origin);
   } catch {
-    return reponseJson({ erreur: "Réponse de Claude illisible.", brut: texte.slice(0, 300) }, 502);
+    return reponseJson({ erreur: "Réponse de Claude illisible.", brut: texte.slice(0, 300) }, 502, origin);
   }
 });

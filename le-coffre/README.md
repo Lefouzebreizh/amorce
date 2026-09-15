@@ -22,24 +22,27 @@ porté sans changement de logique depuis `modules/coffre/stockage.py` et le modu
 | | Local (`life-organizer`) | Hébergé (`le-coffre`) |
 | --- | --- | --- |
 | Qui peut s'en servir | Une personne, sur sa machine | N'importe qui, avec un compte |
-| Authentification | Aucune (127.0.0.1 seul) | Supabase Auth, lien magique par e-mail |
+| Authentification | Aucune (127.0.0.1 seul) | Supabase Auth, identifiant public + mot de passe |
 | Isolation des données | Un seul utilisateur | Row Level Security Postgres, par `auth.uid()` |
 | Stockage des blobs chiffrés | Dossier local (Drive synchronisé) | Bucket Supabase Storage `coffre-objets` |
 | Index + clé | Fichiers locaux (`_cle.json`, `_index.enc`) | Tables Postgres `coffre_cles`, `coffre_index` |
 
-**Deux comptes séparés, par construction** : le compte (e-mail + lien magique,
-Supabase Auth) dit *qui* tu es à ce service. La phrase secrète du coffre dit *ce
+**Deux accès séparés, par construction** : le compte (identifiant public +
+mot de passe, Supabase Auth) dit *qui* tu es à ce service. La phrase secrète du coffre dit *ce
 que tu peux déchiffrer* — elle n'atteint jamais ce service, sous aucune forme.
 Les deux ne se substituent jamais l'un à l'autre.
 
-## Le classement automatique (04/09/2026)
+## Le classement privé par défaut (15/09/2026)
 
-Au dépôt d'un fichier, la fonction `classer-document` propose une catégorie,
-un nom, et une échéance éventuelle (lecture par Claude en vision) —
-**toujours à valider avant que le dépôt n'ait lieu**, jamais appliqué
-automatiquement. C'est la seule exception à « rien de lisible ne sort » du
-projet ; voir `SECURITY.md`, section « Le classement automatique », pour ce
-que ça implique et ses limites.
+Au dépôt d'un fichier, l'application pose seulement une catégorie générique
+selon le type du fichier (`Papiers`, `Images`, `Vidéos`, `Audio`, `Autre`).
+Aucun document n'est envoyé automatiquement à une IA externe pour être lu ou
+classé. L'utilisateur valide ensuite le nom, le dossier et les éventuelles
+informations utiles à la main.
+
+Les anciennes fonctions d'analyse IA restent dans le dépôt comme historique et
+option technique future, mais elles ne font plus partie du parcours publiable
+par défaut. Voir `SECURITY.md`, section « Mode privé par défaut ».
 
 ## Les alertes d'échéance (04/09/2026)
 
@@ -126,12 +129,12 @@ de la liste des papiers permettent de n'en voir qu'une à la fois.
 
 ## Recherche dans le contenu (05/09/2026)
 
-`classer-document` extrait aussi, à l'analyse, jusqu'à 500 caractères du
-texte lisible sur le document (`texteExtrait`) — chiffré dans l'index comme
-le reste, jamais affiché. Le champ de recherche au-dessus de la liste des
-papiers (`rechercheCorrespond` dans `coffre.ts`) filtre sur le nom, la
-catégorie, l'émetteur et ce texte, entièrement côté navigateur sur l'index
-déjà déchiffré — aucune requête n'est jamais envoyée nulle part.
+Le champ de recherche au-dessus de la liste des papiers (`rechercheCorrespond`
+dans `coffre.ts`) filtre sur le nom, la catégorie, l'émetteur et le
+`texteExtrait` quand il existe, entièrement côté navigateur sur l'index déjà
+déchiffré — aucune requête n'est jamais envoyée nulle part. En mode privé par
+défaut, ce texte extrait n'est plus produit automatiquement par une analyse IA
+au dépôt.
 
 ## Aperçu instantané, sans téléchargement (05/09/2026, PDF corrigé le 06/09/2026)
 
@@ -157,13 +160,12 @@ dans les deux cas — l'octet ne quitte jamais le navigateur.
 Deux défauts trouvés à l'usage réel, en déposant un dossier de plusieurs
 fichiers d'un coup :
 
-- **L'analyse tournait un fichier après l'autre** (`for (const item of
-  nouveaux) { await proposerClassement(...) }`) — pour dix fichiers à deux ou
-  trois secondes chacun, l'attente devenait interminable avant que le premier
-  n'apparaisse même prêt à valider. Elle tourne maintenant en parallèle
-  (`Promise.all`), chaque mise à jour utilisant la forme fonctionnelle de
-  `setAValider` — les réponses qui reviennent dans le désordre ne s'écrasent
-  jamais entre elles.
+- **La préparation tournait un fichier après l'autre** (`for (const item of
+  nouveaux) { await proposerClassement(...) }`) — pour dix fichiers, l'attente
+  devenait pénible avant que le premier n'apparaisse même prêt à valider. Elle
+  tourne maintenant en parallèle (`Promise.all`), chaque mise à jour utilisant
+  la forme fonctionnelle de `setAValider` — les réponses qui reviennent dans
+  le désordre ne s'écrasent jamais entre elles.
 - **Il fallait cliquer « Déposer » sur chaque papier**, un par un. Un bouton
   « Déposer tout » (`confirmerTout`) apparaît dès qu'il y a plus d'un papier
   en attente. Il enchaîne les dépôts **en série**, jamais en parallèle, sur un
@@ -172,17 +174,13 @@ fichiers d'un coup :
   de départ, et le second écraserait le premier au lieu de s'y ajouter — le
   même risque que le bug d'index corrigé plus haut, pour la même raison.
 
-## Catégories mieux définies (05/09/2026)
+## Catégories locales sobres (15/09/2026)
 
-`classer-document` ne donnait au modèle qu'une liste nue de dix catégories,
-sans dire où passait la frontière entre deux voisines — un document lié à un
-métier de conducteur professionnel (carte de conducteur, par exemple)
-pouvait atterrir dans « Emploi » ou « Véhicule » selon l'humeur du modèle.
-Le prompt porte désormais une définition d'une ligne par catégorie et la
-consigne de choisir la plus spécifique dans le doute (Véhicule plutôt
-qu'Emploi pour tout ce qui touche directement à un véhicule, même
-professionnel). Les dix catégories elles-mêmes n'ont pas changé — seule la
-frontière entre elles est écrite noir sur blanc.
+Le parcours publiable ne promet plus une lecture automatique fine des papiers.
+Il pose une catégorie de départ volontairement large selon le type du fichier :
+`Papiers`, `Images`, `Vidéos`, `Audio` ou `Autre`. Le rangement précis vient
+ensuite de l'utilisateur, avec une interface plus calme et plus honnête que des
+déductions automatiques sur des documents personnels.
 
 ## Trois vrais bugs remontés par l'usage réel (05/09/2026)
 
@@ -207,16 +205,14 @@ Trouvés sur des vidéos montrant l'appli en main, pas devinés :
   pousse maintenant une entrée d'historique, et un écouteur `popstate`
   referme la fiche au lieu de laisser le navigateur sortir de l'application.
 
-## L'assistant conversationnel (06/09/2026, non documenté ici jusqu'à présent)
+## L'assistant local (15/09/2026)
 
-Depuis les PR #762 à #777, un second moteur de recherche existe à côté de
-`interpreterQuestion` (local, gratuit, entièrement décrit ci-dessus) :
-`AssistantCoffre` + `demanderAuCoffre`, qui envoient la question et un résumé
-des documents (jamais les fichiers) à la fonction serveur `assistant-coffre`
-(Claude, avec recherche web en repli si la question déborde de la paperasse
-personnelle). Voir `SECURITY.md`, section « L'assistant conversationnel »,
-pour ce que ça change à la promesse « rien de lisible ne sort ». Cette
-section README avait pris du retard sur le code — corrigé au passage.
+La barre « Qu'est-ce que je cherche pour toi ? » s'appuie désormais sur
+`interpreterQuestion` et l'index déjà déchiffré dans le navigateur. Elle aide à
+retrouver un papier, ouvrir les dossiers ou préparer un formulaire, sans
+envoyer le résumé du coffre à une fonction serveur. L'ancien assistant Claude
+reste dans l'historique technique du dépôt, mais il n'est plus appelé par le
+parcours par défaut.
 
 ## Un seul point d'entrée pour chercher et demander (06/09/2026)
 
@@ -270,15 +266,15 @@ qu'une vraie intégration Google Agenda ou iCloud.
 le-coffre/
 ├── src/
 │   ├── app/
-│   │   ├── page.tsx            connexion (lien magique par e-mail)
+│   │   ├── page.tsx            connexion (identifiant public + mot de passe)
 │   │   └── coffre/page.tsx     création / déverrouillage / dépôt (avec validation) / liste
 │   └── lib/
 │       ├── crypto.ts           primitives Web Crypto — pas de dépendance
 │       ├── supabase.ts         client Supabase (clé publiable, sécurité par RLS)
 │       └── coffre.ts           les opérations du coffre, contre Supabase
 ├── supabase/functions/
-│   ├── classer-document/       lit un document en clair côté serveur (Claude vision),
-│   │                            ne conserve rien — voir SECURITY.md
+│   ├── classer-document/       ancienne option IA conservée hors parcours par défaut
+│   ├── assistant-coffre/       ancienne option IA conservée hors parcours par défaut
 │   └── envoyer-alertes-echeances/  tâche quotidienne, envoie les alertes via Resend
 └── .env.example                 variables à copier en .env.local
 ```

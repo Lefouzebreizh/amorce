@@ -13,10 +13,27 @@
 const CLE_ANTHROPIC = Deno.env.get("ANTHROPIC_API_KEY");
 const MODELE = "claude-sonnet-4-5-20250929";
 
-const ENTETES_CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ORIGINES_AUTORISEES = new Set([
+  "https://coffre-puce.vercel.app",
+  "https://coffre-erwannchevallier-6916s-projects.vercel.app",
+  "https://coffre-git-main-erwannchevallier-6916s-projects.vercel.app",
+]);
+
+function origineAutorisee(origin: string | null): boolean {
+  return !origin || ORIGINES_AUTORISEES.has(origin);
+}
+
+function entetesCors(origin: string | null): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    Vary: "Origin",
+  };
+  if (origin && ORIGINES_AUTORISEES.has(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+  return headers;
+}
 
 const CATEGORIES = [
   "Administratif", "Impôts", "Santé", "Logement", "Banque", "Assurance",
@@ -39,30 +56,34 @@ type Resultat = {
   };
 };
 
-function reponseJson(corps: unknown, statut = 200): Response {
+function reponseJson(corps: unknown, statut = 200, origin: string | null = null): Response {
   return new Response(JSON.stringify(corps), {
     status: statut,
-    headers: { ...ENTETES_CORS, "Content-Type": "application/json" },
+    headers: { ...entetesCors(origin), "Content-Type": "application/json" },
   });
 }
 
 Deno.serve(async (requete: Request) => {
+  const origin = requete.headers.get("origin");
+  if (!origineAutorisee(origin)) {
+    return reponseJson({ erreur: "Origine non autorisée." }, 403, origin);
+  }
   if (requete.method === "OPTIONS") {
-    return new Response("ok", { headers: ENTETES_CORS });
+    return new Response("ok", { headers: entetesCors(origin) });
   }
   if (!CLE_ANTHROPIC) {
-    return reponseJson({ erreur: "ANTHROPIC_API_KEY absente côté serveur." }, 500);
+    return reponseJson({ erreur: "ANTHROPIC_API_KEY absente côté serveur." }, 500, origin);
   }
 
   let corps: { donnees?: string; type?: string };
   try {
     corps = await requete.json();
   } catch {
-    return reponseJson({ erreur: "Corps JSON attendu : { donnees, type }." }, 400);
+    return reponseJson({ erreur: "Corps JSON attendu : { donnees, type }." }, 400, origin);
   }
   const { donnees, type } = corps;
   if (!donnees || !type) {
-    return reponseJson({ erreur: "Champs 'donnees' (base64) et 'type' (MIME) requis." }, 400);
+    return reponseJson({ erreur: "Champs 'donnees' (base64) et 'type' (MIME) requis." }, 400, origin);
   }
 
   const estPdf = type === "application/pdf";
@@ -75,7 +96,7 @@ Deno.serve(async (requete: Request) => {
       lisible: false, categorie: "", nomSuggere: "", emetteur: null, referenceClient: null, montant: null,
       texteExtrait: null,
       echeance: { presente: false, date: null, libelle: null, confiance: "basse" },
-    } satisfies Resultat);
+    } satisfies Resultat, 200, origin);
   }
 
   const blocContenu = estPdf
@@ -161,7 +182,7 @@ Deno.serve(async (requete: Request) => {
 
   if (!reponse.ok) {
     const detail = await reponse.text();
-    return reponseJson({ erreur: `Appel Claude en échec (${reponse.status}) : ${detail.slice(0, 300)}` }, 502);
+    return reponseJson({ erreur: `Appel Claude en échec (${reponse.status}) : ${detail.slice(0, 300)}` }, 502, origin);
   }
 
   const donneesReponse = await reponse.json();
@@ -170,8 +191,8 @@ Deno.serve(async (requete: Request) => {
     const debut = texte.indexOf("{");
     const fin = texte.lastIndexOf("}");
     const resultat = JSON.parse(texte.slice(debut, fin + 1)) as Resultat;
-    return reponseJson(resultat);
+    return reponseJson(resultat, 200, origin);
   } catch {
-    return reponseJson({ erreur: "Réponse de Claude illisible.", brut: texte.slice(0, 300) }, 502);
+    return reponseJson({ erreur: "Réponse de Claude illisible.", brut: texte.slice(0, 300) }, 502, origin);
   }
 });
