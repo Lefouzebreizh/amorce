@@ -50,6 +50,12 @@ export default function PageConfidentialite() {
           Les données que vous saisissez vous-même dans l&apos;application : titres,
           descriptions, statuts et montants de vos projets.
         </Fait>
+        <Fait>
+          Si vous choisissez explicitement d&apos;enregistrer un bilan FinancIA : votre
+          tranche d&apos;âge, la composition et le revenu du foyer, votre horizon, les
+          montants patrimoniaux et les taux facultatifs. Aucun nom de banque, IBAN ou
+          numéro de contrat n&apos;est collecté.
+        </Fait>
       </Bloc>
 
       <Bloc titre="Finalités et base légale">
@@ -83,8 +89,8 @@ export default function PageConfidentialite() {
           <Link href="/compte" className="font-medium text-primary hover:underline">
             Mon compte
           </Link>{' '}
-          efface définitivement votre compte, votre profil et tous vos projets, sans avoir
-          à écrire à qui que ce soit.
+          efface définitivement votre compte, votre profil, vos projets et vos bilans
+          patrimoniaux, sans avoir à écrire à qui que ce soit.
         </Fait>
         <Fait>
           <strong>Rectification</strong> : votre nom et votre entreprise se modifient sur

@@ -3,7 +3,7 @@
  *
  * `supabase gen types` produit le même fichier, mais exige un projet joignable
  * et la CLI installée — deux choses qu'un poste qui vient de cloner le dépôt
- * n'a pas. Le socle tient dans un seul schéma de deux tables : le maintenir à
+ * n'a pas. Le socle tient dans un seul schéma de trois tables : le maintenir à
  * la main coûte moins cher qu'une étape de génération à ne jamais oublier.
  *
  * En contrepartie, ce fichier est le miroir exact de `supabase/schema.sql`.
@@ -52,6 +52,17 @@ export type Projet = {
   updated_at: string;
 };
 
+export type Json = string | number | boolean | null | { [cle: string]: Json | undefined } | Json[];
+
+export type InstantanePatrimoine = {
+  id: string;
+  user_id: string;
+  situation: Json;
+  total_eur: number;
+  is_partial: boolean;
+  created_at: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -98,6 +109,28 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: 'projects_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      patrimony_snapshots: {
+        Row: InstantanePatrimoine;
+        Insert: {
+          id?: string;
+          user_id: string;
+          situation: Json;
+          total_eur: number;
+          is_partial: boolean;
+          created_at?: string;
+        };
+        // Un instantané ne se réécrit jamais : on en crée un nouveau.
+        Update: Record<string, never>;
+        Relationships: [
+          {
+            foreignKeyName: 'patrimony_snapshots_user_id_fkey';
             columns: ['user_id'];
             isOneToOne: false;
             referencedRelation: 'profiles';

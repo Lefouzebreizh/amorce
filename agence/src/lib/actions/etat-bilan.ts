@@ -7,12 +7,14 @@
  */
 import type { ErreursChamps } from '@/lib/validation';
 import type { Bilan } from '@/lib/bilan/redaction';
+import type { Situation } from '@/lib/bilan/modeles';
 
 export type EtatBilan = {
   statut: 'inactif' | 'succes' | 'erreur';
   message: string;
   erreurs: ErreursChamps;
   bilan: Bilan | null;
+  situation: Situation | null;
 };
 
 export const ETAT_INITIAL_BILAN: EtatBilan = {
@@ -20,4 +22,5 @@ export const ETAT_INITIAL_BILAN: EtatBilan = {
   message: '',
   erreurs: {},
   bilan: null,
+  situation: null,
 };

@@ -47,7 +47,7 @@ const ETAPE_DU_CHAMP: Readonly<Record<string, number>> = {
  * celle, côté serveur, de `soumettreBilan` — revalidée quoi qu'il arrive côté
  * client.
  */
-export function FormulaireBilan() {
+export function FormulaireBilan({ connecte }: { connecte: boolean }) {
   const [etat, action] = useActionState(soumettreBilan, ETAT_INITIAL_BILAN);
   const [etape, setEtape] = React.useState(0);
   const [proprietaire, setProprietaire] = React.useState(false);
@@ -70,8 +70,8 @@ export function FormulaireBilan() {
     setEtape(Math.min(...champsEnErreur.map((champ) => ETAPE_DU_CHAMP[champ] ?? 0)));
   }, [etat.erreurs]);
 
-  if (etat.statut === 'succes' && etat.bilan) {
-    return <RapportBilan bilan={etat.bilan} />;
+  if (etat.statut === 'succes' && etat.bilan && etat.situation) {
+    return <RapportBilan bilan={etat.bilan} situation={etat.situation} connecte={connecte} />;
   }
 
   const derniereEtape = etape === ETAPES.length - 1;
