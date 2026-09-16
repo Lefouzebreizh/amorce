@@ -1168,7 +1168,6 @@ export default function PageCoffre() {
           <div className="coffre-hero__scene">
             <CoffreMer
               compact
-              ouvert={false}
               animationActive={animationActive}
               onBasculerAnimation={() => setAnimationActive((active) => !active)}
             />

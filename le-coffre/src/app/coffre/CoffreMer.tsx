@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 
 type CoffreMerProps = {
-  ouvert: boolean;
-  onBasculer?: () => void;
+  ouvert?: boolean;
   compact?: boolean;
   actionHref?: string;
   actionBadge?: string;
@@ -14,8 +13,7 @@ type CoffreMerProps = {
 };
 
 export function CoffreMer({
-  ouvert,
-  onBasculer,
+  ouvert = false,
   compact = false,
   actionHref,
   actionBadge,
@@ -23,43 +21,26 @@ export function CoffreMer({
   animationActive = true,
   onBasculerAnimation,
 }: CoffreMerProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const libelleAction = actionLabel ?? (ouvert ? 'Refermer doucement' : 'Ouvrir le tiroir');
-  const badgeAction = actionBadge ?? (ouvert ? 'Refermer' : 'Ouvrir');
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (animationActive) {
-      void video.play().catch(() => undefined);
-    } else {
-      video.pause();
-    }
-  }, [animationActive]);
+  const libelleAction = actionLabel ?? 'Entrer dans mon espace';
+  const badgeAction = actionBadge ?? 'Entrer';
 
   return (
     <section
-      className={`coffre-mer ${compact ? 'coffre-mer--compact' : ''} ${ouvert ? 'coffre-mer--ouvert' : ''} ${animationActive ? '' : 'coffre-mer--immobile'}`}
+      className={`coffre-mer ${compact ? 'coffre-mer--compact' : ''} ${ouvert ? 'coffre-mer--ouvert' : ''} ${animationActive ? 'coffre-mer--anime' : 'coffre-mer--immobile'}`}
       aria-label="Mon Tiroir Secret, espace privé"
     >
-      <video
-        ref={videoRef}
+      <Image
         className="coffre-mer__image"
-        poster="/brand/tiroir-secret-coffre-mer-phare-v2.jpg"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
+        src="/brand/tiroir-secret-mer-sans-coffre-v1.png"
+        alt=""
+        fill
+        sizes={compact ? '(max-width: 980px) 100vw, 60vw' : '100vw'}
+        priority
         aria-hidden="true"
-      >
-        <source src="/brand/input-e5552510-8fef-4880-ac45-106008341a94.mp4" type="video/mp4" />
-      </video>
+      />
 
       <div className="coffre-mer__backdrop" aria-hidden="true">
         <span className="coffre-mer__vagues" />
-        <span className="coffre-mer__porte" />
         <span className="coffre-mer__reflet" />
         <span className="coffre-mer__grain" />
       </div>
@@ -73,11 +54,6 @@ export function CoffreMer({
             <span aria-hidden="true">{badgeAction}</span>
             {libelleAction}
           </a>
-        ) : onBasculer ? (
-          <button type="button" onClick={onBasculer} aria-pressed={ouvert} className="coffre-mer__commande">
-            <span aria-hidden="true">{badgeAction}</span>
-            {libelleAction}
-          </button>
         ) : null}
         {onBasculerAnimation && (
           <button
