@@ -1,4 +1,3 @@
-import { MockupChantier } from '@/components/MockupChantier';
 import { BOUTON_CONTOUR, BOUTON_PRINCIPAL } from '@/components/ui';
 import { aUnTelephone, contact } from '@/lib/config';
 
@@ -66,7 +65,20 @@ export function Hero() {
         </div>
 
         <div className="px-6 pt-2 sm:px-12 md:px-0">
-          <MockupChantier />
+          <div className="overflow-hidden rounded-2xl border border-violet-trait/60 bg-panel p-2 shadow-[0_20px_55px_rgba(64,224,208,0.08)]">
+            <video
+              className="aspect-video w-full rounded-xl object-cover"
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="metadata"
+              poster="/maison-artisan.webp"
+              aria-label="Animation d’une maison qui se transforme"
+            >
+              <source src="/maison-artisan.mp4" type="video/mp4" />
+            </video>
+          </div>
         </div>
       </div>
     </header>
