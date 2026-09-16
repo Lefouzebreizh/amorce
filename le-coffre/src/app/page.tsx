@@ -87,7 +87,6 @@ export default function PageAccueil() {
           <p className={styles.brand}>Mon Tiroir Secret</p>
           <span className={styles.signature}>Lefouzèbreizh Studio · accès privé</span>
         </div>
-        <a href="#connexion" className={styles.accessLink}>Ouvrir mon espace <span aria-hidden="true">↗</span></a>
       </header>
       <div className={styles.content}>
         <section className={styles.intro} aria-labelledby="titre-accueil">

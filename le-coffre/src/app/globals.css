@@ -179,8 +179,7 @@ input.border-line.bg-paper-raised {
 .coffre-mer { --scene-radius: 2rem; position: relative; isolation: isolate; min-height: clamp(34rem, 58vw, 46rem); overflow: hidden; border: 1px solid rgb(150 226 255 / .34); border-radius: var(--scene-radius); background: #030916; box-shadow: 0 2.8rem 6rem -3.5rem #000, 0 0 0 1px rgb(255 255 255 / .08) inset, 0 0 6rem -2.7rem rgb(64 224 208 / .78); perspective: 1100px; transform-style: preserve-3d; }
 .coffre-mer::before { content: ''; position: absolute; z-index: 3; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgb(2 7 17 / .94), rgb(2 7 17 / .74) 32%, rgb(7 13 24 / .18) 66%, rgb(2 7 17 / .22)), linear-gradient(0deg, rgb(1 5 13 / .82), transparent 58%), radial-gradient(circle at 73% 42%, rgb(122 243 229 / .13), transparent 34%); }
 .coffre-mer::after { content: ''; position: absolute; z-index: 7; inset: auto 8% 0; height: 1px; pointer-events: none; background: linear-gradient(90deg, transparent, rgb(64 224 208 / .95), rgb(183 155 255 / .82), transparent); box-shadow: 0 0 2rem rgb(64 224 208 / .48); }
-.coffre-mer__image { position: absolute; z-index: 0; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: 62% 50%; transform: scale(1.035); filter: saturate(1.08) contrast(1.08) brightness(.88); }
-.coffre-mer--anime .coffre-mer__image { animation: coffre-horizon 18s ease-in-out infinite alternate; }
+.coffre-mer__image { position: absolute; z-index: 0; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: 68% 50%; transform: scale(1.035); filter: saturate(1.08) contrast(1.08) brightness(.88); transition: transform 1.15s cubic-bezier(.18,.85,.19,1), filter .8s ease; }
 .coffre-mer--ouvert .coffre-mer__image { transform: scale(1.07) translate3d(-.6%, -.35%, 0); filter: saturate(1.16) contrast(1.08) brightness(1.02); }
 .coffre-mer__backdrop { position: absolute; z-index: 2; inset: 0; overflow: hidden; pointer-events: none; }
 .coffre-mer__vagues, .coffre-mer__reflet, .coffre-mer__grain { position: absolute; pointer-events: none; }
@@ -201,8 +200,6 @@ input.border-line.bg-paper-raised {
 .coffre-mer__animation:hover { color: #fff; }
 .coffre-mer__animation:focus-visible { outline: 3px solid #fff; outline-offset: 4px; border-radius: .25rem; }
 .coffre-mer--immobile .coffre-mer__vagues, .coffre-mer--immobile .coffre-mer__reflet { animation-play-state: paused; }
-.coffre-mer--immobile .coffre-mer__image { animation-play-state: paused; }
-@keyframes coffre-horizon { from { transform: scale(1.035) translate3d(0, 0, 0); } to { transform: scale(1.075) translate3d(-.8%, -.45%, 0); } }
 @keyframes coffre-reflet { from { transform: translateY(.4rem) scale(.96); opacity: .42; } to { transform: translateY(-.4rem) scale(1.04); opacity: .78; } }
 @keyframes vagues-clapotis { from { transform: translate3d(-1.4%, .25rem, 0) scaleX(.98); opacity: .48; } to { transform: translate3d(1.6%, -.2rem, 0) scaleX(1.03); opacity: .86; } }
 .coffre-mer--compact { min-height: clamp(24rem, 34vw, 34rem); border-radius: 1.6rem; }

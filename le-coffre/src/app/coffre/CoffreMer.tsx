@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import { useEffect, useRef } from 'react';
 
 type CoffreMerProps = {
   ouvert?: boolean;
@@ -21,23 +21,39 @@ export function CoffreMer({
   animationActive = true,
   onBasculerAnimation,
 }: CoffreMerProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const libelleAction = actionLabel ?? 'Entrer dans mon espace';
   const badgeAction = actionBadge ?? 'Entrer';
 
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (animationActive) {
+      void video.play().catch(() => undefined);
+    } else {
+      video.pause();
+    }
+  }, [animationActive]);
+
   return (
     <section
-      className={`coffre-mer ${compact ? 'coffre-mer--compact' : ''} ${ouvert ? 'coffre-mer--ouvert' : ''} ${animationActive ? 'coffre-mer--anime' : 'coffre-mer--immobile'}`}
+      className={`coffre-mer ${compact ? 'coffre-mer--compact' : ''} ${ouvert ? 'coffre-mer--ouvert' : ''} ${animationActive ? '' : 'coffre-mer--immobile'}`}
       aria-label="Mon Tiroir Secret, espace privé"
     >
-      <Image
+      <video
+        ref={videoRef}
         className="coffre-mer__image"
-        src="/brand/tiroir-secret-mer-sans-coffre-v1.png"
-        alt=""
-        fill
-        sizes={compact ? '(max-width: 980px) 100vw, 60vw' : '100vw'}
-        priority
+        poster="/brand/tiroir-secret-coffre-mer-phare-v2.jpg"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
         aria-hidden="true"
-      />
+      >
+        <source src="/brand/input-e5552510-8fef-4880-ac45-106008341a94.mp4" type="video/mp4" />
+      </video>
 
       <div className="coffre-mer__backdrop" aria-hidden="true">
         <span className="coffre-mer__vagues" />
