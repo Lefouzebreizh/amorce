@@ -37,6 +37,7 @@ alter table public.coffre_identifiants enable row level security;
 create policy "identifiant_proprietaire_lit" on public.coffre_identifiants for select to authenticated using ((select auth.uid()) = user_id);
 create policy "identifiant_proprietaire_cree" on public.coffre_identifiants for insert to authenticated with check ((select auth.uid()) = user_id);
 create policy "identifiant_proprietaire_modifie" on public.coffre_identifiants for update to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+grant select on public.coffre_identifiants to service_role;
 
 -- Les empreintes de tentatives, sans mot de passe ni adresse e-mail, limitent
 -- l'endpoint d'authentification à dix essais par quart d'heure.
@@ -46,6 +47,7 @@ create table if not exists public.coffre_connexion_tentatives (
 );
 alter table public.coffre_connexion_tentatives enable row level security;
 revoke all on table public.coffre_connexion_tentatives from anon, authenticated;
+grant select, insert, delete on public.coffre_connexion_tentatives to service_role;
 create index if not exists coffre_connexion_tentatives_empreinte_date_idx on public.coffre_connexion_tentatives (empreinte, cree_le desc);
 
 -- ---------------------------------------------------------------------------
