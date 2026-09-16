@@ -135,8 +135,8 @@ export default function PageAccueil() {
             {enCours ? 'Connexion…' : 'Entrer dans mon espace'}
           </button>
         </form>
-        <button type="button" onClick={recupererCode} disabled={enCours || recuperationEnvoyee} className={styles.recovery}>
-          {recuperationEnvoyee ? 'Un lien de récupération a été envoyé.' : 'J’ai oublié mon code'}
+        <button type="button" onClick={recupererCode} disabled={enCours} className={styles.recovery}>
+          {recuperationEnvoyee ? 'Renvoyer le lien de récupération' : 'J’ai oublié mon code'}
         </button>
 
           <div className={styles.privacy}>
