@@ -70,9 +70,9 @@ export default function PageAccueil() {
   async function recupererCode() {
     setErreur('');
     setEnCours(true);
-    const { error } = await supabase.functions.invoke('recuperer-code-coffre', { body: { identifiant: 'lefouzebreizh' } });
+    const { data, error: erreurFonction } = await supabase.functions.invoke('recuperer-code-coffre', { body: { identifiant: 'lefouzebreizh' } });
     setEnCours(false);
-    if (error) { setErreur('La récupération est momentanément indisponible. Réessaie un peu plus tard.'); return; }
+    if (erreurFonction || data?.ok !== true) { setErreur('Impossible d’envoyer le lien pour le moment. Réessaie plus tard.'); return; }
     setRecuperationEnvoyee(true);
   }
 
