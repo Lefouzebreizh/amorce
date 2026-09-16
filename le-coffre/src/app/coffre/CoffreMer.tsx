@@ -1,7 +1,5 @@
 'use client';
 
-import Image from 'next/image';
-
 type CoffreMerProps = {
   ouvert: boolean;
   onBasculer?: () => void;
@@ -27,15 +25,18 @@ export function CoffreMer({
       className={`coffre-mer ${compact ? 'coffre-mer--compact' : ''} ${ouvert ? 'coffre-mer--ouvert' : ''}`}
       aria-label="Mon Tiroir Secret, espace privé"
     >
-      <Image
-        src="/brand/tiroir-secret-coffre-mer-phare-v2.jpg"
-        alt=""
-        fill
-        priority
-        sizes="(max-width: 700px) 100vw, 72vw"
+      <video
         className="coffre-mer__image"
+        poster="/brand/tiroir-secret-coffre-mer-phare-v2.jpg"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
         aria-hidden="true"
-      />
+      >
+        <source src="/brand/input-e5552510-8fef-4880-ac45-106008341a94.mp4" type="video/mp4" />
+      </video>
 
       <div className="coffre-mer__backdrop" aria-hidden="true">
         <span className="coffre-mer__lumiere coffre-mer__lumiere--large" />
