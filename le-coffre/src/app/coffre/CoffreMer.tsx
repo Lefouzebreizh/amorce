@@ -73,12 +73,12 @@ export function CoffreMer({
             <span aria-hidden="true">{badgeAction}</span>
             {libelleAction}
           </a>
-        ) : (
+        ) : onBasculer ? (
           <button type="button" onClick={onBasculer} aria-pressed={ouvert} className="coffre-mer__commande">
             <span aria-hidden="true">{badgeAction}</span>
             {libelleAction}
           </button>
-        )}
+        ) : null}
         {onBasculerAnimation && (
           <button
             type="button"

@@ -374,7 +374,6 @@ export default function PageCoffre() {
   // eux-mêmes restent repliés tant qu'on n'a pas cliqué dessus.
   const [vueDossiers, setVueDossiers] = useState(true);
   const [correction, setCorrection] = useState<Correction | null>(null);
-  const [coffreOuvert, setCoffreOuvert] = useState(false);
   const [triAutoEnCours, setTriAutoEnCours] = useState(false);
   const [triAutoProgres, setTriAutoProgres] = useState<{ fait: number; total: number } | null>(null);
   // Plus de « non-documents » ici depuis le 10/09/2026 : tout fichier reçoit
@@ -1169,8 +1168,7 @@ export default function PageCoffre() {
           <div className="coffre-hero__scene">
             <CoffreMer
               compact
-              ouvert={coffreOuvert}
-              onBasculer={() => setCoffreOuvert((ouvert) => !ouvert)}
+              ouvert={false}
               animationActive={animationActive}
               onBasculerAnimation={() => setAnimationActive((active) => !active)}
             />
