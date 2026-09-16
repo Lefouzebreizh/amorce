@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
+
 type CoffreMerProps = {
   ouvert: boolean;
   onBasculer?: () => void;
@@ -7,6 +9,8 @@ type CoffreMerProps = {
   actionHref?: string;
   actionBadge?: string;
   actionLabel?: string;
+  animationActive?: boolean;
+  onBasculerAnimation?: () => void;
 };
 
 export function CoffreMer({
@@ -16,16 +20,31 @@ export function CoffreMer({
   actionHref,
   actionBadge,
   actionLabel,
+  animationActive = true,
+  onBasculerAnimation,
 }: CoffreMerProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const libelleAction = actionLabel ?? (ouvert ? 'Refermer doucement' : 'Ouvrir le tiroir');
   const badgeAction = actionBadge ?? (ouvert ? 'Refermer' : 'Ouvrir');
 
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (animationActive) {
+      void video.play().catch(() => undefined);
+    } else {
+      video.pause();
+    }
+  }, [animationActive]);
+
   return (
     <section
-      className={`coffre-mer ${compact ? 'coffre-mer--compact' : ''} ${ouvert ? 'coffre-mer--ouvert' : ''}`}
+      className={`coffre-mer ${compact ? 'coffre-mer--compact' : ''} ${ouvert ? 'coffre-mer--ouvert' : ''} ${animationActive ? '' : 'coffre-mer--immobile'}`}
       aria-label="Mon Tiroir Secret, espace privé"
     >
       <video
+        ref={videoRef}
         className="coffre-mer__image"
         poster="/brand/tiroir-secret-coffre-mer-phare-v2.jpg"
         autoPlay
@@ -39,9 +58,6 @@ export function CoffreMer({
       </video>
 
       <div className="coffre-mer__backdrop" aria-hidden="true">
-        <span className="coffre-mer__lumiere coffre-mer__lumiere--large" />
-        <span className="coffre-mer__lumiere coffre-mer__lumiere--fine" />
-        <span className="coffre-mer__phare" />
         <span className="coffre-mer__vagues" />
         <span className="coffre-mer__porte" />
         <span className="coffre-mer__reflet" />
@@ -61,6 +77,16 @@ export function CoffreMer({
           <button type="button" onClick={onBasculer} aria-pressed={ouvert} className="coffre-mer__commande">
             <span aria-hidden="true">{badgeAction}</span>
             {libelleAction}
+          </button>
+        )}
+        {onBasculerAnimation && (
+          <button
+            type="button"
+            onClick={onBasculerAnimation}
+            aria-pressed={!animationActive}
+            className="coffre-mer__animation"
+          >
+            {animationActive ? 'Arrêter l’animation' : 'Reprendre l’animation'}
           </button>
         )}
       </div>

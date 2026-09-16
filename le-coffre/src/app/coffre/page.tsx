@@ -338,6 +338,7 @@ export default function PageCoffre() {
   const routeur = useRouter();
   const [utilisateur, setUtilisateur] = useState<User | null>(null);
   const [etape, setEtape] = useState<Etape>('chargement');
+  const [animationActive, setAnimationActive] = useState(true);
   const [cle, setCle] = useState<CryptoKey | null>(null);
   const [index, setIndex] = useState<IndexCoffre>({ objets: {}, rendezVous: {} });
   const [erreur, setErreur] = useState('');
@@ -1166,7 +1167,13 @@ export default function PageCoffre() {
             </p>
           </div>
           <div className="coffre-hero__scene">
-            <CoffreMer compact ouvert={coffreOuvert} onBasculer={() => setCoffreOuvert((ouvert) => !ouvert)} />
+            <CoffreMer
+              compact
+              ouvert={coffreOuvert}
+              onBasculer={() => setCoffreOuvert((ouvert) => !ouvert)}
+              animationActive={animationActive}
+              onBasculerAnimation={() => setAnimationActive((active) => !active)}
+            />
           </div>
           <div className="coffre-hero__actions">
             <button onClick={seDeconnecter}
