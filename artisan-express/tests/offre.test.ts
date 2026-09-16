@@ -103,7 +103,7 @@ test('le nombre de places vit dans une seule constante nommée', () => {
   const valeur = Number(declarations[0]?.[1]);
   assert.ok(
     valeur >= 1 && valeur <= 5,
-    `PLACES_SIMULTANEES vaut ${valeur} : au-delà de cinq, la promesse « livré en 48 h » ne tient plus`,
+    `PLACES_SIMULTANEES vaut ${valeur} : au-delà de cinq, la charge ne permet plus de garder chaque projet soigné`,
   );
 });
 

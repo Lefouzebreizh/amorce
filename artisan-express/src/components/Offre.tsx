@@ -46,10 +46,10 @@ const encaisseEnLigne = SIRET_ACTIF && aUnStripe;
  *
  * CE QUI EST RETENU À LA PLACE, ET POURQUOI C'EST PLUS FORT.
  *
- * La contrainte est déjà écrite trois lignes plus bas : **livré en 48 h**.
- * Ce délai n'est tenable que si peu de chantiers tournent en même temps. La
- * rareté n'a donc pas à être inventée : elle est la condition de la promesse
- * que la page fait déjà.
+ * La contrainte est écrite trois lignes plus bas : une personne seule ne peut
+ * soigner qu'un petit nombre de projets à la fois. La rareté n'a donc pas à
+ * être inventée : elle correspond à une capacité de travail réelle, sans
+ * promettre un délai ferme.
  *
  * On annonce donc un nombre de places **simultanées**, pas un quota mensuel.
  * La différence compte dans les deux sens : un quota mensuel plafonnerait le
@@ -78,7 +78,7 @@ const PLACES_SIMULTANEES = 4;
  * bloc parle comme quelqu'un.
  *
  * La table s'arrête à cinq parce que `tests/offre.test.ts` refuse au-delà —
- * la promesse « livré en 48 h » ne tient plus. Un nombre hors table retombe
+ * la promesse de soin ne tiendrait plus. Un nombre hors table retombe
  * sur le chiffre : la page perd une élégance, jamais son sens.
  */
 const EN_LETTRES: Readonly<Record<number, string>> = {
