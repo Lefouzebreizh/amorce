@@ -161,8 +161,8 @@ export function Offre() {
               {PLACES_EN_LETTRES.charAt(0).toUpperCase() + PLACES_EN_LETTRES.slice(1)} places à la
               fois, pour garder chaque projet soigné.
             </strong>{' '}
-            Je travaille seul. Tant que {PLACES_EN_LETTRES} sites sont en cours, je n’en prends pas un de plus. Quand les places sont prises, je te
-            le dis et on convient du créneau suivant.
+            Je travaille seul. Tant que {PLACES_EN_LETTRES} sites sont en cours, je n’en prends pas un de plus. Ce rythme tient les 48 h annoncées.
+            Quand les places sont prises, je te le dis et on convient du créneau suivant.
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">

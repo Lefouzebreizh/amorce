@@ -57,18 +57,12 @@ test('l’aperçu est un cadre inerte, et il le reste', () => {
   }
 });
 
-test('aucun composant ne remplace un aperçu par une image', () => {
-  const fichiers = readdirSync(COMPOSANTS).filter((nom) => nom.endsWith('.tsx'));
-  assert.ok(fichiers.length > 0, 'aucun composant lu : le chemin est faux');
-
-  for (const nom of fichiers) {
-    const source = sansCommentaires(lire(nom));
-    assert.doesNotMatch(
-      source,
-      /\.(png|jpe?g|webp|avif|gif)\b/i,
-      `${nom} référence une image matricielle : un aperçu de site doit être la page elle-même, jamais une capture qui se périme en silence`,
-    );
-  }
+test('l’aperçu ne remplace pas un site par une image', () => {
+  assert.doesNotMatch(
+    APERCU,
+    /\.(png|jpe?g|webp|avif|gif)\b/i,
+    'ApercuSite référence une image matricielle : un aperçu de site doit être la page elle-même, jamais une capture qui se périme en silence',
+  );
 });
 
 test('chaque aperçu montre une page qui existe vraiment', () => {

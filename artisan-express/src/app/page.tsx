@@ -6,6 +6,7 @@ import { Galerie } from '@/components/Galerie';
 import { Hero } from '@/components/Hero';
 import { Offre } from '@/components/Offre';
 import { PiedDePage } from '@/components/PiedDePage';
+import { QuiSuisJe } from '@/components/QuiSuisJe';
 
 /*
  * L'ordre des sections est l'ordre des questions que se pose un artisan :
@@ -26,6 +27,7 @@ export default function Page() {
       <AvantApres />
       <Galerie />
       <Offre />
+      <QuiSuisJe />
       <FormulaireDevis />
       <PiedDePage />
       <BarreAction />
