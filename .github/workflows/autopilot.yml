@@ -25,9 +25,17 @@ on:
     - cron: '0 8 */2 * *'
   workflow_dispatch:
 
+# `mettre_en_ligne` appelle `annuaire-ia-pages.yml`, qui réclame `pages: write`
+# et `id-token: write`. Un workflow appelé ne peut pas dépasser les permissions
+# de son appelant, et la règle est vérifiée avant le premier job : sans ces deux
+# portées ici, l'exécution entière est rejetée — `publier` compris. Panne du
+# 03/09/2026 : huit exécutions `startup_failure` d'affilée, zéro job, plus rien
+# de publié, et l'alerte de réserve muette puisqu'elle vit dans `publier`.
 permissions:
   contents: write
   issues: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: autopilot-annuaire-ia
