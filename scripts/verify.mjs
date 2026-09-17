@@ -583,6 +583,21 @@ if (!profile.mobile) {
     check('L’export conservé contient les 15 secondes', Math.abs(Number(meta.format.duration) - 15) < 0.3, chemin);
     check('L’export conservé porte image et son',
       meta.streams.some(s => s.codec_type === 'video') && meta.streams.some(s => s.codec_type === 'audio'));
+    // Ces rushes synthétiques bougent continuellement : un gel de 0,5 s
+    // est donc une régression, contrairement à une vraie scène statique.
+    for (const [nom, fichier] of [
+      ...[1, 2, 3, 4].map(n => [`rush${n}`, join(RUSHES, `rush${n}.webm`)]),
+      ['export conservé', chemin],
+    ]) {
+      const analyse = spawnSync('ffmpeg', [
+        '-hide_banner', '-i', fichier, '-vf', 'freezedetect=n=-50dB:d=0.5',
+        '-an', '-f', 'null', '-',
+      ], { encoding: 'utf8' });
+      const gels = analyse.stderr?.match(/freeze_start: [^\r\n]+/g) ?? [];
+      check(`Aucun gel dans ${nom}`, analyse.status === 0 && gels.length === 0,
+        analyse.status === 0 ? gels.join('; ') || 'mouvement continu' : 'Analyse FFmpeg en échec');
+    }
+
   } catch (error) {
     check('L’export conservé est produit et mesuré', false, String(error).slice(0, 160));
   }
