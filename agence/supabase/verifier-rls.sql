@@ -39,6 +39,12 @@ insert into public.projects (id, user_id, title, amount_estimated, status) value
   ('bbbbbbbb-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222',
    'Boutique', 3000, 'completed');
 
+insert into public.patrimony_snapshots (id, user_id, situation, total_eur, is_partial) values
+  ('cccccccc-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111',
+   '{"age":"30-39","horizon":"10ans"}', 125000, false),
+  ('cccccccc-0000-0000-0000-000000000002', '22222222-2222-2222-2222-222222222222',
+   '{"age":"40-49","horizon":"retraite"}', 80000, true);
+
 do $$
 begin
   if (select count(*) from public.profiles) <> 3 then
@@ -71,6 +77,35 @@ begin
   if (select count(*) from public.profiles) <> 1 then
     raise exception 'Alice voit le profil d''un autre compte.';
   end if;
+
+  if (select count(*) from public.patrimony_snapshots) <> 1 then
+    raise exception 'Alice voit les bilans patrimoniaux d''un autre compte.';
+  end if;
+
+  refuse := false;
+  begin
+    insert into public.patrimony_snapshots (user_id, situation, total_eur, is_partial)
+    values ('22222222-2222-2222-2222-222222222222', '{}', 1, false);
+  exception when insufficient_privilege then
+    refuse := true;
+  end;
+  if not refuse then
+    raise exception 'FAILLE : un utilisateur peut créer un bilan au nom d''un autre.';
+  end if;
+
+  refuse := false;
+  begin
+    update public.patrimony_snapshots set total_eur = 1
+     where user_id = '11111111-1111-1111-1111-111111111111';
+  exception when insufficient_privilege then
+    refuse := true;
+  end;
+  if not refuse then
+    raise exception 'FAILLE : un instantané patrimonial peut être réécrit.';
+  end if;
+
+  insert into public.patrimony_snapshots (user_id, situation, total_eur, is_partial)
+  values ('11111111-1111-1111-1111-111111111111', '{}', 130000, false);
 
   -- Créer un projet au nom de quelqu'un d'autre : refusé par le WITH CHECK.
   refuse := false;
@@ -192,6 +227,10 @@ begin
     raise exception 'Un administrateur ne voit pas tous les projets.';
   end if;
 
+  if (select count(*) from public.patrimony_snapshots) <> 0 then
+    raise exception 'FAILLE : un administrateur voit les montants patrimoniaux des clients.';
+  end if;
+
   -- La politique d'administration ouvre la lecture, et elle seule.
   update public.projects set title = 'Corrigé d''autorité'
    where id = 'bbbbbbbb-0000-0000-0000-000000000001';
@@ -244,6 +283,16 @@ begin
   end;
   if not refuse then
     raise exception 'FAILLE : un visiteur anonyme atteint la table des profils.';
+  end if;
+
+  refuse := false;
+  begin
+    perform count(*) from public.patrimony_snapshots;
+  exception when insufficient_privilege then
+    refuse := true;
+  end;
+  if not refuse then
+    raise exception 'FAILLE : un visiteur anonyme atteint les bilans patrimoniaux.';
   end if;
 end $$;
 
@@ -316,6 +365,11 @@ begin
     raise exception 'Les projets du compte effacé ont survécu : la cascade ne suit pas.';
   end if;
 
+  if exists (select 1 from public.patrimony_snapshots
+              where user_id = '22222222-2222-2222-2222-222222222222') then
+    raise exception 'Les bilans du compte effacé ont survécu : la cascade ne suit pas.';
+  end if;
+
   -- Et surtout : personne d'autre n'a été emporté.
   if not exists (select 1 from auth.users where id = '11111111-1111-1111-1111-111111111111') then
     raise exception 'FAILLE : l''effacement a emporté le compte d''un autre.';
@@ -328,5 +382,5 @@ begin
 end $$;
 
 -- Rien de tout cela ne reste : les comptes de test, leurs profils et leurs
--- projets disparaissent avec la transaction.
+-- projets et bilans disparaissent avec la transaction.
 rollback;
