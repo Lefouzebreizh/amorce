@@ -226,6 +226,17 @@
       "score_avis": 4.5,
       "date_ajout": "2026-09-06",
       "description_longue": "## Notre verdict\nGamma s'attaque à l'étape qui décourage tout le monde : la mise en page. On donne un plan, un document existant ou trois lignes d'intention, et il rend une présentation structurée, illustrée et cohérente — qui reste modifiable bloc par bloc, sans jamais rouvrir un gabarit. Le résultat se projette, se partage par lien ou s'exporte en PowerPoint et en PDF. Pour qui prépare des supports régulièrement, c'est une à deux heures récupérées par présentation, et c'est là que la dépense se justifie.\n\n## Points forts\n- La mise en page tient debout toute seule : plus de blocs qui débordent ni de titres à recadrer\n- Un document déjà rédigé devient un support en un passage, au lieu d'être recopié diapositive par diapositive\n- Partage par lien avec suivi de ce qui a réellement été consulté\n- Export vers PowerPoint et PDF, donc rien n'est enfermé dans l'outil\n- Fait aussi des pages web et des documents, pas seulement des diapositives\n\n## Points faibles\n- L'esthétique par défaut se reconnaît d'un support à l'autre : sans reprise du thème, tout le monde rend la même chose\n- Les illustrations générées sont souvent le maillon faible et demandent un remplacement\n- La formule gratuite marque les documents et limite les crédits\n- La reprise fine de la mise en page est moins libre que dans un vrai outil de présentation\n\n## Idéal pour\nUn indépendant, un formateur ou une petite équipe qui produit des supports souvent et passe plus de temps à les mettre en forme qu'à les écrire."
+    },
+    {
+      "id": "notebooklm",
+      "nom": "NotebookLM",
+      "categorie": "Recherche",
+      "prix": "Gratuit, offre avancée payante",
+      "description_courte": "L'assistant qui ne répond que sur vos propres documents, avec la source de chaque affirmation.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/notebooklm",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nLa différence avec un assistant généraliste tient en une contrainte : NotebookLM ne répond que sur les documents qu'on lui a donnés, et chaque affirmation renvoie au passage dont elle est tirée. C'est exactement ce qu'il faut pour dépouiller un appel d'offres, un rapport ou trois cents pages de comptes rendus sans risquer une réponse inventée. Le passage en revue reste possible parce que la source est toujours à un clic.\n\n## Points forts\n- Répond uniquement sur les documents fournis : pas de réponse inventée hors corpus\n- Chaque affirmation renvoie à sa source exacte\n- Excellent sur les corpus longs et hétérogènes\n- Gratuit dans son usage courant\n\n## Points faibles\n- Sans documents, l'outil ne sert à rien : ce n'est pas un assistant général\n- Les documents déposés partent chez l'éditeur : à cadrer selon leur sensibilité\n- Qualité inégale sur les documents mal océrisés\n- Fonctions avancées réservées à l'offre payante\n\n## Idéal pour\nCeux qui doivent tirer une réponse fiable d'un gros dossier — appel d'offres, documentation, archives — et ne peuvent pas se permettre une citation fausse.",
+      "date_ajout": "2026-09-17"
     }
   ]
 }

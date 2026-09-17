@@ -124,6 +124,17 @@
       "score_avis": 4.3,
       "description_longue": "## Notre verdict\nEduaide se distingue par la finesse de ses générateurs : plus de cent types de ressources — séquence, consigne différenciée, question de discussion, grille d’évaluation — et surtout la possibilité de tout aligner sur un référentiel de compétences fourni. C’est ce qui le rend transposable hors du système américain, contrairement à ses concurrents.\n\n## Points forts\n- Plus de cent générateurs, chacun avec sa trame propre\n- Alignement possible sur un référentiel de compétences que l’on fournit\n- Espace de travail qui conserve et réorganise les ressources produites\n- Formule gratuite suffisante pour un usage hebdomadaire\n\n## Points faibles\n- Interface dense : trouver le bon générateur demande un temps d’adaptation\n- Le rendu français est correct mais moins nuancé que l’anglais\n- Toute ressource demande une relecture disciplinaire\n\n## Idéal pour\nLes enseignants et formateurs qui travaillent par compétences et refont chaque année les mêmes supports.",
       "date_ajout": "2026-09-01"
+    },
+    {
+      "id": "classpoint-ai",
+      "nom": "ClassPoint",
+      "categorie": "Supports de cours",
+      "prix": "Freemium — à partir de 8 $/mois",
+      "description_courte": "L’interactivité greffée directement dans PowerPoint, sans changer d’outil ni refaire ses diapositives.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/classpoint-ai",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nLa plupart des enseignants ont déjà leurs supports, en PowerPoint, et ne les referont pas. ClassPoint s’y installe : depuis une diapositive existante, il génère des questions, lance un vote, récupère les réponses des élèves, annote en direct. Zéro migration, ce qui est la seule raison pour laquelle un outil de ce type finit par être utilisé.\n\n## Points forts\n- Fonctionne dans PowerPoint : aucun support à refaire\n- Questions générées à partir du contenu de la diapositive affichée\n- Réponses des élèves collectées en direct, sans quitter la présentation\n- Formule gratuite fonctionnelle pour un usage régulier\n\n## Points faibles\n- Windows et PowerPoint obligatoires : rien pour Google Slides\n- Les questions générées restent de surface sur un contenu complexe\n- Suppose un appareil connecté par élève\n\n## Idéal pour\nLes enseignants et formateurs qui ont des années de diapositives et refusent, à juste titre, de tout refaire.",
+      "date_ajout": "2026-09-17"
     }
   ]
 }
