@@ -35,6 +35,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/jauge` | Dire où en est la consommation de l'abonnement Claude — la fenêtre de cinq heures et celle de sept jours — et ce qu'elle permet encore de faire… |
 | `/kdp-niche-validator` | Valider un mot-clé KDP avant d'écrire le livre — dit si une niche vend assez (BSR), si la place est prenable (nombre d'avis) et si la marge existe… |
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture de livre reste lisible réduite à la taille d'une vignette de boutique (150 px de large) — fabrique la vignette et mesure… |
+| `/lancement-offre` | Préparer le lancement mesurable d'une offre ou d'une application du studio : cible, promesse, preuve, parcours d'essai et plan de diffusion. À utiliser avant une campagne ; ne… |
 | `/le-phare` | Orchestrer une demande ou un événement qui concerne plusieurs projets du studio : choisir la prochaine action utile et les compétences déjà présentes, sans dupliquer leurs… |
 | `/master-telephone` | Sortir une vidéo au niveau d'un téléphone et non d'un cinéma — gagner cinq décibels réellement entendus sans écraser la dynamique, en remplissant la… |
 | `/module-life-organizer` | Dans quel ordre écrire un module de l'assistant de rangement Life-Organizer, et les quatre pièges du domaine qui coûtent chacun une reprise complète… |
@@ -63,6 +64,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/sous-titres-qui-accrochent` | Animer les textes d'une vidéo verticale pour qu'ils retiennent — apparition en ressort, secousse sur l'impact, couleur prise dans l'image, halo qui… |
 | `/stack-agence-supabase` | Réaliser une application client sur la stack standardisée de l'agence — Next.js 16 (App Router, React 19), TypeScript strict, Tailwind + shadcn/ui,… |
 | `/steward` | Conventions de ce dépôt pour mener une pull request jusqu'à la fusion — style des commits, barrière de vérification avant toute poussée, et… |
+| `/suivi-client` | Trier les échanges commerciaux ou clients, préparer la réponse la plus utile et organiser la prochaine relance raisonnable. À utiliser avec Gmail ou Resend pour le suivi ; ne… |
 | `/supabase-en-direct` | Piloter un projet Supabase depuis la session, quand le serveur MCP Supabase est connecté — appliquer le schéma en migration, éprouver les politiques… |
 | `/tailwind-mobile-ux` | Régler l'affichage tactile vertical d'Amorce pour un smartphone Xiaomi (HyperOS/MIUI, Chrome Android, écran ~20:9) — hauteur utile réelle, barre de… |
 | `/tiktok` | Travailler les concepts et les scripts TikTok d'Erwann (`tiktok/`) — la ligne éditoriale à deux sujets, les huit formats répétables, les deux seuls… |
@@ -70,6 +72,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/trier-les-rushes` | Inventorier d'un coup un lot de médias déposé en vrac — quinze, trente, cinquante fichiers — au lieu de les ouvrir un par un. Relève les doublons par… |
 | `/typographie-francaise` | Règles de typographie française pour du texte destiné à l'impression ou au lettrage — espaces insécables, guillemets, apostrophes, points de… |
 | `/usine-a-themes` | Fabriquer ou retoucher la palette d'Amorce — les jetons `@theme` de Tailwind v4 dans `src/app/globals.css`, ce que chaque famille de couleurs… |
+| `/veille-marche` | Étudier un marché, des offres concurrentes et des signaux de demande pour choisir une opportunité réaliste du studio. À utiliser avant de construire ou repositionner une offre ;… |
 | `/verifier` | Lance la vérification des seuls projets touchés, tous en parallèle, et rend un verdict par projet — Amorce, le socle Agence, la page de vente Artisan… |
 | `/video-de-reference` | Prendre une vidéo qu'on admire — un TikTok, un Reel, un Short téléchargé — et en extraire par la mesure ce qui est reproductible dans Amorce :… |
 | `/video-du-jour` | Fabriquer un fichier vidéo publiable à partir d'un script TikTok, d'une prise de voix et d'images — analyse et découpe de la voix, recadrage 9:16 sur… |
