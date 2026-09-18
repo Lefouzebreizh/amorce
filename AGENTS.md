@@ -11,3 +11,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 # Qualité du réseau Lefouzebreizh
 
 Lire les sections « Identité visuelle partagée », « Exigence permanente du réseau » et « QA avant lancement » de `CLAUDE.md` avant toute intervention. Elles portent les choix du propriétaire et les critères de validation. Ce renvoi complète le bloc Next.js ci-dessus et ne le remplace pas.
+
+## Preuve avant toute annonce de fin
+
+Il est interdit d'annoncer « fait », « corrigé », « livré » ou « terminé » sur la seule base d'une modification de source, d'un build vert ou d'un téléversement réussi. Avant cette annonce, ouvrir et contrôler le livrable exact auquel le propriétaire aura accès : bon fichier et bonne version, contenu visible attendu, liens réellement cliquables et destination correcte. Pour un remplacement de document, utiliser un nom ou un numéro de version non ambigu afin d'éviter qu'un cache ou un doublon affiche l'ancienne version. Si cette vérification finale n'est pas possible, annoncer explicitement « non vérifié » ou « en cours », jamais « fait ».
