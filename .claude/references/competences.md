@@ -9,6 +9,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/api-tierce-verifiee` | Écrire du code contre une bibliothèque ou une API qu'on ne connaît pas de première main — SDK, service en ligne, module livré avec un logiciel — en… |
 | `/audit-code-ia` | Auditer une application générée par IA qui ne tient plus en production — depuis son dépôt quand il y en a un, sinon depuis la surface publique de… |
 | `/bande-son` | Fabriquer la bande-son d'une vidéo — voix off **synthétisée sur la machine**, musique, bruitages — et la sortir au bon niveau pour la plateforme… |
+| `/bilan-reseaux` | Analyser les réseaux sociaux reliés à Metricool, tirer un enseignement hebdomadaire et préparer la prochaine action de contenu. À utiliser pour un bilan, un calendrier ou une… |
 | `/branche-partagee` | Travailler sur une branche pendant que d'autres sessions font avancer `main` — savoir en une commande de combien on a pris du retard, quels commits… |
 | `/cadrage-brief-client` | Transformer le brief d'un client en cahier des charges exploitable — questionnaire en cinq points (objectif, utilisateurs, fonctionnalités, données,… |
 | `/capacites-session` | Savoir ce que cette session-ci peut réellement faire — binaires présents, bibliothèques installées, hôtes que le mandataire laisse joindre, modèles… |
@@ -34,6 +35,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/jauge` | Dire où en est la consommation de l'abonnement Claude — la fenêtre de cinq heures et celle de sept jours — et ce qu'elle permet encore de faire… |
 | `/kdp-niche-validator` | Valider un mot-clé KDP avant d'écrire le livre — dit si une niche vend assez (BSR), si la place est prenable (nombre d'avis) et si la marge existe… |
 | `/kdp-thumbnail-validator` | Contrôler qu'une couverture de livre reste lisible réduite à la taille d'une vignette de boutique (150 px de large) — fabrique la vignette et mesure… |
+| `/le-phare` | Orchestrer une demande ou un événement qui concerne plusieurs projets du studio : choisir la prochaine action utile et les compétences déjà présentes, sans dupliquer leurs… |
 | `/master-telephone` | Sortir une vidéo au niveau d'un téléphone et non d'un cinéma — gagner cinq décibels réellement entendus sans écraser la dynamique, en remplissant la… |
 | `/module-life-organizer` | Dans quel ordre écrire un module de l'assistant de rangement Life-Organizer, et les quatre pièges du domaine qui coûtent chacun une reprise complète… |
 | `/montage-sans-refaire` | La liste de contrôle d'un montage vertical, écrite après vingt-cinq versions d'un même épisode livrées et rejetées en une nuit. Chaque ligne est un… |
@@ -42,6 +44,7 @@ dans ce dépôt, ce qui s'énumère est faux le lendemain. La régénérer avec
 | `/nouvelle-competence` | Écrire une compétence pour ce dépôt sans en fabriquer un doublon ni un doublon d'intention — vérifier d'abord ce qui existe **y compris sur `main`**,… |
 | `/page-qui-vend` | Rendre une page de vente capable d'encaisser, en la mesurant plutôt qu'en la regardant — bouton d'achat mort, prix qui arrive après le bouton,… |
 | `/paper-manager` | Recette pour développer l'assistant administratif Paper-Manager (`paper-manager/`) — où poser chaque fichier, la frontière entre ce que l'humain… |
+| `/pilotage-acquisition` | Transformer les signaux commerciaux en une courte liste d'actions d'acquisition : recherche de prospects, qualification, brouillons de suivi et lecture de campagne. À utiliser pour développer… |
 | `/prepresse-kdp` | Règles de préparation d'un livre illustré pour l'impression à la demande KDP — résolution, fond perdu, zone de sécurité, calcul de tranche, compte de… |
 | `/publier-depuis-capcut` | La chaîne de montage et de publication d'une vidéo verticale faite au doigt, dans CapCut sur Android, puis publiée sur TikTok — l'ordre des… |
 | `/radar-crypto` | Où poser chaque fichier du radar crypto `pepites/`, l'ordre des cinq skills qu'on ne réarrange pas, les six invariants qui empêchent l'outil de… |
