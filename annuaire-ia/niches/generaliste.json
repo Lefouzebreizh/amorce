@@ -237,6 +237,17 @@
       "score_avis": 4.3,
       "description_longue": "## Notre verdict\nLa différence avec un assistant généraliste tient en une contrainte : NotebookLM ne répond que sur les documents qu'on lui a donnés, et chaque affirmation renvoie au passage dont elle est tirée. C'est exactement ce qu'il faut pour dépouiller un appel d'offres, un rapport ou trois cents pages de comptes rendus sans risquer une réponse inventée. Le passage en revue reste possible parce que la source est toujours à un clic.\n\n## Points forts\n- Répond uniquement sur les documents fournis : pas de réponse inventée hors corpus\n- Chaque affirmation renvoie à sa source exacte\n- Excellent sur les corpus longs et hétérogènes\n- Gratuit dans son usage courant\n\n## Points faibles\n- Sans documents, l'outil ne sert à rien : ce n'est pas un assistant général\n- Les documents déposés partent chez l'éditeur : à cadrer selon leur sensibilité\n- Qualité inégale sur les documents mal océrisés\n- Fonctions avancées réservées à l'offre payante\n\n## Idéal pour\nCeux qui doivent tirer une réponse fiable d'un gros dossier — appel d'offres, documentation, archives — et ne peuvent pas se permettre une citation fausse.",
       "date_ajout": "2026-09-17"
+    },
+    {
+      "id": "napkin-ai",
+      "nom": "Napkin AI",
+      "categorie": "Design",
+      "prix": "Freemium — à partir de 10 $/mois",
+      "description_courte": "Le texte transformé en schéma : un paragraphe devient un diagramme modifiable, sans ouvrir un logiciel de dessin.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/napkin-ai",
+      "score_avis": 4.4,
+      "description_longue": "## Notre verdict\nUn schéma explique mieux qu'un paragraphe, mais personne n'ouvre un logiciel de dessin vectoriel pour illustrer une note interne. Napkin lit le texte, propose plusieurs représentations visuelles — chronologie, cycle, comparaison, entonnoir — et rend un schéma vectoriel modifiable élément par élément. Le résultat est propre, sobre, et prêt à coller dans un document ou une présentation.\n\n## Points forts\n- Plusieurs représentations proposées pour un même texte, au choix\n- Schémas vectoriels réellement modifiables, pas des images figées\n- Rendu sobre qui passe dans un document professionnel sans retouche\n- Version gratuite largement suffisante pour un usage régulier\n\n## Points faibles\n- Types de schémas limités à un catalogue : rien de vraiment sur mesure\n- Les textes très denses donnent des schémas confus\n- Les fonctions collaboratives restent minces\n\n## Idéal pour\nTous ceux qui rédigent des notes, des rapports ou des supports et illustrent tout par des listes à puces faute de savoir dessiner.",
+      "date_ajout": "2026-09-19"
     }
   ]
 }

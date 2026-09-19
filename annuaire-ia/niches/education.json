@@ -135,6 +135,17 @@
       "score_avis": 4.1,
       "description_longue": "## Notre verdict\nLa plupart des enseignants ont déjà leurs supports, en PowerPoint, et ne les referont pas. ClassPoint s’y installe : depuis une diapositive existante, il génère des questions, lance un vote, récupère les réponses des élèves, annote en direct. Zéro migration, ce qui est la seule raison pour laquelle un outil de ce type finit par être utilisé.\n\n## Points forts\n- Fonctionne dans PowerPoint : aucun support à refaire\n- Questions générées à partir du contenu de la diapositive affichée\n- Réponses des élèves collectées en direct, sans quitter la présentation\n- Formule gratuite fonctionnelle pour un usage régulier\n\n## Points faibles\n- Windows et PowerPoint obligatoires : rien pour Google Slides\n- Les questions générées restent de surface sur un contenu complexe\n- Suppose un appareil connecté par élève\n\n## Idéal pour\nLes enseignants et formateurs qui ont des années de diapositives et refusent, à juste titre, de tout refaire.",
       "date_ajout": "2026-09-17"
+    },
+    {
+      "id": "nolej",
+      "nom": "Nolej",
+      "categorie": "Supports de cours",
+      "prix": "Palier gratuit, puis abonnement",
+      "description_courte": "Un document, une vidéo ou un cours transformés en activités interactives — quiz, cartes, résumés — en quelques minutes.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/nolej",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nLa matière ne manque jamais à un enseignant : ce qui manque, c'est le temps de la transformer en activités. Nolej part d'un support existant — document, vidéo, page — et en tire un ensemble d'activités interactives exportables vers les plateformes d'apprentissage courantes. L'éditeur est européen, ce qui pèse quand les productions concernent des élèves. Le résultat demande une relecture, mais il part d'un brouillon complet plutôt que d'une page blanche.\n\n## Points forts\n- Part d'un support déjà écrit plutôt que d'une consigne à rédiger\n- Exporte vers les plateformes d'apprentissage standard du marché\n- Produit plusieurs types d'activités d'un seul document\n- Palier gratuit permettant d'évaluer sur un vrai cours\n\n## Points faibles\n- Les activités générées demandent une relecture pédagogique systématique\n- La qualité dépend étroitement de celle du document de départ\n- Moins pertinent pour les disciplines très formelles\n- Interface pensée d'abord pour l'anglais\n\n## Idéal pour\nLes enseignants et formateurs qui ont déjà leurs supports et veulent les rendre interactifs sans y consacrer leurs soirées.",
+      "date_ajout": "2026-09-19"
     }
   ]
 }
