@@ -20,7 +20,7 @@ export async function soumettreBilan(_etat: EtatBilan, donnees: FormData): Promi
   const analyse = analyser(schemaBilan, donnees);
 
   if (!analyse.valide) {
-    return { statut: 'erreur', message: 'Vérifiez les champs signalés.', erreurs: analyse.erreurs, bilan: null };
+    return { statut: 'erreur', message: 'Vérifiez les champs signalés.', erreurs: analyse.erreurs, bilan: null, situation: null };
   }
 
   const { donnees: d } = analyse;
@@ -45,5 +45,5 @@ export async function soumettreBilan(_etat: EtatBilan, donnees: FormData): Promi
 
   const bilan = rediger(situation, new Date());
 
-  return { statut: 'succes', message: '', erreurs: {}, bilan };
+  return { statut: 'succes', message: '', erreurs: {}, bilan, situation };
 }

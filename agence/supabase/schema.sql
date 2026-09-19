@@ -60,6 +60,27 @@ create index if not exists projects_status_idx
     on public.projects (user_id, status);
 
 -- ---------------------------------------------------------------------------
+-- 2 bis. Instantanés patrimoniaux — le suivi FinancIA
+-- ---------------------------------------------------------------------------
+
+-- Le bilan public n'écrit toujours rien. Cette table ne reçoit une ligne
+-- qu'après création d'un compte et geste explicite « Enregistrer ce bilan ».
+-- La situation ne contient ni banque, ni IBAN, ni numéro de contrat : seulement
+-- les huit réponses déjà nécessaires au calcul. Le JSON garde leur distinction
+-- essentielle entre `null` (inconnu) et zéro (connu et nul).
+create table if not exists public.patrimony_snapshots (
+    id uuid default gen_random_uuid() primary key,
+    user_id uuid references public.profiles(id) on delete cascade not null,
+    situation jsonb not null check (jsonb_typeof(situation) = 'object'),
+    total_eur numeric(14, 2) not null check (total_eur >= 0),
+    is_partial boolean not null,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+create index if not exists patrimony_snapshots_user_created_at_idx
+    on public.patrimony_snapshots (user_id, created_at desc);
+
+-- ---------------------------------------------------------------------------
 -- 3. Horodatage de modification, posé par le serveur
 -- ---------------------------------------------------------------------------
 
@@ -119,6 +140,7 @@ grant execute on function public.is_admin() to authenticated;
 
 alter table public.profiles enable row level security;
 alter table public.projects enable row level security;
+alter table public.patrimony_snapshots enable row level security;
 
 -- ---------------------------------------------------------------------------
 -- 6. Politiques
@@ -162,6 +184,28 @@ create policy "Un administrateur lit tous les projets"
     to authenticated
     using (public.is_admin());
 
+-- Les montants patrimoniaux restent plus étroits que les projets du socle :
+-- même un administrateur ne les lit pas. Le propriétaire seul peut consulter,
+-- créer et effacer ses instantanés ; un instantané n'est jamais modifié après
+-- coup, sans quoi l'historique cesserait d'être un historique.
+drop policy if exists "Un utilisateur lit ses propres bilans" on public.patrimony_snapshots;
+create policy "Un utilisateur lit ses propres bilans"
+    on public.patrimony_snapshots for select
+    to authenticated
+    using ((select auth.uid()) = user_id);
+
+drop policy if exists "Un utilisateur crée ses propres bilans" on public.patrimony_snapshots;
+create policy "Un utilisateur crée ses propres bilans"
+    on public.patrimony_snapshots for insert
+    to authenticated
+    with check ((select auth.uid()) = user_id);
+
+drop policy if exists "Un utilisateur efface ses propres bilans" on public.patrimony_snapshots;
+create policy "Un utilisateur efface ses propres bilans"
+    on public.patrimony_snapshots for delete
+    to authenticated
+    using ((select auth.uid()) = user_id);
+
 -- ---------------------------------------------------------------------------
 -- 7. Privilèges de colonnes — l'escalade de rôle se ferme ici
 -- ---------------------------------------------------------------------------
@@ -178,6 +222,9 @@ grant update (full_name, company_name, avatar_url) on public.profiles to authent
 
 revoke all on public.projects from anon, authenticated;
 grant select, insert, update, delete on public.projects to authenticated;
+
+revoke all on public.patrimony_snapshots from anon, authenticated;
+grant select, insert, delete on public.patrimony_snapshots to authenticated;
 
 -- Un rôle ne se change donc plus que depuis le tableau de bord Supabase ou une
 -- tâche serveur porteuse de la clé `service_role`, jamais depuis l'application.

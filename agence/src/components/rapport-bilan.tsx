@@ -2,7 +2,10 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { enregistrerBilan } from '@/lib/actions/patrimoine';
+import type { Situation } from '@/lib/bilan/modeles';
 import { CONSTATS_MONTRES_MAX, premierGesteTexte, type Bilan } from '@/lib/bilan/redaction';
 import { ETIQUETTES, type Constat, type Ton } from '@/lib/bilan/modeles';
 import { euros } from '@/lib/bilan/valorisation';
@@ -51,7 +54,7 @@ function CarteConstat({ constat }: { constat: Constat }) {
   );
 }
 
-export function RapportBilan({ bilan }: { bilan: Bilan }) {
+export function RapportBilan({ bilan, situation, connecte }: { bilan: Bilan; situation: Situation; connecte: boolean }) {
   const { patrimoine, constats } = bilan;
   const bravos = constats.filter((constat) => constat.ton === 'bravo');
   const problemes = constats.filter((constat) => constat.ton !== 'bravo').slice(0, CONSTATS_MONTRES_MAX);
@@ -133,6 +136,33 @@ export function RapportBilan({ bilan }: { bilan: Bilan }) {
           </CardContent>
         </Card>
       ) : null}
+
+      <Card className="border-primary/30 bg-accent">
+        <CardHeader>
+          <CardTitle className="text-lg">FinancIA peut suivre cette évolution</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 text-sm text-accent-foreground">
+          <p>
+            Enregistrez des instantanés datés pour comparer votre patrimoine dans le temps. Aucun nom
+            de banque, IBAN ou numéro de contrat n’est demandé.
+          </p>
+          {connecte ? (
+            <form action={enregistrerBilan}>
+              <input type="hidden" name="situation" value={JSON.stringify(situation)} />
+              <Button type="submit">Enregistrer ce bilan</Button>
+            </form>
+          ) : (
+            <Link href="/inscription" className="inline-flex min-h-11 items-center justify-center self-start rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:bg-primary/90">
+              Créer mon espace de suivi
+            </Link>
+          )}
+        </CardContent>
+      </Card>
+
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        Je suis un assistant IA d’aide à la décision. Ceci ne constitue pas un conseil en
+        investissement financier officiel (statut CIF). Investir comporte des risques de perte en capital.
+      </p>
 
       <div>
         <Button variante="contour" onClick={() => window.location.reload()}>

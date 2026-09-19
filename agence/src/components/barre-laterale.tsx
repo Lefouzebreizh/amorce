@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FolderKanban, LayoutDashboard, LogOut, ShieldCheck, UserRound } from 'lucide-react';
+import { FolderKanban, Landmark, LayoutDashboard, LogOut, ShieldCheck, UserRound } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { seDeconnecter } from '@/lib/actions/auth';
@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 const LIENS = [
   { href: '/tableau-de-bord', libelle: 'Tableau de bord', Icone: LayoutDashboard },
   { href: '/projets', libelle: 'Projets', Icone: FolderKanban },
+  { href: '/patrimoine', libelle: 'FinancIA', Icone: Landmark },
   { href: '/compte', libelle: 'Mon compte', Icone: UserRound },
 ] as const;
 
