@@ -147,6 +147,7 @@ jobs:
           name: amorce-captures
           path: |
             .fixtures/captures/
+            .fixtures/rushes/
             /tmp/dev.log
             /tmp/verify.log
           if-no-files-found: warn
