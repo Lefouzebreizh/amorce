@@ -1,21 +1,59 @@
-import type { Metadata, Viewport } from 'next';
+import type { Metadata } from 'next';
 import './globals.css';
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://psy-ia-ecru.vercel.app');
+
+const TITRE = 'Respire — Espace d’écoute et d’apaisement par IA';
+const DESCRIPTION =
+  'Un espace d’écoute bienveillante et confidentielle disponible 24h/24 pour poser vos émotions, relâcher la pression et clarifier vos pensées.';
+
 export const metadata: Metadata = {
-  title: 'Psy IA — accompagnement, pas thérapie',
-  description:
-    "Un accompagnement conversationnel de bien-être psychologique. Psy IA n'est pas un professionnel de santé et le dit toujours clairement.",
-  robots: { index: false, follow: false },
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: TITRE,
+    template: '%s | Respire'
+  },
+  description: DESCRIPTION,
+  applicationName: 'Respire',
+  authors: [{ name: 'Respire IA' }],
+  keywords: ['santé mentale', 'écoute active', 'bien-être', 'gestion du stress', 'IA bienveillante'],
+  openGraph: {
+    title: TITRE,
+    description: DESCRIPTION,
+    url: SITE_URL,
+    siteName: 'Respire',
+    locale: 'fr_FR',
+    type: 'website'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: TITRE,
+    description: DESCRIPTION
+  },
+  robots: {
+    index: true,
+    follow: true
+  }
 };
 
-export const viewport: Viewport = {
-  themeColor: '#0f1115',
-};
-
-export default function RacineMiseEnPage({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="fr">
-      <body>{children}</body>
+    <html lang="fr" className="dark h-full antialiased">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+      </head>
+      <body className="h-full bg-slate-950 text-slate-100 font-sans selection:bg-teal-500/20 selection:text-teal-300">
+        <div className="flex min-h-full flex-col">
+          {children}
+        </div>
+      </body>
     </html>
   );
 }
