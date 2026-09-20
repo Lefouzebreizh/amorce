@@ -9,20 +9,21 @@ interface Message {
   time: string;
 }
 
-const PHASES = [
-  'Inspirez lentement...',
-  'Retenez doucement...',
-  'Expirez profondément...'
-] as const;
-
 export default function RespirePage() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
-  const [breathIndex, setBreathIndex] = useState(0);
+  const [breathPhase, setBreathPhase] = useState('Inspirez lentement...');
 
   useEffect(() => {
+    const phases = [
+      'Inspirez lentement...',
+      'Retenez doucement...',
+      'Expirez profondément...'
+    ];
+    let idx = 0;
     const interval = setInterval(() => {
-      setBreathIndex((prev) => (prev + 1) % PHASES.length);
+      idx = (idx + 1) % phases.length;
+      setBreathPhase(phases[idx] ?? 'Respirez calmement...');
     }, 4000);
     return () => clearInterval(interval);
   }, []);
@@ -81,7 +82,7 @@ export default function RespirePage() {
       const iaMsg: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'ia',
-        text: "Je suis là avec vous. Prenez une inspiration profonde face à l'horizon, puis soufflez lentement. Qu'est-ce qui prend le plus de place dans votre esprit à cet instant précis ?",
+        text: "Je suis là avec vous. Prenez une inspiration profonde face à cet horizon, puis soufflez lentement. Qu'est-ce qui prend le plus de place dans votre esprit à cet instant précis ?",
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages((prev) => [...prev, iaMsg]);
@@ -90,7 +91,7 @@ export default function RespirePage() {
 
   return (
     <div className="relative min-h-screen text-slate-100 flex flex-col justify-between font-sans selection:bg-teal-500/30 selection:text-teal-200 overflow-x-hidden bg-[#050811]">
-      {/* Fond breton avec luminosité équilibrée */}
+      {/* Fond breton immersif */}
       <div 
         className="pointer-events-none fixed inset-0 bg-cover bg-center bg-no-repeat opacity-45 scale-105 transition-transform duration-1000"
         style={{ backgroundImage: "url('/fond-bretagne.jpg')" }}
@@ -124,11 +125,11 @@ export default function RespirePage() {
         </div>
       </header>
 
-      {/* Cœur visuel étendu */}
+      {/* Main content élargi */}
       <main className="relative z-10 flex-1 max-w-6xl w-full mx-auto px-6 py-10 flex flex-col justify-center">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center text-center my-auto">
-            {/* Orbe 3D agrandi, circulaire */}
+            {/* Orbe 3D circulaire agrandi */}
             <div className="relative mb-6 flex flex-col justify-center items-center">
               <div className="absolute w-80 h-80 sm:w-96 sm:h-96 rounded-full bg-teal-500/20 blur-3xl animate-pulse pointer-events-none" />
               <div className="absolute w-72 h-72 sm:w-80 sm:h-80 rounded-full border border-teal-400/25 animate-ping opacity-25 pointer-events-none" style={{ animationDuration: '6s' }} />
@@ -145,9 +146,9 @@ export default function RespirePage() {
                 </video>
               </div>
 
-              {/* Guide de respiration synchronisé */}
-              <div className="mt-5 px-4 py-1.5 rounded-full bg-slate-950/60 border border-white/10 backdrop-blur-md text-xs font-medium text-teal-200 tracking-wider transition-all duration-700 shadow-md">
-                {PHASES[breathIndex]}
+              {/* Guide de respiration */}
+              <div className="mt-5 px-4 py-1.5 rounded-full bg-slate-950/60 border border-white/10 backdrop-blur-md text-xs font-medium text-teal-200 tracking-wider shadow-md">
+                {breathPhase}
               </div>
             </div>
 
@@ -158,7 +159,7 @@ export default function RespirePage() {
               Un refuge calme sans jugement pour poser vos pensées et relâcher la pression à votre rythme.
             </p>
 
-            {/* Modules d'intention largement écartés */}
+            {/* Cartes d'intention espacées */}
             <div className="grid sm:grid-cols-3 gap-6 w-full text-left mb-10">
               {starters.map((s, idx) => (
                 <button
@@ -222,7 +223,7 @@ export default function RespirePage() {
         )}
       </main>
 
-      {/* Zone de saisie */}
+      {/* Barre de saisie */}
       <footer className="relative z-10 border-t border-white/10 bg-slate-950/50 backdrop-blur-2xl px-6 py-5">
         <div className="max-w-4xl mx-auto flex flex-col gap-2">
           <form
