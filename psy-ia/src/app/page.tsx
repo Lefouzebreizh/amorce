@@ -17,6 +17,7 @@ const PHASES = [
 
 export default function RespirePage() {
   const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -37,7 +38,7 @@ export default function RespirePage() {
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, loading]);
 
   const starters = [
     {
@@ -69,9 +70,9 @@ export default function RespirePage() {
     }
   ];
 
-  const handleSend = (customText?: string) => {
+  const handleSend = async (customText?: string) => {
     const text = (customText || input).trim();
-    if (!text) return;
+    if (!text || loading) return;
 
     const userMsg: Message = {
       id: Date.now().toString(),
@@ -80,18 +81,37 @@ export default function RespirePage() {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const nextMessages = [...messages, userMsg];
+    setMessages(nextMessages);
     if (!customText) setInput('');
+    setLoading(true);
 
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: nextMessages })
+      });
+      const data = await res.json();
+
       const iaMsg: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'ia',
-        text: "Prenez une inspiration profonde et soufflez lentement. Qu'est-ce qui pèse le plus en ce moment ?",
+        text: data.text || "Je suis là avec vous. Respirez doucement.",
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages((prev) => [...prev, iaMsg]);
-    }, 600);
+    } catch {
+      const fallbackMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: 'ia',
+        text: "Prenez une grande inspiration... Je reste avec vous. Qu'est-ce qui ferait le plus de bien à votre esprit en cet instant ?",
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages((prev) => [...prev, fallbackMsg]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -129,7 +149,7 @@ export default function RespirePage() {
       {/* Cœur de l'application */}
       <main className="relative z-10 flex-1 max-w-4xl w-full mx-auto px-4 py-2 flex flex-col items-center justify-between overflow-hidden">
         
-        {/* Vidéo 3D mise en valeur */}
+        {/* Vidéo 3D */}
         <div className="flex flex-col items-center text-center shrink-0">
           <div className="relative my-2 flex flex-col justify-center items-center">
             <div className="absolute w-52 h-52 rounded-full bg-teal-500/20 blur-3xl animate-pulse pointer-events-none" />
@@ -197,6 +217,12 @@ export default function RespirePage() {
               <span className="text-[9px] text-slate-400 mt-0.5 px-1 drop-shadow">{m.time}</span>
             </div>
           ))}
+          {loading && (
+            <div className="flex items-center gap-2 text-xs text-teal-300/80 px-2 py-1">
+              <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping" />
+              <span>Respire est en train de vous répondre...</span>
+            </div>
+          )}
           <div ref={chatBottomRef} />
         </div>
       </main>
@@ -215,12 +241,13 @@ export default function RespirePage() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              disabled={loading}
               placeholder="Écrivez ce que vous ressentez à cet instant..."
-              className="flex-1 bg-transparent px-3 py-1.5 text-xs text-slate-100 placeholder-slate-400 focus:outline-none"
+              className="flex-1 bg-transparent px-3 py-1.5 text-xs text-slate-100 placeholder-slate-400 focus:outline-none disabled:opacity-50"
             />
             <button
               type="submit"
-              disabled={!input.trim()}
+              disabled={!input.trim() || loading}
               className="bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 disabled:opacity-30 text-white px-4 py-1.5 rounded-lg text-xs font-medium transition shadow-md"
             >
               Envoyer
