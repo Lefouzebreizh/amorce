@@ -13,40 +13,29 @@ export async function POST(req: Request) {
 
     const lastUserMessage = messages[messages.length - 1]?.text || "Bonjour";
 
-    const prompt = `Tu es "Respire", un compagnon d'écoute bienveillant, calme et apaisant face à l'océan.
-Consignes impératives :
+    const prompt = `Tu es Respire, un compagnon d'écoute bienveillant, doux et apaisant face à l'océan.
+Consignes :
 - Réponds en français avec douceur et empathie, en 2 ou 3 phrases courtes.
-- Valide avec délicatesse ce que la personne ressent, invite-la à respirer doucement et à relâcher ses tensions.
-- Si détresse vitale ou idées suicidaires, mentionne avec bienveillance le 3114 (numéro national de prévention).
+- Valide ce que la personne ressent, invite-la à respirer doucement et à relâcher ses épaules.
+- Si détresse vitale ou idées suicidaires, rappelle avec délicatesse le 3114.
 
 Message de la personne : "${lastUserMessage}"`;
 
-    // Endpoint officiel Google AI Studio v1beta avec gemini-1.5-flash
-    const response = await fetch(
+    const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: prompt }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 250
-          }
+          contents: [{ parts: [{ text: prompt }] }]
         })
       }
     );
 
-    const data = await response.json();
+    const data = await res.json();
 
-    if (!response.ok) {
-      console.error('Erreur API Gemini détails:', response.status, JSON.stringify(data));
+    if (!res.ok) {
+      console.error('Erreur Google API:', res.status, JSON.stringify(data));
       return NextResponse.json({
         text: "Prenez une grande inspiration... Je reste avec vous. Qu'est-ce qui pèse le plus en cet instant précis ?"
       });
@@ -55,10 +44,10 @@ Message de la personne : "${lastUserMessage}"`;
     const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     return NextResponse.json({
-      text: reply || "Je vous entends. Prenez tout votre temps pour déposer vos pensées."
+      text: reply || "Je vous entends. Prenez tout votre temps pour déposer vos ressentis."
     });
-  } catch (err) {
-    console.error('Erreur route chat:', err);
+  } catch (error) {
+    console.error('Erreur interne chat:', error);
     return NextResponse.json({
       text: "Je suis là avec vous. Respirez doucement en observant la vague..."
     });
