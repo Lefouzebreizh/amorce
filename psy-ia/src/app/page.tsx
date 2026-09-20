@@ -9,23 +9,21 @@ interface Message {
   time: string;
 }
 
+const PHASES = [
+  'Inspirez lentement...',
+  'Retenez doucement...',
+  'Expirez profondément...'
+] as const;
+
 export default function RespirePage() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
-  const [breathPhase, setBreathPhase] = useState<'Inspirez lentement...' | 'Retenez doucement...' | 'Expirez profondément...'>('Inspirez lentement...');
+  const [breathIndex, setBreathIndex] = useState(0);
 
   useEffect(() => {
-    const cycle = [
-      { text: 'Inspirez lentement...' as const, duration: 4000 },
-      { text: 'Retenez doucement...' as const, duration: 2500 },
-      { text: 'Expirez profondément...' as const, duration: 4500 }
-    ];
-    let step = 0;
     const interval = setInterval(() => {
-      step = (step + 1) % cycle.length;
-      setBreathPhase(cycle[step].text);
-    }, 3800);
-
+      setBreathIndex((prev) => (prev + 1) % PHASES.length);
+    }, 4000);
     return () => clearInterval(interval);
   }, []);
 
@@ -92,14 +90,14 @@ export default function RespirePage() {
 
   return (
     <div className="relative min-h-screen text-slate-100 flex flex-col justify-between font-sans selection:bg-teal-500/30 selection:text-teal-200 overflow-x-hidden bg-[#050811]">
-      {/* Fond breton avec luminosité équilibrée et léger voile protecteur */}
+      {/* Fond breton avec luminosité équilibrée */}
       <div 
         className="pointer-events-none fixed inset-0 bg-cover bg-center bg-no-repeat opacity-45 scale-105 transition-transform duration-1000"
         style={{ backgroundImage: "url('/fond-bretagne.jpg')" }}
       />
       <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-[#050811]/75 via-[#070d1a]/55 to-[#050811]/85 backdrop-blur-[1px]" />
 
-      {/* Header aéré et semi-transparent */}
+      {/* Header aéré */}
       <header className="relative z-10 border-b border-white/10 bg-slate-950/40 backdrop-blur-xl px-8 py-5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -130,7 +128,7 @@ export default function RespirePage() {
       <main className="relative z-10 flex-1 max-w-6xl w-full mx-auto px-6 py-10 flex flex-col justify-center">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center text-center my-auto">
-            {/* Orbe 3D agrandi, circulaire avec halos concentriques apaisants */}
+            {/* Orbe 3D agrandi, circulaire */}
             <div className="relative mb-6 flex flex-col justify-center items-center">
               <div className="absolute w-80 h-80 sm:w-96 sm:h-96 rounded-full bg-teal-500/20 blur-3xl animate-pulse pointer-events-none" />
               <div className="absolute w-72 h-72 sm:w-80 sm:h-80 rounded-full border border-teal-400/25 animate-ping opacity-25 pointer-events-none" style={{ animationDuration: '6s' }} />
@@ -149,11 +147,10 @@ export default function RespirePage() {
 
               {/* Guide de respiration synchronisé */}
               <div className="mt-5 px-4 py-1.5 rounded-full bg-slate-950/60 border border-white/10 backdrop-blur-md text-xs font-medium text-teal-200 tracking-wider transition-all duration-700 shadow-md">
-                {breathPhase}
+                {PHASES[breathIndex]}
               </div>
             </div>
 
-            {/* Titre et accroche espacés */}
             <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-3 drop-shadow-xl">
               Déposez ce qui pèse. Respirez.
             </h1>
@@ -197,7 +194,6 @@ export default function RespirePage() {
               ))}
             </div>
 
-            {/* Note de réassurance */}
             <div className="text-xs text-slate-300 flex items-center gap-2 backdrop-blur-md px-5 py-2 rounded-full bg-slate-950/60 border border-white/10 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-teal-400" />
               <span>Soutien d'écoute non médical • En cas d'urgence vitale ou détresse majeure : composez le 3114</span>
@@ -226,7 +222,7 @@ export default function RespirePage() {
         )}
       </main>
 
-      {/* Zone de saisie flottante et étendue */}
+      {/* Zone de saisie */}
       <footer className="relative z-10 border-t border-white/10 bg-slate-950/50 backdrop-blur-2xl px-6 py-5">
         <div className="max-w-4xl mx-auto flex flex-col gap-2">
           <form
