@@ -9,6 +9,12 @@ interface Message {
   time: string;
 }
 
+const PHASES = [
+  'Inspirez lentement...',
+  'Retenez doucement...',
+  'Expirez profondément...'
+] as const;
+
 export default function RespirePage() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
@@ -19,20 +25,13 @@ export default function RespirePage() {
       time: 'À l’instant'
     }
   ]);
-  const [breathPhase, setBreathPhase] = useState('Inspirez lentement...');
+  const [breathIndex, setBreathIndex] = useState(0);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const phases = [
-      'Inspirez lentement...',
-      'Retenez doucement...',
-      'Expirez profondément...'
-    ];
-    let idx = 0;
     const interval = setInterval(() => {
-      idx = (idx + 1) % phases.length;
-      setBreathPhase(phases[idx] ?? 'Respirez calmement...');
-    }, 3800);
+      setBreathIndex((prev) => (prev + 1) % PHASES.length);
+    }, 4000);
     return () => clearInterval(interval);
   }, []);
 
@@ -45,7 +44,7 @@ export default function RespirePage() {
       title: 'Crise d’angoisse',
       action: 'Je ressens une crise d’angoisse, aide-moi à calmer mon souffle.',
       icon: (
-        <svg className="w-4 h-4 text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <svg className="w-5 h-5 text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
         </svg>
       )
@@ -54,7 +53,7 @@ export default function RespirePage() {
       title: 'Tension & Surcharge',
       action: 'J’ai accumulé trop de charge mentale, j’ai besoin de déposer mes tensions.',
       icon: (
-        <svg className="w-4 h-4 text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <svg className="w-5 h-5 text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
           <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
         </svg>
       )
@@ -63,7 +62,7 @@ export default function RespirePage() {
       title: 'Pensées du soir',
       action: 'Mes pensées tournent en boucle, j’ai besoin d’apaiser mon esprit pour dormir.',
       icon: (
-        <svg className="w-4 h-4 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <svg className="w-5 h-5 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
           <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
         </svg>
       )
@@ -88,7 +87,7 @@ export default function RespirePage() {
       const iaMsg: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'ia',
-        text: "Je vous écoute. Prenez le temps de sentir l'air entrer puis sortir doucement. Vous n'avez aucune obligation de performance ici : qu'est-ce qui vous ferait du bien maintenant ?",
+        text: "Prenez une inspiration profonde et soufflez lentement. Qu'est-ce qui pèse le plus en ce moment ?",
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages((prev) => [...prev, iaMsg]);
@@ -97,14 +96,14 @@ export default function RespirePage() {
 
   return (
     <div className="relative h-screen w-screen text-slate-100 flex flex-col justify-between font-sans selection:bg-teal-500/30 selection:text-teal-200 overflow-hidden bg-[#050811]">
-      {/* Fond breton immersif */}
+      {/* Fond paysage breton */}
       <div 
         className="pointer-events-none fixed inset-0 bg-cover bg-center bg-no-repeat opacity-45 scale-105"
         style={{ backgroundImage: "url('/fond-bretagne.jpg')" }}
       />
       <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-[#050811]/75 via-[#070d1a]/55 to-[#050811]/85 backdrop-blur-[0.5px]" />
 
-      {/* Header compact */}
+      {/* Header */}
       <header className="relative z-10 border-b border-white/10 bg-slate-950/40 backdrop-blur-xl px-6 py-2.5 shrink-0">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -127,14 +126,14 @@ export default function RespirePage() {
         </div>
       </header>
 
-      {/* Contenu principal sans scroll global */}
-      <main className="relative z-10 flex-1 max-w-4xl w-full mx-auto px-4 py-2 flex flex-col justify-between overflow-hidden">
+      {/* Cœur de l'application */}
+      <main className="relative z-10 flex-1 max-w-4xl w-full mx-auto px-4 py-2 flex flex-col items-center justify-between overflow-hidden">
         
-        {/* Section haute : Orbe vidéo 3D + Titre resserré */}
+        {/* Vidéo 3D mise en valeur */}
         <div className="flex flex-col items-center text-center shrink-0">
-          <div className="relative my-1 flex flex-col justify-center items-center">
-            <div className="absolute w-44 h-44 rounded-full bg-teal-500/20 blur-2xl animate-pulse pointer-events-none" />
-            <div className="relative w-36 h-36 sm:w-40 sm:h-40 rounded-full overflow-hidden border border-white/20 shadow-[0_0_40px_rgba(20,184,166,0.3)] bg-slate-950/40 backdrop-blur-sm flex items-center justify-center">
+          <div className="relative my-2 flex flex-col justify-center items-center">
+            <div className="absolute w-52 h-52 rounded-full bg-teal-500/20 blur-3xl animate-pulse pointer-events-none" />
+            <div className="relative w-44 h-44 sm:w-48 sm:h-48 rounded-full overflow-hidden border border-white/20 shadow-[0_0_40px_rgba(20,184,166,0.35)] bg-slate-950/40 backdrop-blur-sm flex items-center justify-center">
               <video 
                 autoPlay 
                 loop 
@@ -145,8 +144,8 @@ export default function RespirePage() {
                 <source src="/respire.mp4" type="video/mp4" />
               </video>
             </div>
-            <span className="mt-1.5 px-3 py-0.5 rounded-full bg-slate-950/60 border border-white/10 backdrop-blur-md text-[11px] font-medium text-teal-200 tracking-wider shadow-sm">
-              {breathPhase}
+            <span className="mt-2 px-3 py-0.5 rounded-full bg-slate-950/70 border border-white/10 backdrop-blur-md text-xs font-medium text-teal-200 tracking-wider shadow-sm">
+              {PHASES[breathIndex]}
             </span>
           </div>
 
@@ -155,23 +154,23 @@ export default function RespirePage() {
           </h1>
         </div>
 
-        {/* Section médiane : Cartes d'intention affinées */}
-        <div className="grid grid-cols-3 gap-2.5 w-full my-2 shrink-0">
+        {/* Modules d'intention */}
+        <div className="grid grid-cols-3 gap-3 w-full my-2 shrink-0">
           {starters.map((s, idx) => (
             <button
               key={idx}
               type="button"
               onClick={() => handleSend(s.action)}
-              className="group p-2.5 rounded-xl bg-slate-950/60 hover:bg-slate-900/80 border border-white/10 hover:border-teal-400/50 transition flex items-center gap-2.5 backdrop-blur-md shadow-md text-left"
+              className="group p-3 rounded-2xl bg-slate-950/65 hover:bg-slate-900/85 border border-white/10 hover:border-teal-400/50 transition flex items-center gap-3 backdrop-blur-md shadow-lg text-left"
             >
-              <div className="p-1.5 rounded-lg bg-white/5 border border-white/10 group-hover:scale-105 transition-transform shrink-0">
+              <div className="p-2 rounded-xl bg-white/5 border border-white/10 group-hover:scale-105 transition-transform shrink-0">
                 {s.icon}
               </div>
               <div className="overflow-hidden">
-                <span className="text-xs font-medium text-slate-200 group-hover:text-teal-200 block truncate">
+                <span className="text-xs font-semibold text-slate-200 group-hover:text-teal-200 block truncate">
                   {s.title}
                 </span>
-                <span className="text-[10px] text-slate-400 block truncate">
+                <span className="text-[10px] text-slate-400 block truncate mt-0.5">
                   Poser & apaiser
                 </span>
               </div>
@@ -179,8 +178,8 @@ export default function RespirePage() {
           ))}
         </div>
 
-        {/* Section basse : Fil de discussion visible directement à l'écran */}
-        <div className="flex-1 w-full bg-slate-950/40 border border-white/10 rounded-2xl backdrop-blur-md p-3 overflow-y-auto flex flex-col gap-2.5 shadow-inner">
+        {/* Zone de chat calibrée */}
+        <div className="w-full h-32 sm:h-36 bg-slate-950/50 border border-white/10 rounded-2xl backdrop-blur-md p-3 overflow-y-auto flex flex-col gap-2 shrink-0 shadow-inner">
           {messages.map((m) => (
             <div
               key={m.id}
@@ -190,7 +189,7 @@ export default function RespirePage() {
                 className={`max-w-[85%] rounded-2xl px-4 py-2 text-xs leading-relaxed shadow-md backdrop-blur-md ${
                   m.sender === 'user'
                     ? 'bg-teal-600/90 text-white rounded-br-none'
-                    : 'bg-slate-900/85 border border-white/10 text-slate-100 rounded-bl-none'
+                    : 'bg-slate-900/90 border border-white/10 text-slate-100 rounded-bl-none'
                 }`}
               >
                 {m.text}
@@ -202,7 +201,7 @@ export default function RespirePage() {
         </div>
       </main>
 
-      {/* Barre de saisie ancrée en bas */}
+      {/* Footer / Champ de saisie */}
       <footer className="relative z-10 border-t border-white/10 bg-slate-950/60 backdrop-blur-xl px-4 py-2.5 shrink-0">
         <div className="max-w-4xl mx-auto flex flex-col gap-1">
           <form
@@ -228,7 +227,7 @@ export default function RespirePage() {
             </button>
           </form>
           <div className="flex items-center justify-between text-[10px] text-slate-400 px-1">
-            <span>Respire • Échanges temporaires & sans jugement</span>
+            <span>Respire • Échanges temporaires & sans trace</span>
             <span>Urgence médicale : composez le 3114</span>
           </div>
         </div>
