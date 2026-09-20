@@ -61,7 +61,7 @@ export default function RespirePage() {
       const iaMsg: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'ia',
-        text: "Je suis là avec vous. Prenez une grande inspiration, puis soufflez lentement. Qu'est-ce qui pèse le plus lourd à cet instant ?",
+        text: "Je suis là avec vous. Prenez une grande inspiration face à cet horizon, puis soufflez lentement. Qu'est-ce qui pèse le plus à cet instant précis ?",
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages((prev) => [...prev, iaMsg]);
@@ -69,51 +69,49 @@ export default function RespirePage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#070b14] text-slate-100 flex flex-col justify-between font-sans selection:bg-teal-500/30 selection:text-teal-200 overflow-x-hidden">
-      {/* Fond texturé et nappes lumineuses */}
+    <div className="relative min-h-screen text-slate-100 flex flex-col justify-between font-sans selection:bg-teal-500/30 selection:text-teal-200 overflow-x-hidden bg-slate-950">
+      {/* Fond breton immersif avec overlay glassmorphism */}
       <div 
-        className="pointer-events-none absolute inset-0 opacity-[0.14]"
-        style={{
-          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)',
-          backgroundSize: '36px 36px'
-        }}
+        className="pointer-events-none fixed inset-0 bg-cover bg-center bg-no-repeat opacity-40 scale-105"
+        style={{ backgroundImage: "url('/fond-bretagne.jpg')" }}
       />
-      <div className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-gradient-to-b from-teal-500/20 via-cyan-500/10 to-transparent rounded-full blur-[140px]" />
-      <div className="pointer-events-none absolute bottom-0 right-[-10%] w-[650px] h-[450px] bg-indigo-500/10 rounded-full blur-[160px]" />
+      <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/65 to-slate-950/90" />
 
-      <header className="relative z-10 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-xl px-6 py-4">
+      {/* Header en verre dépoli */}
+      <header className="relative z-10 border-b border-white/10 bg-slate-950/60 backdrop-blur-xl px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="font-semibold text-lg text-white tracking-tight">Respire • Écoute IA</span>
           </div>
-          <div className="flex items-center gap-2 text-xs bg-slate-900/80 border border-slate-800 px-3.5 py-1.5 rounded-full text-slate-300">
+          <div className="flex items-center gap-2 text-xs bg-slate-900/80 border border-white/10 px-3.5 py-1.5 rounded-full text-slate-300 backdrop-blur-md">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>Échanges chiffrés</span>
           </div>
         </div>
       </header>
 
+      {/* Corps principal */}
       <main className="relative z-10 flex-1 max-w-4xl w-full mx-auto px-6 py-6 flex flex-col justify-center">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center text-center my-auto">
-            {/* Conteneur de l'animation vidéo 3D */}
+            {/* Vidéo 3D intégrée */}
             <div className="relative mb-6 flex justify-center items-center">
-              <div className="absolute w-56 h-56 rounded-full bg-teal-500/20 blur-3xl animate-pulse" />
+              <div className="absolute w-56 h-56 rounded-full bg-teal-500/25 blur-3xl animate-pulse" />
               <video 
                 autoPlay 
                 loop 
                 muted 
                 playsInline 
-                className="relative w-52 h-52 sm:w-60 sm:h-60 rounded-3xl border border-slate-800/80 bg-slate-950/60 shadow-[0_0_50px_rgba(20,184,166,0.25)] object-cover"
+                className="relative w-52 h-52 sm:w-60 sm:h-60 rounded-3xl border border-white/15 bg-slate-950/50 shadow-[0_0_50px_rgba(20,184,166,0.3)] object-cover backdrop-blur-sm"
               >
                 <source src="/respire.mp4" type="video/mp4" />
               </video>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-2">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-2 drop-shadow-lg">
               Déposez ce qui pèse. Respirez.
             </h1>
-            <p className="text-sm text-slate-400 max-w-md mb-8 leading-relaxed">
+            <p className="text-sm text-slate-300 max-w-md mb-8 leading-relaxed drop-shadow">
               Un espace d'écoute empathique et immédiat, sans jugement ni conservation de données.
             </p>
 
@@ -123,14 +121,14 @@ export default function RespirePage() {
                   key={idx}
                   type="button"
                   onClick={() => handleSend(s.title)}
-                  className="group p-4 rounded-2xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800 hover:border-teal-500/50 transition-all duration-300 flex flex-col justify-between backdrop-blur-md hover:-translate-y-1 shadow-lg"
+                  className="group p-4 rounded-2xl bg-slate-900/65 hover:bg-slate-900/90 border border-white/10 hover:border-teal-400/50 transition-all duration-300 flex flex-col justify-between backdrop-blur-md hover:-translate-y-1 shadow-xl"
                 >
                   <div className="mb-3">{s.icon}</div>
                   <div>
                     <h3 className="text-sm font-semibold text-slate-100 group-hover:text-teal-300 transition">
                       {s.title}
                     </h3>
-                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                    <p className="text-xs text-slate-300 mt-1 leading-relaxed">
                       {s.desc}
                     </p>
                   </div>
@@ -138,7 +136,7 @@ export default function RespirePage() {
               ))}
             </div>
 
-            <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+            <div className="text-[11px] text-slate-300 flex items-center gap-1.5 backdrop-blur-md px-3 py-1 rounded-full bg-slate-950/50 border border-white/10">
               <span>Soutien bienveillant non médical • Urgence : composez le 3114</span>
             </div>
           </div>
@@ -150,41 +148,42 @@ export default function RespirePage() {
                 className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-2xl px-5 py-3.5 text-sm leading-relaxed shadow-lg ${
+                  className={`max-w-[85%] rounded-2xl px-5 py-3.5 text-sm leading-relaxed shadow-xl backdrop-blur-md ${
                     m.sender === 'user'
-                      ? 'bg-gradient-to-r from-teal-600 to-teal-500 text-white rounded-br-none'
-                      : 'bg-slate-900/90 border border-slate-800 text-slate-100 rounded-bl-none backdrop-blur-md'
+                      ? 'bg-teal-600/90 text-white rounded-br-none'
+                      : 'bg-slate-900/85 border border-white/10 text-slate-100 rounded-bl-none'
                   }`}
                 >
                   {m.text}
                 </div>
-                <span className="text-[10px] text-slate-500 mt-1 px-1">{m.time}</span>
+                <span className="text-[10px] text-slate-300 mt-1 px-1 drop-shadow">{m.time}</span>
               </div>
             ))}
           </div>
         )}
       </main>
 
-      <footer className="relative z-10 border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-xl p-4">
+      {/* Footer avec saisie */}
+      <footer className="relative z-10 border-t border-white/10 bg-slate-950/70 backdrop-blur-xl p-4">
         <div className="max-w-3xl mx-auto">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSend();
             }}
-            className="flex items-center gap-2 bg-slate-900/90 border border-slate-800 focus-within:border-teal-500/70 rounded-2xl p-1.5 transition"
+            className="flex items-center gap-2 bg-slate-900/80 border border-white/10 focus-within:border-teal-500/70 rounded-2xl p-1.5 transition backdrop-blur-md"
           >
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Saisir un message..."
-              className="flex-1 bg-transparent px-4 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none"
+              className="flex-1 bg-transparent px-4 py-2 text-sm text-slate-100 placeholder-slate-400 focus:outline-none"
             />
             <button
               type="submit"
               disabled={!input.trim()}
-              className="bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 disabled:opacity-30 text-white px-4 py-2 rounded-xl text-xs font-medium transition"
+              className="bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 disabled:opacity-30 text-white px-4 py-2 rounded-xl text-xs font-medium transition shadow-md"
             >
               Envoyer
             </button>
