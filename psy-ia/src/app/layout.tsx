@@ -1,16 +1,12 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://psy-ia-ecru.vercel.app');
-
 const TITRE = 'Respire — Espace d’écoute et d’apaisement par IA';
 const DESCRIPTION =
   'Un espace d’écoute bienveillante et confidentielle disponible 24h/24 pour poser vos émotions, relâcher la pression et clarifier vos pensées.';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
+  metadataBase: new URL('https://psy-ia-ecru.vercel.app'),
   title: {
     default: TITRE,
     template: '%s | Respire'
@@ -22,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: TITRE,
     description: DESCRIPTION,
-    url: SITE_URL,
+    url: 'https://psy-ia-ecru.vercel.app',
     siteName: 'Respire',
     locale: 'fr_FR',
     type: 'website'
