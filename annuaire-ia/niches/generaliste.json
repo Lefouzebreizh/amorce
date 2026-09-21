@@ -248,6 +248,17 @@
       "score_avis": 4.4,
       "description_longue": "## Notre verdict\nUn schéma explique mieux qu'un paragraphe, mais personne n'ouvre un logiciel de dessin vectoriel pour illustrer une note interne. Napkin lit le texte, propose plusieurs représentations visuelles — chronologie, cycle, comparaison, entonnoir — et rend un schéma vectoriel modifiable élément par élément. Le résultat est propre, sobre, et prêt à coller dans un document ou une présentation.\n\n## Points forts\n- Plusieurs représentations proposées pour un même texte, au choix\n- Schémas vectoriels réellement modifiables, pas des images figées\n- Rendu sobre qui passe dans un document professionnel sans retouche\n- Version gratuite largement suffisante pour un usage régulier\n\n## Points faibles\n- Types de schémas limités à un catalogue : rien de vraiment sur mesure\n- Les textes très denses donnent des schémas confus\n- Les fonctions collaboratives restent minces\n\n## Idéal pour\nTous ceux qui rédigent des notes, des rapports ou des supports et illustrent tout par des listes à puces faute de savoir dessiner.",
       "date_ajout": "2026-09-19"
+    },
+    {
+      "id": "fireflies-ai",
+      "nom": "Fireflies.ai",
+      "categorie": "Productivité",
+      "prix": "Palier gratuit, puis abonnement par utilisateur",
+      "description_courte": "La réunion transcrite, résumée et découpée en actions, sans que personne n'ait à prendre de notes.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/fireflies-ai",
+      "score_avis": 4.1,
+      "description_longue": "## Notre verdict\nLe compte rendu de réunion est le travail que tout le monde repousse et que personne ne relit. Fireflies rejoint la visioconférence, transcrit, résume et sort la liste des décisions et des actions. Le gain réel n'est pas le temps de frappe mais la disparition du flou : ce qui a été décidé est écrit, et on cesse de rejouer la même discussion trois semaines plus tard. Prévenir les participants qu'ils sont enregistrés n'est pas une politesse, c'est une obligation.\n\n## Points forts\n- Rejoint automatiquement les réunions des principales plateformes\n- Résumé et liste d'actions, pas seulement une transcription brute\n- Recherche dans l'historique de toutes les réunions passées\n- Palier gratuit suffisant pour évaluer sur quelques réunions\n\n## Points faibles\n- L'information de l'enregistrement à tous les participants est une obligation\n- Précision variable en français, surtout à plusieurs voix\n- Les enregistrements partent chez l'éditeur : à cadrer selon la confidentialité\n- L'abonnement par utilisateur pèse dès que l'équipe grandit\n\n## Idéal pour\nLes équipes qui enchaînent les réunions et perdent les décisions entre deux, à condition d'avoir cadré le sujet de l'enregistrement.",
+      "date_ajout": "2026-09-21"
     }
   ]
 }

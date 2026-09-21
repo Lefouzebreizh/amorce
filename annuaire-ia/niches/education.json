@@ -146,6 +146,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nLa matière ne manque jamais à un enseignant : ce qui manque, c'est le temps de la transformer en activités. Nolej part d'un support existant — document, vidéo, page — et en tire un ensemble d'activités interactives exportables vers les plateformes d'apprentissage courantes. L'éditeur est européen, ce qui pèse quand les productions concernent des élèves. Le résultat demande une relecture, mais il part d'un brouillon complet plutôt que d'une page blanche.\n\n## Points forts\n- Part d'un support déjà écrit plutôt que d'une consigne à rédiger\n- Exporte vers les plateformes d'apprentissage standard du marché\n- Produit plusieurs types d'activités d'un seul document\n- Palier gratuit permettant d'évaluer sur un vrai cours\n\n## Points faibles\n- Les activités générées demandent une relecture pédagogique systématique\n- La qualité dépend étroitement de celle du document de départ\n- Moins pertinent pour les disciplines très formelles\n- Interface pensée d'abord pour l'anglais\n\n## Idéal pour\nLes enseignants et formateurs qui ont déjà leurs supports et veulent les rendre interactifs sans y consacrer leurs soirées.",
       "date_ajout": "2026-09-19"
+    },
+    {
+      "id": "twee",
+      "nom": "Twee",
+      "categorie": "Langues vivantes",
+      "prix": "Freemium — à partir de 10 $/mois",
+      "description_courte": "La boîte à outils du professeur de langues : exercices, dialogues, questions de compréhension bâtis autour d'une vidéo ou d'un texte.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/twee",
+      "score_avis": 4.4,
+      "description_longue": "## Notre verdict\nTwee est conçu pour une seule discipline et cela se voit : à partir d'une vidéo en ligne, d'un texte ou d'un simple thème, il produit des questions de compréhension orale, des textes à trous, des listes lexicales, des amorces de discussion et des dialogues calibrés par niveau du cadre européen. Ce que le professeur de langues fabrique à la main chaque semaine se prépare en quelques minutes.\n\n## Points forts\n- Génération à partir d'une vidéo en ligne, avec la transcription exploitée\n- Calibrage explicite par niveau du cadre européen de référence\n- Couvre l'oral, l'écrit, le lexique et la grammaire dans un même outil\n- Version gratuite suffisante pour un usage hebdomadaire raisonnable\n\n## Points faibles\n- Centré sur l'anglais, plus léger sur les autres langues\n- Les exercices générés se ressemblent si l'on ne varie pas les consignes\n- Aucune gestion de classe ni de suivi des élèves\n\n## Idéal pour\nLes professeurs de langues qui construisent leurs supports à partir de documents authentiques et refont ce travail chaque semaine.",
+      "date_ajout": "2026-09-21"
     }
   ]
 }
