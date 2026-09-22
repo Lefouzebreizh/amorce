@@ -1,7 +1,13 @@
 # Audit Landing — Gemini (22 septembre 2026)
 
-Statut : intégration préparée, génération réelle bloquée par HTTP 401.
-La clé locale a été testée sans génération et sans publier sa valeur.
+Mise à jour à 20:50 UTC : après remplacement local de la clé par le propriétaire,
+l’accès Gemini est confirmé. Une analyse réelle d’Artisan Express a réussi sur
+10 segments capturés le 22 septembre 2026, modèle gemini-3.5-flash-lite.
+Rapports Markdown, JSON et HTML générés. Usage retourné : 11 625 jetons
+entrants et 1 138 sortants. Aucun prix ni gratuité n’est déduit de ces compteurs.
+La relecture a écarté une recommandation sur le téléphone, déjà cliquable.
+L’audit visuel ne valide pas les parcours. Le reste de ce guide documente aussi
+le diagnostic initial (401), désormais résolu. Aucun secret n’a été publié.
 
 ## Utilisation
 Depuis une copie à jour de cette branche, avec Python et Pillow installés :
