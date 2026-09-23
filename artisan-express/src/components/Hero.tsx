@@ -3,9 +3,9 @@ import { aUnTelephone, contact } from '@/lib/config';
 
 export function Hero() {
   return (
-    <header className="border-b border-edge bg-slab">
+    <header className="artisan-hero border-b border-edge bg-slab">
       <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 pb-14 pt-10 sm:pt-16 md:grid-cols-[1.1fr_0.9fr] md:items-center md:gap-14 md:pb-20">
-        <div>
+        <div className="artisan-hero__copy">
           <p className="text-base font-semibold uppercase tracking-[0.2em] text-accent">
             Maçon, couvreur, électricien
           </p>
@@ -64,10 +64,10 @@ export function Hero() {
           </dl>
         </div>
 
-        <div className="px-6 pt-2 sm:px-12 md:px-0">
-          <div className="overflow-hidden rounded-2xl border border-violet-trait/60 bg-panel p-2 shadow-[0_20px_55px_rgba(64,224,208,0.08)]">
+        <div className="artisan-hero__scene px-6 pt-2 sm:px-12 md:px-0">
+          <div className="artisan-hero__frame overflow-hidden rounded-2xl border border-violet-trait/60 bg-panel p-2 shadow-[0_20px_55px_rgba(64,224,208,0.08)]">
             <video
-              className="aspect-video w-full rounded-xl object-cover"
+              className="artisan-hero__film aspect-video w-full rounded-xl object-cover"
               autoPlay
               loop
               muted
