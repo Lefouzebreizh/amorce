@@ -1,11 +1,42 @@
+'use client';
+
 import Image from 'next/image';
+import { useRef } from 'react';
 
 import { BOUTON_CONTOUR, BOUTON_PRINCIPAL } from '@/components/ui';
 import { aUnTelephone, contact } from '@/lib/config';
 
 export function Hero() {
+  const heroRef = useRef<HTMLElement>(null);
+
+  function eclaireLaScene(event: React.PointerEvent<HTMLElement>) {
+    const hero = heroRef.current;
+    if (!hero || event.pointerType === 'touch') return;
+
+    const zone = hero.getBoundingClientRect();
+    const x = (event.clientX - zone.left) / zone.width;
+    const y = (event.clientY - zone.top) / zone.height;
+    hero.style.setProperty('--pointer-x', `${x * 100}%`);
+    hero.style.setProperty('--pointer-y', `${y * 100}%`);
+    hero.style.setProperty('--scene-rotate-x', `${(0.5 - y) * 4}deg`);
+    hero.style.setProperty('--scene-rotate-y', `${(x - 0.5) * 5}deg`);
+  }
+
+  function reposeLaScene() {
+    const hero = heroRef.current;
+    if (!hero) return;
+    hero.style.removeProperty('--scene-rotate-x');
+    hero.style.removeProperty('--scene-rotate-y');
+  }
+
   return (
-    <header className="artisan-hero border-b border-edge bg-slab">
+    <header
+      ref={heroRef}
+      className="artisan-hero border-b border-edge bg-slab"
+      onPointerMove={eclaireLaScene}
+      onPointerLeave={reposeLaScene}
+    >
+      <span className="artisan-hero__pointer" aria-hidden="true" />
       <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 pb-14 pt-10 sm:pt-16 md:grid-cols-[1.1fr_0.9fr] md:items-center md:gap-14 md:pb-20">
         <div className="artisan-hero__copy">
           <p className="artisan-hero__eyebrow">
@@ -68,6 +99,8 @@ export function Hero() {
         </div>
 
         <div className="artisan-hero__scene px-6 pt-2 sm:px-12 md:px-0">
+          <span className="artisan-hero__scene-orbit" aria-hidden="true" />
+          <span className="artisan-hero__scene-beam" aria-hidden="true" />
           <p className="artisan-hero__scene-caption"><span>01</span> Une vitrine qui tient dans une main</p>
           <div className="artisan-hero__material artisan-hero__material--photos"><span>01</span><b>Photos</b><small>tes réalisations</small></div>
           <div className="artisan-hero__material artisan-hero__material--contact"><span>03</span><b>Contact</b><small>appel direct</small></div>
