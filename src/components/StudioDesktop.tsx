@@ -30,11 +30,12 @@ export function StudioDesktop({
   onStep: (step: StepId) => void;
 }) {
   return (
-    <div className="flex h-screen flex-col overflow-hidden">
+    <div className="studio-shell flex h-screen flex-col overflow-hidden">
       <DesktopHeader />
 
-      <main className="flex min-h-0 flex-1">
-        <nav className="flex w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-edge p-3" aria-label="Étapes du montage">
+      <main className="studio-body flex min-h-0 flex-1">
+        <nav className="studio-nav flex w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-edge p-3" aria-label="Étapes du montage">
+          <p className="studio-nav-eyebrow">Le Phare · montage</p>
           {STEPS.map((item) => {
             const active = item.id === step;
             return (
@@ -43,8 +44,8 @@ export function StudioDesktop({
                 type="button"
                 aria-current={active ? 'step' : undefined}
                 onClick={() => onStep(item.id)}
-                className={`rounded-xl px-3 py-2.5 text-left transition-colors ${
-                  active ? 'bg-raised ring-1 ring-select/60' : 'hover:bg-slab'
+                className={`studio-step rounded-xl px-3 py-2.5 text-left transition-colors ${
+                  active ? 'studio-step-active bg-raised ring-1 ring-select/60' : 'hover:bg-slab'
                 }`}
               >
                 <span className={`text-[13px] font-semibold ${active ? 'text-mist' : 'text-muted'}`}>
@@ -56,14 +57,16 @@ export function StudioDesktop({
           })}
         </nav>
 
-        <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-3 p-3">
-          <Preview engine={engine} />
-          <div className="shrink-0">
+        <section className="studio-workspace flex min-h-0 min-w-0 flex-1 flex-col gap-3 p-3">
+          <div className="studio-preview-plate flex min-h-0 flex-1">
+            <Preview engine={engine} />
+          </div>
+          <div className="studio-timeline-plate shrink-0">
             <Timeline engine={engine} />
           </div>
         </section>
 
-        <aside className="w-full max-w-sm shrink-0 space-y-3 overflow-y-auto border-l border-edge p-3">
+        <aside className="studio-rail w-full max-w-sm shrink-0 space-y-3 overflow-y-auto border-l border-edge p-3">
           <NextStep onStep={onStep} />
           <StepPanel step={step} engine={engine} onStep={onStep} />
         </aside>
@@ -81,14 +84,15 @@ function DesktopHeader() {
   const canRedo = useStudio((s) => s.future.length > 0);
 
   return (
-    <header className="flex shrink-0 items-center justify-between gap-4 border-b border-edge px-4 py-2.5">
+    <header className="studio-header flex shrink-0 items-center justify-between gap-4 border-b border-edge px-4 py-2.5">
       <div className="flex items-baseline gap-3">
         <Link
           href="/"
-          className="flex min-h-11 items-center font-display text-xl tracking-tight text-mist focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className="studio-wordmark flex min-h-11 items-center font-display text-xl tracking-tight text-mist focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           amorce
         </Link>
+        <span className="studio-live-dot" aria-label="Studio prêt" />
         <span className="hidden text-[13px] text-muted sm:block">
           Création et montage vidéo assistés de bout en bout — tout se passe dans ton navigateur
         </span>
