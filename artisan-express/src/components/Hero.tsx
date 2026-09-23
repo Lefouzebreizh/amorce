@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 import { BOUTON_CONTOUR, BOUTON_PRINCIPAL } from '@/components/ui';
 import { aUnTelephone, contact } from '@/lib/config';
 
@@ -71,18 +73,14 @@ export function Hero() {
           <div className="artisan-hero__material artisan-hero__material--contact"><span>03</span><b>Contact</b><small>appel direct</small></div>
           <div className="artisan-hero__measure" aria-hidden="true"><span /> <span /></div>
           <div className="artisan-hero__frame overflow-hidden rounded-2xl border border-violet-trait/60 bg-panel p-2 shadow-[0_20px_55px_rgba(64,224,208,0.08)]">
-            <video
+            <Image
               className="artisan-hero__film aspect-video w-full rounded-xl object-cover"
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="metadata"
-              poster="/maison-artisan.webp"
-              aria-label="Animation d’une maison qui se transforme"
-            >
-              <source src="/maison-artisan.mp4" type="video/mp4" />
-            </video>
+              src="/atelier-artisan-express.webp"
+              alt="Atelier d’artisan avec téléphone, plans techniques et matériaux"
+              width={1672}
+              height={941}
+              preload
+            />
           </div>
         </div>
       </div>

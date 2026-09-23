@@ -171,10 +171,10 @@ du runtime Node : elle le déclare elle-même, rien à régler.
 - **18 px de base.** Cette page se lit dehors, au soleil, sur un téléphone tenu
   à bout de bras. Le plancher tactile est monté à 56 px (`min-h-14`) plutôt
   qu'aux 44 px habituels : des mains de chantier, et un achat au bout.
-- **Aucune image.** Le téléphone du haut de page et les deux maquettes
-  « avant / après » sont dessinés en HTML. L'invariant du dépôt interdit tout
-  binaire versionné, et une capture serait de toute façon fausse — le site
-  montré est celui qu'on promet, pas un qui existe.
+- **Des images utiles, jamais des captures qui mentent.** La scène du haut et
+  le portrait présentent l'atelier et la personne derrière l'offre, dans des
+  formats optimisés. Les aperçus des sites livrés restent les vraies pages
+  HTML : aucune capture figée ne peut diverger du résultat réellement vendu.
 - **Aucun témoignage inventé.** La place du premier client est vide et le dit.
   C'est le seul argument qu'un concurrent ne peut pas copier.
 - **Pas d'annuaire nommé.** La comparaison « avant / après » décrit ce que vit

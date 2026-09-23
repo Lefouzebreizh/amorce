@@ -185,11 +185,256 @@ body {
   padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
 }
 
+main {
+  overflow: clip;
+}
+
+#top,
+#contenu,
+#avant-apres,
+#galerie,
+#offre,
+#formulaire {
+  scroll-margin-top: 6rem;
+}
+
 /*
- * La scène signature d'Artisan Express garde la maison existante au premier
- * plan : elle raconte réellement le métier et la livraison, contrairement à
- * une interface fictive. Les halos servent uniquement à conduire le regard
- * vers la vidéo et vers le premier contact.
+ * La barre garde l'offre et les exemples à portée sans voler le premier écran.
+ * Son fond n'est opaque qu'au point nécessaire pour que les liens restent
+ * lisibles quand les halos passent derrière.
+ */
+.artisan-nav {
+  position: sticky;
+  z-index: 60;
+  top: 0;
+  border-bottom: 1px solid rgb(255 255 255 / .08);
+  background: rgb(15 17 21 / .82);
+  box-shadow: 0 .8rem 2.5rem rgb(0 0 0 / .14);
+  backdrop-filter: blur(22px) saturate(135%);
+}
+
+.artisan-nav__inner {
+  display: flex;
+  width: 100%;
+  max-width: 80rem;
+  min-height: 4.75rem;
+  align-items: center;
+  gap: 2rem;
+  margin: 0 auto;
+  padding: .65rem 1.25rem;
+}
+
+.artisan-nav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: .75rem;
+  color: var(--color-encre);
+  text-decoration: none;
+}
+
+.artisan-nav__brand > span:last-child { display: grid; gap: .1rem; }
+.artisan-nav__brand strong { font: 800 .92rem/1 var(--font-titre); letter-spacing: -.025em; }
+.artisan-nav__brand small { color: var(--color-ardoise); font: 600 .58rem/1.2 var(--font-sans); }
+
+.artisan-nav__mark {
+  position: relative;
+  display: inline-grid;
+  width: 2.45rem;
+  height: 2.45rem;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgb(64 224 208 / .55);
+  border-radius: .8rem;
+  background: linear-gradient(145deg, rgb(64 224 208 / .2), rgb(124 58 237 / .18));
+  box-shadow: inset 0 1px rgb(255 255 255 / .13), 0 0 1.8rem rgb(64 224 208 / .11);
+}
+
+.artisan-nav__mark::after {
+  position: absolute;
+  width: 3rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  content: '';
+  transform: rotate(-35deg);
+}
+
+.artisan-nav__mark span { z-index: 1; color: var(--color-encre); font: 800 .68rem/1 var(--font-titre); letter-spacing: -.03em; }
+.artisan-nav__links { display: flex; align-items: center; gap: 1.7rem; margin-left: auto; }
+.artisan-nav__links a { color: var(--color-ardoise); font-size: .76rem; font-weight: 650; text-decoration: none; transition: color .18s ease; }
+.artisan-nav__links a:hover { color: var(--color-accent); }
+.artisan-nav__cta { min-height: 2.9rem !important; padding: .55rem 1.05rem !important; font-size: .74rem !important; }
+
+.artisan-section-heading { max-width: 51rem; }
+.artisan-section-heading > p:last-child { max-width: 42rem; margin: 1.1rem 0 0; color: var(--color-ardoise); font-size: 1.02rem; line-height: 1.68; }
+.artisan-section-heading h2 span { background: linear-gradient(96deg, var(--color-accent), #b9fff8 52%, #bca4ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+.artisan-section-heading--split { display: grid; max-width: none; align-items: end; gap: 2rem; grid-template-columns: minmax(0, 1.2fr) minmax(18rem, .8fr); }
+.artisan-section-heading--split > p:last-child { margin: 0 0 .25rem; }
+
+.artisan-kicker {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  margin: 0 0 1.15rem;
+  color: var(--color-accent);
+  font: 760 .68rem/1.25 var(--font-sans);
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.artisan-kicker span {
+  display: inline-grid;
+  width: 1.65rem;
+  height: 1.65rem;
+  place-items: center;
+  border: 1px solid rgb(64 224 208 / .48);
+  border-radius: 50%;
+  background: rgb(64 224 208 / .06);
+  font-size: .58rem;
+  letter-spacing: .02em;
+  box-shadow: 0 0 1.2rem rgb(64 224 208 / .12);
+}
+
+/* Bloc inclus : cartes bento plus profondes, avec une hiérarchie commune. */
+.artisan-inclus { position: relative; }
+.artisan-inclus::before {
+  position: absolute;
+  z-index: -1;
+  top: 13rem;
+  right: -14rem;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 50%;
+  background: rgb(124 58 237 / .09);
+  content: '';
+  filter: blur(90px);
+}
+
+.artisan-inclus__grid { display: grid; gap: 1rem; margin-top: 3rem; padding: 0; list-style: none; }
+.artisan-inclus__card { min-height: 17rem; padding: 1.55rem; background: linear-gradient(145deg, rgb(39 44 58 / .72), rgb(22 25 33 / .95)); box-shadow: inset 0 1px rgb(255 255 255 / .045), 0 1.5rem 4rem rgb(0 0 0 / .14); }
+.artisan-inclus__card::after { position: absolute; right: -3.5rem; bottom: -4rem; width: 10rem; height: 10rem; border-radius: 50%; background: rgb(64 224 208 / .055); content: ''; filter: blur(14px); transition: transform .35s ease, background .35s ease; }
+.artisan-inclus__card:hover::after { background: rgb(64 224 208 / .11); transform: translate(-.6rem, -.6rem); }
+.artisan-inclus__meta { display: flex; align-items: center; justify-content: space-between; }
+.artisan-inclus__icon { display: grid; width: 3.1rem; height: 3.1rem; place-items: center; border: 1px solid rgb(64 224 208 / .3); border-radius: 1rem; background: linear-gradient(145deg, var(--color-accent), #82f6eb); color: var(--color-accent-encre); box-shadow: 0 .8rem 2rem rgb(64 224 208 / .16); }
+.artisan-inclus__number { color: rgb(182 190 204 / .56); font: 700 .72rem/1 var(--font-sans); letter-spacing: .14em; }
+.artisan-inclus__card h3 { position: relative; z-index: 1; max-width: 26rem; margin: 2.2rem 0 0; color: var(--color-encre); font: 780 1.35rem/1.15 var(--font-titre); letter-spacing: -.03em; }
+.artisan-inclus__card p { position: relative; z-index: 1; max-width: 32rem; margin: .85rem 0 0; color: var(--color-ardoise); font-size: .9rem; line-height: 1.65; }
+
+/* Parcours : une ligne lumineuse relie les trois étapes sans masquer le texte. */
+.artisan-processus { position: relative; border-block: 1px solid rgb(255 255 255 / .06); background: linear-gradient(145deg, #101621, #161729 52%, #101419); }
+.artisan-processus::before { position: absolute; inset: 0; background-image: linear-gradient(rgb(64 224 208 / .035) 1px, transparent 1px), linear-gradient(90deg, rgb(64 224 208 / .035) 1px, transparent 1px); background-size: 3rem 3rem; content: ''; mask-image: linear-gradient(to bottom, transparent, #000 25%, #000 75%, transparent); }
+.artisan-processus__grid { position: relative; display: grid; gap: 1rem; margin: 3.2rem 0 0; padding: 0; list-style: none; }
+.artisan-processus__grid::before { position: absolute; top: 2.15rem; left: 8%; width: 84%; height: 1px; background: linear-gradient(90deg, transparent, var(--color-accent), rgb(169 120 255 / .85), transparent); box-shadow: 0 0 1rem rgb(64 224 208 / .35); content: ''; }
+.artisan-processus__card { position: relative; min-height: 15rem; overflow: hidden; padding: 1.5rem; border: 1px solid rgb(255 255 255 / .1); border-radius: 1.2rem; background: rgb(15 17 21 / .78); box-shadow: inset 0 1px rgb(255 255 255 / .045), 0 1.5rem 3.5rem rgb(0 0 0 / .16); backdrop-filter: blur(14px); }
+.artisan-processus__topline { display: flex; align-items: center; justify-content: space-between; }
+.artisan-processus__topline > span { display: grid; width: 2.7rem; height: 2.7rem; place-items: center; border: 1px solid var(--color-accent); border-radius: 50%; background: var(--color-ink); color: var(--color-accent); font: 800 .7rem/1 var(--font-sans); box-shadow: 0 0 1.8rem rgb(64 224 208 / .18); }
+.artisan-processus__topline small { color: var(--color-ardoise); font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.artisan-processus__card h3 { margin: 2.2rem 0 0; color: var(--color-encre); font: 760 1.25rem/1.15 var(--font-titre); letter-spacing: -.025em; }
+.artisan-processus__card p { margin: .75rem 0 0; color: var(--color-ardoise); font-size: .86rem; line-height: 1.65; }
+.artisan-processus__note { position: relative; margin: 1.25rem 0 0; color: var(--color-ardoise); font-size: .72rem; line-height: 1.5; }
+
+/* Comparaison : contraste de surfaces avant/après, comme un vrai outil. */
+.artisan-comparaison { position: relative; background: var(--color-slab); }
+.artisan-comparaison::before { position: absolute; top: 10%; left: -15rem; width: 35rem; height: 35rem; border-radius: 50%; background: rgb(64 224 208 / .07); content: ''; filter: blur(100px); }
+.artisan-comparaison__grid { position: relative; display: grid; gap: 1.15rem; margin-top: 3rem; }
+.artisan-comparaison__card { display: flex; min-width: 0; flex-direction: column; padding: 1.4rem; border-radius: 1.25rem; box-shadow: inset 0 1px rgb(255 255 255 / .045), 0 2rem 5rem rgb(0 0 0 / .18); }
+.artisan-comparaison__card--avant { border: 1px solid var(--color-edge); background: linear-gradient(145deg, rgb(39 44 58 / .82), rgb(24 27 36 / .96)); }
+.artisan-comparaison__card--apres { border: 1px solid var(--color-accent); background: linear-gradient(145deg, rgb(39 44 58 / .92), rgb(16 36 39 / .76)); box-shadow: inset 0 1px rgb(255 255 255 / .06), 0 2rem 5rem rgb(0 0 0 / .2), 0 0 3rem rgb(64 224 208 / .075); }
+.artisan-comparaison__cta { margin-top: 2.2rem; }
+
+/* Galerie : cartes plus généreuses, lecture éditoriale et relief au survol. */
+.artisan-galerie { position: relative; }
+.artisan-galerie__notice { margin-top: 2.2rem; padding: 1.2rem 1.35rem; border-left: 2px solid var(--color-violet-trait); border-radius: 0 1rem 1rem 0; background: linear-gradient(90deg, rgb(169 120 255 / .08), transparent); }
+.artisan-galerie__notice p + p { margin-top: .8rem; }
+.artisan-galerie__grid { display: grid; gap: 1rem; margin: 2rem 0 0; padding: 0; list-style: none; }
+.artisan-galerie__card { padding: 1rem; border-radius: 1.15rem; box-shadow: inset 0 1px rgb(255 255 255 / .035), 0 1.3rem 3.5rem rgb(0 0 0 / .16); }
+.artisan-galerie__card:hover { box-shadow: inset 0 1px rgb(255 255 255 / .06), 0 2rem 4.5rem rgb(0 0 0 / .26), 0 0 2.5rem rgb(64 224 208 / .06); transform: translateY(-.3rem); }
+
+/* Offre : prix-scène à gauche, contenu de décision à droite. */
+.artisan-offre { position: relative; isolation: isolate; border-block: 1px solid rgb(255 255 255 / .06); background: linear-gradient(135deg, #10131a, #141827 58%, #11151c); }
+.artisan-offre::before { position: absolute; z-index: -1; top: -16rem; right: -12rem; width: 38rem; height: 38rem; border-radius: 50%; background: rgb(124 58 237 / .12); content: ''; filter: blur(95px); }
+.artisan-offre::after { position: absolute; z-index: -1; bottom: -12rem; left: -8rem; width: 28rem; height: 28rem; border-radius: 50%; background: rgb(64 224 208 / .08); content: ''; filter: blur(90px); }
+.artisan-offre__shell { display: grid; overflow: hidden; margin-top: 3rem; border: 1px solid rgb(255 255 255 / .1); border-radius: 1.6rem; background: rgb(15 17 21 / .65); box-shadow: inset 0 1px rgb(255 255 255 / .06), 0 2.5rem 7rem rgb(0 0 0 / .3); backdrop-filter: blur(18px); }
+.artisan-offre__price { position: relative; overflow: hidden; padding: 2rem; border-bottom: 1px solid rgb(255 255 255 / .1); background: linear-gradient(145deg, rgb(64 224 208 / .19), rgb(124 58 237 / .18) 70%, rgb(15 17 21 / .8)); }
+.artisan-offre__price::before { position: absolute; top: -8rem; right: -6rem; width: 20rem; height: 20rem; border: 1px solid rgb(64 224 208 / .22); border-radius: 50%; box-shadow: 0 0 0 3rem rgb(64 224 208 / .025), 0 0 0 6rem rgb(169 120 255 / .025); content: ''; }
+.artisan-offre__label { position: relative; margin: 0; color: var(--color-accent); font-size: .68rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+.artisan-offre__amount { position: relative; margin: 2.4rem 0 0; color: var(--color-encre); font: 850 clamp(4rem, 9vw, 7rem)/.83 var(--font-titre); letter-spacing: -.075em; }
+.artisan-offre__once { position: relative; max-width: 25rem; margin: 1rem 0 0; color: var(--color-ardoise); font-size: .88rem; line-height: 1.55; }
+.artisan-offre__signal { position: relative; display: flex; height: 3.5rem; align-items: end; gap: .45rem; margin: 2.2rem 0 0; }
+.artisan-offre__signal span { width: .32rem; border-radius: 1rem; background: linear-gradient(to top, var(--color-accent), var(--color-violet-trait)); box-shadow: 0 0 .8rem rgb(64 224 208 / .2); }
+.artisan-offre__signal span:nth-child(1) { height: 32%; }.artisan-offre__signal span:nth-child(2) { height: 58%; }.artisan-offre__signal span:nth-child(3) { height: 42%; }.artisan-offre__signal span:nth-child(4) { height: 80%; }.artisan-offre__signal span:nth-child(5) { height: 100%; }
+.artisan-offre__ownership { position: relative; margin: 1rem 0 0; color: var(--color-ardoise); font-size: .75rem; }
+.artisan-offre__ownership span { color: var(--color-encre); font-size: 1rem; font-weight: 800; }
+.artisan-offre__content { padding: 1.4rem; }
+.artisan-offre__list { display: grid; gap: 0; }
+.artisan-offre__list > div { display: flex; gap: 1rem; padding: 1.2rem 0; border-bottom: 1px solid rgb(255 255 255 / .085); }
+.artisan-offre__list > div > span { display: grid; width: 1.7rem; height: 1.7rem; flex: 0 0 auto; place-items: center; border: 1px solid rgb(64 224 208 / .42); border-radius: 50%; color: var(--color-accent); font-size: .68rem; font-weight: 900; box-shadow: 0 0 1.2rem rgb(64 224 208 / .1); }
+.artisan-offre__list dt { color: var(--color-encre); font-size: .96rem; font-weight: 750; }
+.artisan-offre__list dd { margin: .4rem 0 0; color: var(--color-ardoise); font-size: .82rem; line-height: 1.55; }
+.artisan-offre__aside { margin-top: 1.3rem; padding: 1rem 1.1rem; border: 1px solid var(--color-edge); border-radius: .95rem; background: rgb(39 44 58 / .7); }
+.artisan-offre__availability { display: flex; gap: .9rem; margin-top: 1rem; padding: 1.1rem; border: 1px solid rgb(64 224 208 / .4); border-radius: .95rem; background: rgb(64 224 208 / .045); }
+.artisan-offre__pulse { width: .65rem; height: .65rem; flex: 0 0 auto; margin-top: .45rem; border-radius: 50%; background: var(--color-accent); box-shadow: 0 0 0 .3rem rgb(64 224 208 / .09), 0 0 1.2rem var(--color-accent); }
+
+/* Portrait : scène éditoriale, preuve humaine et non témoignage inventé. */
+.artisan-erwann__shell { position: relative; overflow: hidden; padding: 1.35rem; border: 1px solid rgb(255 255 255 / .1); border-radius: 1.7rem; background: linear-gradient(145deg, rgb(32 36 48 / .88), rgb(20 22 30 / .96)); box-shadow: inset 0 1px rgb(255 255 255 / .05), 0 2.5rem 7rem rgb(0 0 0 / .24); }
+.artisan-erwann__shell::before { position: absolute; top: -15rem; left: -12rem; width: 34rem; height: 34rem; border-radius: 50%; background: rgb(64 224 208 / .075); content: ''; filter: blur(70px); }
+.artisan-erwann__grid { position: relative; display: grid; align-items: center; gap: 2.3rem; }
+.artisan-erwann__visual { position: relative; padding: 1.2rem; }
+.artisan-erwann__frame { overflow: hidden; border: 1px solid rgb(169 120 255 / .66); border-radius: 1.35rem; background: var(--color-panel); padding: .42rem; box-shadow: 0 2rem 5rem rgb(0 0 0 / .38), 0 0 4rem rgb(124 58 237 / .08); transform: rotate(1.2deg); }
+.artisan-erwann__frame img { filter: saturate(.94) contrast(1.03); }
+.artisan-erwann__float { position: absolute; display: grid; gap: .2rem; max-width: 12.5rem; padding: .75rem .9rem; border: 1px solid rgb(255 255 255 / .14); border-radius: .85rem; background: rgb(10 15 23 / .87); box-shadow: 0 1rem 2.8rem rgb(0 0 0 / .38); backdrop-filter: blur(16px); }
+.artisan-erwann__float span { color: var(--color-accent); font-size: .58rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.artisan-erwann__float strong { color: var(--color-encre); font-size: .7rem; line-height: 1.25; }
+.artisan-erwann__float--top { top: 4%; left: -.1rem; transform: rotate(-3deg); }
+.artisan-erwann__float--bottom { right: -.2rem; bottom: 7%; transform: rotate(3deg); }
+.artisan-erwann__story { margin-top: 1.35rem; color: var(--color-ardoise); font-size: .91rem; line-height: 1.7; }
+.artisan-erwann__story p + p { margin-top: 1rem; }
+.artisan-erwann__facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; margin-top: 1.5rem; }
+.artisan-erwann__facts > div { padding: .85rem; border: 1px solid rgb(255 255 255 / .1); border-radius: .85rem; background: rgb(15 17 21 / .45); }
+.artisan-erwann__facts dt { color: var(--color-accent); font: 800 1.05rem/1 var(--font-titre); }
+.artisan-erwann__facts dd { margin: .4rem 0 0; color: var(--color-ardoise); font-size: .66rem; line-height: 1.35; }
+
+/* Formulaire : la réassurance accompagne les champs au lieu d'être répétée dessous. */
+.artisan-formulaire { position: relative; border-top: 1px solid rgb(255 255 255 / .06); background: linear-gradient(145deg, #101621, #161629 58%, #101419); }
+.artisan-formulaire::before { position: absolute; inset: 0; background: radial-gradient(circle at 12% 25%, rgb(64 224 208 / .1), transparent 25rem), radial-gradient(circle at 88% 70%, rgb(124 58 237 / .12), transparent 28rem); content: ''; }
+.artisan-formulaire__grid { position: relative; display: grid; gap: 2.5rem; align-items: start; }
+.artisan-formulaire__intro > p:not(.artisan-kicker) { max-width: 32rem; margin: 1rem 0 0; color: var(--color-ardoise); font-size: .95rem; line-height: 1.65; }
+.artisan-formulaire__intro h2 span { background: linear-gradient(96deg, var(--color-accent), #b9fff8 52%, #bca4ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.artisan-formulaire__intro dl { margin-top: 2rem; }
+.artisan-formulaire__intro dl > div { display: flex; gap: .9rem; padding: 1rem 0; border-top: 1px solid rgb(255 255 255 / .09); }
+.artisan-formulaire__intro dt { color: var(--color-accent); font-size: .62rem; font-weight: 800; letter-spacing: .12em; }
+.artisan-formulaire__intro dd { display: grid; gap: .22rem; margin: 0; }
+.artisan-formulaire__intro dd strong { color: var(--color-encre); font-size: .88rem; }
+.artisan-formulaire__intro dd span { color: var(--color-ardoise); font-size: .72rem; }
+.artisan-formulaire__card { padding: 1.35rem; border: 1px solid rgb(255 255 255 / .11); border-radius: 1.35rem; background: rgb(15 17 21 / .72); box-shadow: inset 0 1px rgb(255 255 255 / .055), 0 2rem 6rem rgb(0 0 0 / .3); backdrop-filter: blur(18px); }
+.artisan-formulaire__card-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 1rem; border-bottom: 1px solid rgb(255 255 255 / .09); }
+.artisan-formulaire__card-head span { color: var(--color-encre); font: 750 .9rem/1 var(--font-titre); }
+.artisan-formulaire__card-head small { color: var(--color-accent); font-size: .61rem; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; }
+.artisan-formulaire__card input,
+.artisan-formulaire__card textarea { background: rgb(32 36 48 / .72); box-shadow: inset 0 1px rgb(255 255 255 / .025); transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease; }
+.artisan-formulaire__card input:hover,
+.artisan-formulaire__card textarea:hover { border-color: var(--color-violet-trait); background: rgb(39 44 58 / .82); }
+.artisan-formulaire__card input:focus,
+.artisan-formulaire__card textarea:focus { border-color: var(--color-accent); box-shadow: 0 0 0 .22rem rgb(64 224 208 / .09), 0 0 2rem rgb(64 224 208 / .08); outline: 0; }
+.artisan-formulaire__success { position: relative; padding: 3rem 1.5rem; border: 1px solid var(--color-accent); border-radius: 1.5rem; background: rgb(15 17 21 / .72); text-align: center; box-shadow: 0 2rem 6rem rgb(0 0 0 / .3), 0 0 4rem rgb(64 224 208 / .08); }
+
+.artisan-footer { border-top: 1px solid rgb(255 255 255 / .08); background: #0b0d11; }
+.artisan-footer__inner { width: 100%; max-width: 80rem; margin: 0 auto; padding: 3rem 1.25rem; }
+.artisan-footer__brand { display: flex; align-items: center; gap: .8rem; }
+.artisan-footer__brand > div { display: grid; gap: .15rem; }
+.artisan-footer__brand p { margin: 0; color: var(--color-encre); font: 800 1rem/1 var(--font-titre); }
+.artisan-footer__brand > div > span { color: var(--color-ardoise); font-size: .67rem; }
+.artisan-footer__lead { margin-top: 1.2rem; }
+.artisan-footer__links { display: flex; flex-wrap: wrap; gap: .35rem 1.2rem; margin-top: 1.35rem; }
+.artisan-footer__links a { min-height: 2.75rem; padding: .6rem 0; color: var(--color-accent); font-weight: 700; text-underline-offset: .2rem; }
+.artisan-footer__privacy { margin-top: 1.6rem; padding-top: 1.35rem; border-top: 1px solid rgb(255 255 255 / .08); }
+
+/*
+ * La scène signature montre un atelier réel au premier plan : téléphone,
+ * plans et matériaux racontent le passage du métier au site sans fabriquer
+ * une interface fictive. Les halos conduisent le regard vers cette scène et
+ * vers le premier contact.
  */
 .artisan-hero {
   position: relative;
@@ -293,7 +538,53 @@ body {
 .artisan-hero__material--photos { top: 28%; left: -.6rem; transform: rotate(-7deg); }.artisan-hero__material--contact { right: -.8rem; bottom: 13%; transform: rotate(6deg); border-color: rgb(64 224 208 / .38); }
 .artisan-hero__measure { position: absolute; z-index: 1; top: 16%; right: 2%; width: 66%; height: 1px; background: linear-gradient(90deg, transparent, rgb(64 224 208 / .65), transparent); transform: rotate(-19deg); }.artisan-hero__measure span { position: absolute; top: -.22rem; width: .44rem; height: .44rem; border: 1px solid var(--color-accent); border-radius: 50%; background: var(--color-ink); }.artisan-hero__measure span:first-child { left: 0; }.artisan-hero__measure span:last-child { right: 0; }
 
+@media (min-width: 640px) {
+  .artisan-inclus__grid,
+  .artisan-galerie__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .artisan-inclus__card { padding: 1.8rem; }
+  .artisan-processus__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .artisan-erwann__shell { padding: 2rem; }
+  .artisan-formulaire__card { padding: 1.8rem; }
+}
+
+@media (min-width: 768px) {
+  .artisan-comparaison__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .artisan-comparaison__card { padding: 1.65rem; }
+  .artisan-erwann__grid { grid-template-columns: minmax(0, 1fr) minmax(0, .9fr); gap: 3rem; }
+  .artisan-formulaire__grid { grid-template-columns: minmax(17rem, .72fr) minmax(0, 1.28fr); gap: 3.5rem; }
+  .artisan-formulaire__intro { position: sticky; top: 7rem; }
+}
+
+@media (min-width: 1024px) {
+  .artisan-inclus__grid { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .artisan-inclus__card { grid-column: span 6; }
+  .artisan-inclus__card:nth-child(1),
+  .artisan-inclus__card:nth-child(4) { grid-column: span 7; }
+  .artisan-inclus__card:nth-child(2),
+  .artisan-inclus__card:nth-child(3) { grid-column: span 5; }
+  .artisan-galerie__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .artisan-offre__shell { grid-template-columns: minmax(20rem, .78fr) minmax(0, 1.22fr); }
+  .artisan-offre__price { min-height: 100%; border-right: 1px solid rgb(255 255 255 / .1); border-bottom: 0; padding: 2.7rem; }
+  .artisan-offre__content { padding: 2rem 2.25rem; }
+  .artisan-erwann__shell { padding: 2.8rem; }
+}
+
 @media (max-width: 767px) {
+  .artisan-nav__inner { min-height: 4.2rem; gap: .65rem; }
+  .artisan-nav__links { display: none; }
+  .artisan-nav__brand { margin-right: auto; }
+  .artisan-nav__brand small { display: none; }
+  .artisan-nav__cta { min-height: 2.65rem !important; padding-inline: .75rem !important; font-size: .66rem !important; }
+  .artisan-section-heading--split { grid-template-columns: 1fr; }
+  .artisan-section-heading--split > p:last-child { margin-top: -.5rem; }
+  .artisan-processus__grid::before { display: none; }
+  .artisan-processus__card { min-height: 0; }
+  .artisan-processus__card h3 { margin-top: 1.6rem; }
+  .artisan-erwann__visual { padding: .8rem .55rem; }
+  .artisan-erwann__float { max-width: 10.5rem; }
+  .artisan-erwann__facts { grid-template-columns: 1fr; }
+  .artisan-formulaire__intro { padding-inline: .2rem; }
+  .artisan-formulaire__card-head { align-items: flex-start; gap: .5rem; flex-direction: column; }
   .artisan-hero::before { top: -23rem; right: -24rem; }
   .artisan-hero__title { font-size: clamp(3rem, 13vw, 4.4rem); }
   .artisan-hero__proofs { gap: .45rem; }.artisan-hero__proofs > div { min-height: 6.1rem; padding: .65rem; }

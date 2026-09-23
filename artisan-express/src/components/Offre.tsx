@@ -100,37 +100,37 @@ const COMPRIS = [
 
 export function Offre() {
   return (
-    <section className={SECTION} id="offre">
-      <h2 className={TITRE_SECTION}>300&nbsp;€, une fois</h2>
-
-      <div className="mt-8 overflow-hidden rounded-2xl border-2 border-accent">
-        <div className="bg-accent px-6 py-7 text-accent-encre sm:px-8">
-          <p className="text-5xl font-bold tracking-tight sm:text-6xl">300&nbsp;€</p>
-          {/*
-            L'encre pleine, jamais une opacité. Elle valait 85 % et rendait
-            2,58:1 sur le bleu d'avant la charte ; la teinte a changé, le piège
-            non — une opacité sur un aplat de couleur mange le contraste sans
-            qu'aucun jeton ne le montre.
-          */}
-          <p className="mt-2 text-lg text-accent-encre">
-            Une fois. Pas d’abonnement, rien à résilier, pas de reconduction.
-          </p>
+    <section className="artisan-offre" id="offre">
+      <div className={SECTION}>
+        <div className="artisan-section-heading">
+          <p className="artisan-kicker"><span>05</span> Un prix net, un site qui t’appartient</p>
+          <h2 className={TITRE_SECTION}>300&nbsp;€, une fois.<br /><span>Pas de petite ligne.</span></h2>
+          <p>Tu sais ce que tu paies, ce qui est inclus et ce qui ne l’est pas avant de commencer.</p>
         </div>
 
-        <div className="bg-slab px-6 py-7 sm:px-8">
-          <dl className="grid gap-5 sm:grid-cols-2">
-            {COMPRIS.map(([titre, detail]) => (
-              <div key={titre} className="flex gap-3">
-                <span aria-hidden="true" className="mt-0.5 text-xl font-bold text-accent">
-                  ✓
-                </span>
-                <div>
-                  <dt className="text-lg font-bold text-encre">{titre}</dt>
-                  <dd className="mt-1 leading-relaxed text-ardoise">{detail}</dd>
+        <div className="artisan-offre__shell">
+          <div className="artisan-offre__price">
+            <p className="artisan-offre__label">Création complète</p>
+            <p className="artisan-offre__amount">300&nbsp;€</p>
+            <p className="artisan-offre__once">Une fois. Pas d’abonnement, rien à résilier, pas de reconduction.</p>
+            <div className="artisan-offre__signal" aria-hidden="true">
+              <span /><span /><span /><span /><span />
+            </div>
+            <p className="artisan-offre__ownership"><span>100 %</span> ton site, ton code, tes contenus.</p>
+          </div>
+
+          <div className="artisan-offre__content">
+            <dl className="artisan-offre__list">
+              {COMPRIS.map(([titre, detail]) => (
+                <div key={titre}>
+                  <span aria-hidden="true">✓</span>
+                  <div>
+                    <dt>{titre}</dt>
+                    <dd>{detail}</dd>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </dl>
+              ))}
+            </dl>
 
           {/*
             La ligne que les pages de vente cachent. Elle est ici parce qu'un
@@ -139,11 +139,11 @@ export function Offre() {
           {/* `panel` et non `slab` : posé sur une carte `slab`, cet encadré
               avait exactement la couleur de son fond et ne se détachait plus —
               or c'est le seul bloc de la page qu'on veut faire remarquer. */}
-          <p className={`mt-7 rounded-xl border border-edge bg-panel p-4 text-base leading-relaxed text-ardoise ${MESURE}`}>
+            <p className={`artisan-offre__aside text-base leading-relaxed text-ardoise ${MESURE}`}>
             <strong className="text-encre">Ce qui n’est pas dedans&nbsp;:</strong> le nom de domaine
             à ton nom (une douzaine d’euros par an, payés directement au fournisseur, jamais à moi).
             Je te montre comment le prendre, ou je m’en occupe avec toi au téléphone.
-          </p>
+            </p>
 
           {/*
             Placé juste au-dessus des boutons, et pas ailleurs : le bouton dit
@@ -156,26 +156,29 @@ export function Offre() {
             `panel` — un aplat d'accent en ferait un second bouton plein, et la
             page n'en porte qu'un.
           */}
-          <p className={`mt-7 rounded-xl border border-accent bg-panel p-4 text-lg leading-relaxed text-ardoise ${MESURE}`}>
-            <strong className="text-encre">
-              {PLACES_EN_LETTRES.charAt(0).toUpperCase() + PLACES_EN_LETTRES.slice(1)} places à la
-              fois, pour garder chaque projet soigné.
-            </strong>{' '}
-            Je travaille seul. Tant que {PLACES_EN_LETTRES} sites sont en cours, je n’en prends pas un de plus. Ce rythme tient les 48 h annoncées.
-            Quand les places sont prises, je te le dis et on convient du créneau suivant.
-          </p>
+            <div className="artisan-offre__availability">
+              <span className="artisan-offre__pulse" aria-hidden="true" />
+              <p className={`text-lg leading-relaxed text-ardoise ${MESURE}`}>
+                <strong className="text-encre">
+                  {PLACES_EN_LETTRES.charAt(0).toUpperCase() + PLACES_EN_LETTRES.slice(1)} places à la
+                  fois, pour garder chaque projet soigné.
+                </strong>{' '}
+                Je travaille seul. Tant que {PLACES_EN_LETTRES} sites sont en cours, je n’en prends pas un de plus. Ce rythme tient les 48 h annoncées.
+                Quand les places sont prises, je te le dis et on convient du créneau suivant.
+              </p>
+            </div>
 
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <a
-              className={BOUTON_PRINCIPAL}
-              href={encaisseEnLigne ? contact.stripeLien : '#formulaire'}
-            >
-              {encaisseEnLigne ? 'Je demande mon site' : 'Je réserve ma place'}
-            </a>
-            <a className={BOUTON_CONTOUR} href="#formulaire">
-              J’ai une question avant
-            </a>
-          </div>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <a
+                className={BOUTON_PRINCIPAL}
+                href={encaisseEnLigne ? contact.stripeLien : '#formulaire'}
+              >
+                {encaisseEnLigne ? 'Je demande mon site' : 'Je réserve ma place'}
+              </a>
+              <a className={BOUTON_CONTOUR} href="#formulaire">
+                J’ai une question avant
+              </a>
+            </div>
 
           {/*
             * Deux phrases, jamais la même. Le paiement en ligne est fermé tant
@@ -183,11 +186,12 @@ export function Offre() {
             * n'encaisse pas ferait rebrousser chemin à quelqu'un de décidé.
             * On dit donc ce qui se passe vraiment — on convient ensemble.
             */}
-          <p className={`mt-4 text-base text-ardoise ${MESURE}`}>
-            {encaisseEnLigne
-              ? 'Paiement chez Stripe. Ta carte ne passe jamais par ce site.'
-              : 'Je réserve ta place, on convient du paiement ensemble. Rien à régler depuis cette page.'}
-          </p>
+            <p className={`mt-4 text-base text-ardoise ${MESURE}`}>
+              {encaisseEnLigne
+                ? 'Paiement chez Stripe. Ta carte ne passe jamais par ce site.'
+                : 'Je réserve ta place, on convient du paiement ensemble. Rien à régler depuis cette page.'}
+            </p>
+          </div>
         </div>
       </div>
     </section>

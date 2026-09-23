@@ -112,27 +112,42 @@ export function FormulaireDevis() {
 
   if (etat.nom === 'recu') {
     return (
-      <section className={SECTION} id="formulaire">
-        <div className="rounded-2xl border-2 border-accent bg-slab p-8 text-center">
+      <section className="artisan-formulaire" id="formulaire">
+        <div className={SECTION}>
+          <div className="artisan-formulaire__success">
           <h2 className={TITRE_SECTION}>C’est envoyé.</h2>
           <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-ardoise">
             Je te rappelle dans la journée. On parle cinq minutes de ton métier et de ta zone, et je
             m’y mets. Si c’est urgent, appelle — je décroche plus vite que je ne lis mes courriels.
           </p>
+          </div>
         </div>
       </section>
     );
   }
 
   return (
-    <section className={SECTION} id="formulaire">
-      <h2 className={TITRE_SECTION}>Dis-moi qui tu es, je te rappelle</h2>
-      <p className="mt-3 max-w-2xl text-lg leading-relaxed text-ardoise">
-        Cinq lignes. Pas de compte à créer, pas de newsletter, et ton numéro ne part chez personne
-        d’autre que moi.
-      </p>
+    <section className="artisan-formulaire" id="formulaire">
+      <div className={SECTION}>
+        <div className="artisan-formulaire__grid">
+          <div className="artisan-formulaire__intro">
+            <p className="artisan-kicker"><span>07</span> On commence simplement</p>
+            <h2 className={TITRE_SECTION}>Parle-moi de<br /><span>ton activité.</span></h2>
+            <p>
+              Cinq lignes suffisent. Je te rappelle pour vérifier que l’offre correspond vraiment à ton métier.
+            </p>
+            <dl>
+              <div><dt>01</dt><dd><strong>Pas de compte</strong><span>Tu envoies, c’est tout.</span></dd></div>
+              <div><dt>02</dt><dd><strong>Pas de newsletter</strong><span>Ton numéro reste entre nous.</span></dd></div>
+              <div><dt>03</dt><dd><strong>Pas de paiement ici</strong><span>On valide le projet ensemble.</span></dd></div>
+            </dl>
+          </div>
 
-      <form className="mt-8 grid gap-5 sm:grid-cols-2" onSubmit={envoyer} noValidate>
+          <form className="artisan-formulaire__card grid gap-5 sm:grid-cols-2" onSubmit={envoyer} noValidate>
+            <div className="artisan-formulaire__card-head sm:col-span-2">
+              <span>Demande de rappel</span>
+              <small>Réponse dans la journée</small>
+            </div>
         <div>
           <label className="block text-lg font-bold text-encre" htmlFor={`${idBase}-nom`}>
             Ton nom
@@ -271,7 +286,9 @@ export function FormulaireDevis() {
             {!aUnTelephone && !aUnWhatsapp ? ' Réessaie dans quelques minutes.' : null}
           </p>
         ) : null}
-      </form>
+          </form>
+        </div>
+      </div>
     </section>
   );
 }
