@@ -31,8 +31,8 @@
   --color-bleu-strong: #8cc2ff;
   --color-wine: #ff8cab;
 
-  --font-affiche: var(--font-instrument-serif), Georgia, serif;
-  --font-corps: var(--font-plus-jakarta-sans), system-ui, sans-serif;
+  --font-affiche: 'Instrument Serif', Georgia, serif;
+  --font-corps: 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 /* Trois halos turquoise/violet fixes, flous, sous tout le contenu — demandé
@@ -41,6 +41,12 @@
    attachment: fixed` les garde en place pendant le défilement, comme un
    éclairage de la pièce plutôt qu'un élément qui glisse avec la page. */
 body {
+  /* `next/font` pose ces deux familles sur la classe du body. Les déclarer
+     ici garde aussi les jetons Tailwind `font-affiche` et `font-corps` : une
+     référence directe depuis `@theme` était supprimée à la compilation et
+     rendait le grand titre avec la taille par défaut du navigateur. */
+  --font-affiche: var(--font-instrument-serif), Georgia, serif;
+  --font-corps: var(--font-plus-jakarta-sans), system-ui, sans-serif;
   background:
     radial-gradient(900px circle at 8% -16%, rgb(64 224 208 / .19), transparent 58%),
     radial-gradient(850px circle at 102% 18%, rgb(124 58 237 / .26), transparent 60%),
