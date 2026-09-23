@@ -27,7 +27,7 @@ const projects: StudioProject[] = [
   { name: 'Mon Tiroir Secret', family: 'Vie quotidienne', description: 'Un coffre documentaire personnel pour garder ses papiers importants à portée de main.', status: 'En ligne', mark: 'MT', accent: '#b89cff', href: 'https://coffre-puce.vercel.app' },
   { name: 'Annuaire IA', family: 'Solutions professionnelles', description: 'Des annuaires spécialisés pensés pour transformer une recherche précise en contact utile.', status: 'À auditer', mark: 'AI', accent: '#7fd68a' },
   { name: 'Bois Chiffrage', family: 'Solutions professionnelles', description: 'Des mesures, des postes et un chiffrage de travaux bois réunis dans une lecture claire.', status: 'En préparation', mark: 'BC', accent: '#e6b86a' },
-  { name: 'Artisans Express', family: 'Solutions professionnelles', description: 'Des vitrines métier rapides, rassurantes et conçues pour déclencher un premier contact.', status: 'Prêt à tester', mark: 'AE', accent: '#67c1a0' },
+  { name: 'Artisan Express', family: 'Solutions professionnelles', description: 'Des vitrines métier rapides, rassurantes et conçues pour déclencher un premier contact.', status: 'Offre publique', mark: 'AE', accent: '#67c1a0', href: 'https://artisan-express-ashy.vercel.app' },
   { name: 'Audit Landing', family: 'Solutions professionnelles', description: 'Un audit visuel et fonctionnel qui transforme les défauts d’une page en priorités vérifiables.', status: 'Moteur en cours', mark: 'AL', accent: '#40e0d0' },
   { name: 'Look & Find', family: 'Accessibilité', description: 'La reconnaissance d’objets et de couleurs pour mieux comprendre ce qui se trouve devant soi.', status: 'À auditer', mark: 'LF', accent: '#c0abff' },
   { name: 'Roussy & Zéphy', family: 'Création & transmission', description: 'La maison numérique d’un renard sensible et d’un zèbre ailé, entre récit et émerveillement.', status: 'En ligne', mark: 'RZ', accent: '#ffb680', href: 'https://roussy-et-zephy.erwannchevallier.chatgpt.site' },
@@ -35,6 +35,15 @@ const projects: StudioProject[] = [
   { name: 'Accord', family: 'Création & transmission', description: 'Un projet autour du lien, du rythme et de ce qui remet les personnes en harmonie.', status: 'En préparation', mark: 'A', accent: '#8cc8ff' },
   { name: 'Amorce', family: 'Création assistée', description: 'Le studio qui transforme des rushes en montage vertical, directement dans le navigateur.', status: 'Ouvert', mark: 'AM', accent: '#40e0d0', href: '/studio' },
   { name: 'Conseiller Patrimoine & Financier', family: 'Patrimoine', description: 'Une vue structurée du patrimoine pour préparer les bonnes questions et éclairer les décisions.', status: '18e expérience', mark: 'PF', accent: '#d9e34a' },
+];
+
+const publicProofs = [
+  { name: 'AvisLocal', description: 'Aide les commerces et indépendants à préparer des réponses personnalisées à leurs avis clients.', href: 'https://avislocal.erwannchevallier.chatgpt.site', mark: 'AL' },
+  { name: 'RecruteClair', description: 'Transforme un besoin de recrutement en offre, entretien et accueil plus clairs pour une petite entreprise.', href: 'https://recrute-clair.erwannchevallier.chatgpt.site', mark: 'RC' },
+  { name: 'ImmoDéclic', description: 'Recompose une annonce immobilière en présentation attractive sans inventer les caractéristiques du bien.', href: 'https://immo-declic.erwannchevallier.chatgpt.site', mark: 'ID' },
+  { name: 'Mémoire en voix', description: 'Transforme des souvenirs et notes vocales en récits familiaux prêts à transmettre.', href: 'https://memoire-en-voix.erwannchevallier.chatgpt.site', mark: 'MV' },
+  { name: 'Les Mots Justes', description: 'Prépare des discours, vœux et hommages personnalisés avec un ton naturel.', href: 'https://les-mots-justes.erwannchevallier.chatgpt.site', mark: 'MJ' },
+  { name: 'Mots & Merveilles', description: 'Réunit image et texte dans des créations numériques personnalisées et prêtes à offrir.', href: 'https://mots-et-merveilles.erwannchevallier.chatgpt.site', mark: 'MM' },
 ];
 
 function scrollTo(id: string) {
@@ -45,9 +54,9 @@ export default function UniversPage() {
   return (
     <main className="univers-page">
       <BrandNavigation items={[
-        { label: 'Signature', href: '#signature' },
-        { label: '18 expériences', href: '#univers' },
-        { label: 'Exigence', href: '#exigence' },
+        { label: 'Offre', href: '#offre' },
+        { label: 'Réalisations', href: '#realisations' },
+        { label: 'Studio', href: '#studio' },
       ]} />
 
       <ImmersiveHero
@@ -56,19 +65,92 @@ export default function UniversPage() {
         title="Donner forme"
         highlight="à ce qui compte."
         description="Lefouzèbreizh Studio imagine des expériences numériques utiles, sensibles et ambitieuses. Dix-huit projets, une même exigence : éclairer le chemin sans prendre la place de l’humain."
-        primaryLabel="Explorer les 18 expériences"
-        secondaryLabel="Découvrir la signature"
+        primaryLabel="Découvrir l’offre"
+        secondaryLabel="Voir les réalisations"
         sceneImage="/brand/studio-phare-hero.webp"
         sceneAlt="Un phare breton numérique éclaire une côte rocheuse dans une nuit turquoise et violette."
-        onPrimary={() => scrollTo('univers')}
-        onSecondary={() => scrollTo('signature')}
+        onPrimary={() => scrollTo('offre')}
+        onSecondary={() => scrollTo('realisations')}
       />
 
       <section className="univers-signal" aria-label="Le Studio en chiffres">
-        <div><strong>18</strong><span>expériences présentées</span></div>
-        <div><strong>1</strong><span>langage visuel partagé</span></div>
-        <div><strong>100 %</strong><span>pensé autour de l’usage</span></div>
-        <p>Le Phare donne le cap. Chaque projet garde sa propre lumière.</p>
+        <div><strong>6</strong><span>démonstrateurs publics sélectionnés</span></div>
+        <div><strong>3</strong><span>axes commerciaux prioritaires</span></div>
+        <div><strong>18</strong><span>expériences dans l’écosystème</span></div>
+        <p>Une activité récente, des preuves visibles et une priorité commerciale resserrée.</p>
+      </section>
+
+      <section id="offre" className="univers-section bank-offer">
+        <SectionHeading
+          eyebrow="L’activité commerciale"
+          title="Trois offres. Une priorité claire."
+          copy="Le Studio concentre maintenant son développement sur les sites professionnels, l’audit et la maintenance. Les tarifs de travail sont distingués de l’offre déjà publiée."
+        />
+        <div className="bank-offer-grid">
+          <article className="bank-offer-card bank-offer-card--active">
+            <p className="bank-offer-card__status">Offre publique actuelle</p>
+            <h3>Artisan Express</h3>
+            <p className="bank-offer-card__price">300 €</p>
+            <p>Une page professionnelle claire pour présenter son activité et faciliter le premier contact.</p>
+            <ul><li>Une page vitrine</li><li>Sans abonnement Artisan Express</li><li>Nom de domaine en supplément</li></ul>
+            <a href="https://artisan-express-ashy.vercel.app" target="_blank" rel="noreferrer">Voir l’offre publiée <span aria-hidden="true">↗</span></a>
+          </article>
+          <article className="bank-offer-card">
+            <p className="bank-offer-card__status">Structuration commerciale</p>
+            <h3>Audit & correction</h3>
+            <p className="bank-offer-card__price">Du diagnostic à la reprise</p>
+            <p>Une gamme progressive qui distingue clairement ce qui fonctionne déjà de ce qui doit encore être éprouvé.</p>
+            <ul><li>Déclic : diagnostic gratuit fonctionnel</li><li>Audit Landing : futur rapport payant, commandes fermées jusqu’à preuve complète</li><li>Reprise humaine premium : sur devis après cadrage</li></ul>
+            <a href="https://declic-studio.erwannchevallier.chatgpt.site" target="_blank" rel="noreferrer">Lancer mon diagnostic gratuit <span aria-hidden="true">↗</span></a>
+          </article>
+          <article className="bank-offer-card">
+            <p className="bank-offer-card__status">Récurrence envisagée</p>
+            <h3>Maintenance Sérénité</h3>
+            <p className="bank-offer-card__price">79 € / mois <small>tarif de travail</small></p>
+            <p>Une maintenance bornée pour sécuriser, actualiser et améliorer les sites livrés.</p>
+            <ul><li>Suivi régulier</li><li>Corrections encadrées</li><li>Contenu exact à contractualiser</li></ul>
+            <span className="bank-offer-card__pending">Hypothèse commerciale prudente</span>
+          </article>
+        </div>
+        <p className="bank-disclaimer">Artisan Express est l’offre actuellement affichée au public. Les commandes Audit Landing restent fermées tant que le parcours paiement → rapport n’est pas prouvé. La maintenance et les autres niveaux d’audit sont des hypothèses de structuration : ils ne constituent ni des commandes signées ni du chiffre d’affaires acquis.</p>
+      </section>
+
+      <section id="realisations" className="univers-section bank-proofs">
+        <div className="bank-proofs__intro">
+          <SectionHeading
+            eyebrow="Preuves visibles"
+            title="Six réalisations à ouvrir maintenant."
+            copy="Ces démonstrateurs publics montrent la capacité du Studio à transformer un besoin en expérience complète, lisible et utilisable."
+          />
+          <p>Démonstrateurs publics fonctionnels. Les parcours de paiement sont intégrés ; leur validation commerciale de bout en bout reste en cours.</p>
+        </div>
+        <div className="bank-proof-grid">
+          {publicProofs.map((proof, index) => (
+            <article className="bank-proof-card" key={proof.name}>
+              <div><span>{String(index + 1).padStart(2, '0')}</span><b aria-hidden="true">{proof.mark}</b></div>
+              <h3>{proof.name}</h3>
+              <p>{proof.description}</p>
+              <a href={proof.href} target="_blank" rel="noreferrer">Ouvrir le démonstrateur <span aria-hidden="true">↗</span></a>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="studio" className="univers-section bank-founder">
+        <div className="bank-founder__identity">
+          <p className="lfb-eyebrow">Le porteur du projet</p>
+          <h2>Erwann Chevallier</h2>
+          <p>Fondateur de Lefouzèbreizh Studio · micro-entreprise créée le 31 août 2026</p>
+        </div>
+        <div className="bank-founder__story">
+          <h3>Du terrain au numérique.</h3>
+          <p>Après vingt ans dans les travaux publics et sur la route, Erwann transforme aujourd’hui sa connaissance des professionnels de terrain et sa maîtrise des outils d’intelligence artificielle en une activité numérique structurée.</p>
+          <p>Le cap est volontairement resserré : commercialiser Artisan Express, consolider une offre d’audit vérifiable, puis construire un revenu récurrent de maintenance.</p>
+          <div className="bank-founder__actions">
+            <a href="mailto:erwannchevallier@gmail.com?subject=Échange%20avec%20Lefouzèbreizh%20Studio">Contacter le Studio <span aria-hidden="true">→</span></a>
+            <a href="#univers">Voir les 18 expériences</a>
+          </div>
+        </div>
       </section>
 
       <section id="signature" className="univers-section univers-signature">
@@ -127,9 +209,9 @@ export default function UniversPage() {
       </section>
 
       <BrandFooter>
-        <a href="#signature">Signature</a>
-        <a href="#univers">18 expériences</a>
-        <a href="#exigence">Exigence</a>
+        <a href="#offre">Offre</a>
+        <a href="#realisations">Réalisations</a>
+        <a href="mailto:erwannchevallier@gmail.com">Contact</a>
       </BrandFooter>
     </main>
   );
