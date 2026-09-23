@@ -157,6 +157,17 @@
       "score_avis": 4.4,
       "description_longue": "## Notre verdict\nTwee est conçu pour une seule discipline et cela se voit : à partir d'une vidéo en ligne, d'un texte ou d'un simple thème, il produit des questions de compréhension orale, des textes à trous, des listes lexicales, des amorces de discussion et des dialogues calibrés par niveau du cadre européen. Ce que le professeur de langues fabrique à la main chaque semaine se prépare en quelques minutes.\n\n## Points forts\n- Génération à partir d'une vidéo en ligne, avec la transcription exploitée\n- Calibrage explicite par niveau du cadre européen de référence\n- Couvre l'oral, l'écrit, le lexique et la grammaire dans un même outil\n- Version gratuite suffisante pour un usage hebdomadaire raisonnable\n\n## Points faibles\n- Centré sur l'anglais, plus léger sur les autres langues\n- Les exercices générés se ressemblent si l'on ne varie pas les consignes\n- Aucune gestion de classe ni de suivi des élèves\n\n## Idéal pour\nLes professeurs de langues qui construisent leurs supports à partir de documents authentiques et refont ce travail chaque semaine.",
       "date_ajout": "2026-09-21"
+    },
+    {
+      "id": "lalilo",
+      "nom": "Lalilo",
+      "categorie": "Tutorat",
+      "prix": "Abonnement établissement",
+      "description_courte": "L'accompagnement individuel de la lecture au primaire, avec le relevé de ce qui bloque pour chaque élève.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/lalilo",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nAu primaire, l'écart entre les élèves sur la lecture se creuse vite, et un professeur seul devant vingt-cinq enfants ne peut pas écouter chacun lire assez souvent. Lalilo prend cette tâche-là : exercices adaptés au niveau réel de chaque élève, et surtout un relevé qui dit au professeur qui bute sur quel son. Née en France, la plateforme s'est étendue depuis à d'autres pays.\n\n## Points forts\n- Adapte le travail au niveau réel de chaque élève, sans intervention\n- Relevé précis des difficultés, exploitable en classe\n- Conçue au départ pour le français et l'école primaire\n- Utilisée en établissement, avec un cadre d'usage établi\n\n## Points faibles\n- Périmètre étroit : lecture et primaire, rien au-delà\n- Ne remplace pas l'écoute directe d'un enfant qui lit\n- Suppose un accès individuel aux écrans en classe\n- Abonnement porté par l'établissement\n\n## Idéal pour\nLes professeurs des écoles qui veulent savoir précisément où en est chaque élève en lecture, plutôt que de le deviner.",
+      "date_ajout": "2026-09-23"
     }
   ]
 }

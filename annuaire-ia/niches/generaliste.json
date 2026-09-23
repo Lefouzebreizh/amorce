@@ -259,6 +259,17 @@
       "score_avis": 4.1,
       "description_longue": "## Notre verdict\nLe compte rendu de réunion est le travail que tout le monde repousse et que personne ne relit. Fireflies rejoint la visioconférence, transcrit, résume et sort la liste des décisions et des actions. Le gain réel n'est pas le temps de frappe mais la disparition du flou : ce qui a été décidé est écrit, et on cesse de rejouer la même discussion trois semaines plus tard. Prévenir les participants qu'ils sont enregistrés n'est pas une politesse, c'est une obligation.\n\n## Points forts\n- Rejoint automatiquement les réunions des principales plateformes\n- Résumé et liste d'actions, pas seulement une transcription brute\n- Recherche dans l'historique de toutes les réunions passées\n- Palier gratuit suffisant pour évaluer sur quelques réunions\n\n## Points faibles\n- L'information de l'enregistrement à tous les participants est une obligation\n- Précision variable en français, surtout à plusieurs voix\n- Les enregistrements partent chez l'éditeur : à cadrer selon la confidentialité\n- L'abonnement par utilisateur pèse dès que l'équipe grandit\n\n## Idéal pour\nLes équipes qui enchaînent les réunions et perdent les décisions entre deux, à condition d'avoir cadré le sujet de l'enregistrement.",
       "date_ajout": "2026-09-21"
+    },
+    {
+      "id": "fathom",
+      "nom": "Fathom",
+      "categorie": "Productivité",
+      "prix": "Freemium — à partir de 19 $/mois",
+      "description_courte": "Le preneur de notes de réunion dont la version gratuite est complète, sans limite de minutes.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/fathom",
+      "score_avis": 4.5,
+      "description_longue": "## Notre verdict\nFathom a fait un choix rare : la version gratuite est illimitée en durée d’enregistrement et de transcription, avec les résumés. On ne paie que pour les fonctions d’équipe et l’intégration au logiciel commercial. Pour un indépendant ou une petite structure, c’est l’outil de compte rendu qui ne coûte rien et qu’on garde.\n\n## Points forts\n- Version gratuite illimitée en minutes, ce qui n’existe presque nulle part\n- Résumés disponibles en quelques secondes après la fin de la réunion\n- Extraits horodatés partageables, sans envoyer l’enregistrement entier\n- Pousse les comptes rendus dans les logiciels commerciaux courants\n\n## Points faibles\n- L’accord des participants à l’enregistrement reste obligatoire\n- Moins fin que la concurrence sur la distinction des locuteurs en français\n- Les fonctions d’équipe sont réservées aux formules payantes\n\n## Idéal pour\nLes indépendants et petites équipes qui enchaînent les rendez-vous en visioconférence et n’en gardent aucune trace.",
+      "date_ajout": "2026-09-23"
     }
   ]
 }
