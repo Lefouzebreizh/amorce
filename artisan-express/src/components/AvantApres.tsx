@@ -41,18 +41,22 @@ const APRES = [
 
 export function AvantApres() {
   return (
-    <section className="bg-slab">
+    <section className="artisan-comparaison">
       <div className={SECTION} id="avant-apres">
-        <h2 className={TITRE_SECTION}>Ce que tu as aujourd’hui, ce que tu auras jeudi</h2>
+        <div className="artisan-section-heading">
+          <p className="artisan-kicker"><span>03</span> La différence se voit tout de suite</p>
+          <h2 className={TITRE_SECTION}>Ne sois plus un nom<br /><span>perdu dans une liste.</span></h2>
+          <p>Ton site donne toute la place à ton savoir-faire, à tes chantiers et au moyen de te joindre.</p>
+        </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
+        <div className="artisan-comparaison__grid">
           {/*
             * Avant. La capture d'annuaire garde ses gris clairs, et c'est
             * délibéré : c'est **le sujet** — une vraie page d'annuaire est
             * blanche et grise. La montrer sombre reviendrait à la maquiller,
             * et le contraste avec la carte « après » porte tout le message.
             */}
-          <div className="flex flex-col rounded-2xl border border-edge bg-panel p-6">
+          <div className="artisan-comparaison__card artisan-comparaison__card--avant">
             <p className="text-base font-bold uppercase tracking-[0.16em] text-ardoise">
               Aujourd’hui — ta fiche dans un annuaire
             </p>
@@ -94,7 +98,7 @@ export function AvantApres() {
           </div>
 
           {/* Après */}
-          <div className="flex flex-col rounded-2xl border-2 border-accent bg-panel p-6">
+          <div className="artisan-comparaison__card artisan-comparaison__card--apres">
             <p className="text-base font-bold uppercase tracking-[0.16em] text-accent">
               Jeudi — ton site à toi
             </p>
@@ -158,7 +162,7 @@ export function AvantApres() {
           * l'entreprise n'existe pas, elle ne doit pas apparaître dans les
           * résultats comme un vrai artisan.
           */}
-        <p className={`mx-auto mt-8 text-center text-lg leading-relaxed text-ardoise ${MESURE}`}>
+        <p className={`artisan-comparaison__cta mx-auto text-center text-lg leading-relaxed text-ardoise ${MESURE}`}>
           <a
             className="inline-flex min-h-14 items-center justify-center rounded-xl border-2 border-accent bg-slab px-6 text-lg font-semibold text-accent"
             href="/exemple.html"

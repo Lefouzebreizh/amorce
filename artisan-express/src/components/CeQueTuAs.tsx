@@ -77,22 +77,27 @@ const LOTS = [
 
 export function CeQueTuAs() {
   return (
-    <section className={SECTION} id="contenu">
-      <h2 className={TITRE_SECTION}>Ce que tu as pour 300&nbsp;€</h2>
-      <p className="mt-3 max-w-2xl text-lg text-ardoise">
-        Tout est livré fini. Rien à installer, rien à apprendre, rien à payer le mois suivant.
-      </p>
+    <section className={`${SECTION} artisan-inclus`} id="contenu">
+      <div className="artisan-section-heading">
+        <p className="artisan-kicker"><span>01</span> Une offre complète, sans surprise</p>
+        <h2 className={TITRE_SECTION}>Tout ce qu’il faut.<br /><span>Rien qui ne serve.</span></h2>
+        <p>
+          Un site fini, pensé pour être vu sur téléphone et pour transformer une visite en appel.
+          Rien à installer, rien à apprendre, rien à payer le mois suivant.
+        </p>
+      </div>
 
-      <ul className="mt-10 grid gap-5 sm:grid-cols-2">
-        {LOTS.map(({ icone: Icone, titre, texte }) => (
+      <ul className="artisan-inclus__grid">
+        {LOTS.map(({ icone: Icone, titre, texte }, index) => (
           /*
             Le filet violet coiffe la carte d'un dégradé d'un pixel. C'est le
             relief que réclame une hiérarchie sombre, et la seule chose que le
             violet a le droit de faire ici : il ne porte ni mot ni action, donc
             ses 3,42:1 ne s'appliquent pas — il n'y a rien à lire dessus.
           */
-          <li key={titre} className={`${CARTE_VIOLET} ${FILET_VIOLET} p-6 sm:p-7`}>
-            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-accent-encre shadow-lg shadow-accent/20">
+          <li key={titre} className={`${CARTE_VIOLET} ${FILET_VIOLET} artisan-inclus__card`}>
+            <div className="artisan-inclus__meta">
+              <span className="artisan-inclus__icon">
               <svg
                 width="26"
                 height="26"
@@ -104,9 +109,11 @@ export function CeQueTuAs() {
               >
                 <Icone />
               </svg>
-            </span>
-            <h3 className="mt-4 text-xl font-bold text-encre">{titre}</h3>
-            <p className="mt-2 leading-relaxed text-ardoise">{texte}</p>
+              </span>
+              <span className="artisan-inclus__number">0{index + 1}</span>
+            </div>
+            <h3>{titre}</h3>
+            <p>{texte}</p>
           </li>
         ))}
       </ul>

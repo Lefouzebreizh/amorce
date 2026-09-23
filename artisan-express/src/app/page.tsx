@@ -4,8 +4,10 @@ import { CeQueTuAs } from '@/components/CeQueTuAs';
 import { FormulaireDevis } from '@/components/FormulaireDevis';
 import { Galerie } from '@/components/Galerie';
 import { Hero } from '@/components/Hero';
+import { Navigation } from '@/components/Navigation';
 import { Offre } from '@/components/Offre';
 import { PiedDePage } from '@/components/PiedDePage';
+import { Processus } from '@/components/Processus';
 import { QuiSuisJe } from '@/components/QuiSuisJe';
 
 /*
@@ -21,16 +23,20 @@ import { QuiSuisJe } from '@/components/QuiSuisJe';
  */
 export default function Page() {
   return (
-    <main>
-      <Hero />
-      <CeQueTuAs />
-      <AvantApres />
-      <Galerie />
-      <Offre />
-      <QuiSuisJe />
-      <FormulaireDevis />
+    <>
+      <Navigation />
+      <main id="top">
+        <Hero />
+        <CeQueTuAs />
+        <Processus />
+        <AvantApres />
+        <Galerie />
+        <Offre />
+        <QuiSuisJe />
+        <FormulaireDevis />
+      </main>
       <PiedDePage />
       <BarreAction />
-    </main>
+    </>
   );
 }

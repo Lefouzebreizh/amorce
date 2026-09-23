@@ -106,10 +106,19 @@ const MODELES: readonly Modele[] = [
 
 export function Galerie() {
   return (
-    <section className={SECTION} id="galerie">
-      <h2 className={TITRE_SECTION}>Six métiers, six sites</h2>
+    <section className={`${SECTION} artisan-galerie`} id="galerie">
+      <div className="artisan-section-heading artisan-section-heading--split">
+        <div>
+          <p className="artisan-kicker"><span>04</span> Des exemples à explorer</p>
+          <h2 className={TITRE_SECTION}>Six métiers.<br /><span>Six identités.</span></h2>
+        </div>
+        <p>
+          Même exigence, mais une couleur, des mots et un rythme adaptés à chaque activité.
+          Ouvre une carte : ce sont de vraies pages, pas des images de présentation.
+        </p>
+      </div>
 
-      <div className={`mt-6 space-y-4 text-lg leading-relaxed text-ardoise ${MESURE}`}>
+      <div className={`artisan-galerie__notice text-lg leading-relaxed text-ardoise ${MESURE}`}>
         <p>
           Voilà ce que je produis. Ce ne sont pas mes clients :{' '}
           <strong className="text-encre">ces six entreprises n’existent pas</strong>, et chaque page
@@ -122,10 +131,10 @@ export function Galerie() {
         </p>
       </div>
 
-      <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <ul className="artisan-galerie__grid">
         {MODELES.map((modele) => (
           <li key={modele.fichier}>
-            <a className={`${CARTE} group flex h-full flex-col p-5`} href={modele.fichier}>
+            <a className={`${CARTE} artisan-galerie__card group flex h-full flex-col`} href={modele.fichier}>
               {/*
                 L'aperçu **est** la page qui s'ouvre en cliquant, pas une image
                 d'elle : le raisonnement complet est en tête d'`ApercuSite`. Le
