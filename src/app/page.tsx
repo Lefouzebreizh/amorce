@@ -1,4 +1,26 @@
+import type { Metadata } from 'next';
 import UniversPage from './univers/page';
+
+export const metadata: Metadata = {
+  title: 'Lefouzèbreizh Studio — Des horizons plus grands',
+  description:
+    'Dix-huit expériences numériques utiles, sensibles et ambitieuses, réunies sous une même exigence créative.',
+  openGraph: {
+    title: 'Lefouzèbreizh Studio — Des horizons plus grands',
+    description:
+      'Dix-huit expériences numériques utiles, sensibles et ambitieuses, réunies sous une même exigence créative.',
+    url: '/',
+    siteName: 'Lefouzèbreizh Studio',
+    locale: 'fr_FR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Lefouzèbreizh Studio — Des horizons plus grands',
+    description:
+      'Dix-huit expériences numériques utiles, sensibles et ambitieuses, réunies sous une même exigence créative.',
+  },
+};
 
 /**
  * La racine est la porte d'entrée de Lefouzèbreizh Studio.
