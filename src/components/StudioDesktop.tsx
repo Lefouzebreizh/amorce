@@ -90,7 +90,7 @@ function DesktopHeader() {
           amorce
         </Link>
         <span className="hidden text-[13px] text-muted sm:block">
-          Le studio qui rend tes vidéos IA virales — tout se passe dans ton navigateur
+          Création et montage vidéo assistés de bout en bout — tout se passe dans ton navigateur
         </span>
       </div>
 
