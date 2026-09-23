@@ -4,6 +4,40 @@
 .univers-section { position: relative; overflow: hidden; padding: clamp(5rem, 10vw, 9rem) max(1rem, calc((100vw - 1180px) / 2)); }
 .univers-section::before { content: ''; position: absolute; width: 34rem; height: 34rem; border-radius: 50%; filter: blur(110px); opacity: .1; pointer-events: none; }
 
+/*
+ * Scène signature du Studio : le phare est l'objet unique de l'écran, encadré
+ * comme une pièce de portfolio. Les lignes restent une lumière de composition
+ * et ne prétendent représenter aucune fonction du produit.
+ */
+.univers-page .lfb-immersive-hero::before {
+  position: absolute;
+  z-index: -2;
+  inset: clamp(1rem, 3vw, 2.5rem);
+  border: 1px solid rgb(255 255 255 / .09);
+  border-radius: clamp(1.35rem, 2.5vw, 2.2rem);
+  box-shadow: inset 0 1px rgb(255 255 255 / .05), 0 0 0 1px rgb(64 224 208 / .05);
+  content: '';
+  pointer-events: none;
+}
+
+.univers-page .lfb-immersive-hero::after {
+  position: absolute;
+  z-index: -2;
+  top: 11%;
+  right: 6%;
+  width: min(38vw, 34rem);
+  height: min(38vw, 34rem);
+  border: 1px solid rgb(64 224 208 / .16);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3.2rem rgb(64 224 208 / .022), 0 0 0 7rem rgb(124 58 237 / .018);
+  content: '';
+  pointer-events: none;
+}
+
+.univers-page .lfb-immersive-hero__scene { filter: saturate(1.08) contrast(1.07) brightness(.88); }
+.univers-page .lfb-immersive-hero__content { max-width: 1180px; }
+.univers-page .lfb-immersive-hero__signal { border-color: rgb(64 224 208 / .42); background: rgb(2 10 18 / .7); }
+
 .univers-signal { position: relative; z-index: 4; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 1.45fr; align-items: stretch; width: min(1240px, calc(100% - 2rem)); margin: -2.1rem auto 0; overflow: hidden; border: 1px solid rgb(64 224 208 / .2); border-radius: 1.35rem; background: linear-gradient(135deg, rgb(8 14 27 / .94), rgb(5 8 16 / .88)); box-shadow: 0 26px 80px rgb(0 0 0 / .52), inset 0 1px rgb(255 255 255 / .05); backdrop-filter: blur(22px); }
 .univers-signal > div, .univers-signal > p { min-height: 112px; margin: 0; padding: 1.35rem 1.45rem; }
 .univers-signal > div { display: grid; align-content: center; gap: .35rem; border-right: 1px solid rgb(255 255 255 / .08); }
@@ -113,6 +147,8 @@
 }
 
 @media (max-width: 760px) {
+  .univers-page .lfb-immersive-hero::before { inset: .7rem; border-radius: 1.1rem; }
+  .univers-page .lfb-immersive-hero::after { top: 8%; right: -14%; width: 74vw; height: 74vw; }
   .univers-signal { grid-template-columns: 1fr; margin-top: -1.25rem; }
   .univers-signal > div, .univers-signal > p { min-height: auto; padding: 1rem 1.15rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .08); }
   .univers-signal > div { grid-template-columns: 4.2rem 1fr; align-items: center; }
