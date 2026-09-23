@@ -33,8 +33,8 @@ const projects: StudioProject[] = [
   { name: 'Roussy & Zéphy', family: 'Création & transmission', description: 'La maison numérique d’un renard sensible et d’un zèbre ailé, entre récit et émerveillement.', status: 'En ligne', mark: 'RZ', accent: '#ffb680', href: 'https://roussy-et-zephy.erwannchevallier.chatgpt.site' },
   { name: 'L’Éveil des couleurs', family: 'Création & transmission', description: 'Une expérience sensible où la couleur devient matière, émotion et mouvement.', status: 'En préparation', mark: 'EC', accent: '#ff8fab' },
   { name: 'Accord', family: 'Création & transmission', description: 'Un projet autour du lien, du rythme et de ce qui remet les personnes en harmonie.', status: 'En préparation', mark: 'A', accent: '#8cc8ff' },
-  { name: 'Amorce', family: 'Création assistée', description: 'Le studio qui transforme des rushes en montage vertical, directement dans le navigateur.', status: 'Ouvert', mark: 'AM', accent: '#40e0d0', href: '/studio' },
-  { name: 'Conseiller Patrimoine & Financier', family: 'Patrimoine', description: 'Une vue structurée du patrimoine pour préparer les bonnes questions et éclairer les décisions.', status: '18e expérience', mark: 'PF', accent: '#d9e34a' },
+  { name: 'Amorce', family: 'Création assistée', description: 'Le studio qui transforme des rushes en montage vertical, directement dans le navigateur.', status: 'Prototype en développement', mark: 'AM', accent: '#40e0d0', href: '/studio' },
+  { name: 'Conseiller Patrimoine & Financier', family: 'Patrimoine', description: 'Une vue structurée du patrimoine pour préparer les bonnes questions et éclairer les décisions.', status: 'Prévu', mark: 'PF', accent: '#d9e34a' },
 ];
 
 const publicProofs = [
@@ -76,7 +76,7 @@ export default function UniversPage() {
       <section className="univers-signal" aria-label="Le Studio en chiffres">
         <div><strong>6</strong><span>démonstrateurs publics sélectionnés</span></div>
         <div><strong>3</strong><span>axes commerciaux prioritaires</span></div>
-        <div><strong>18</strong><span>expériences dans l’écosystème</span></div>
+        <div><strong>18</strong><span>projets recensés dans la feuille de route</span></div>
         <p>Une activité récente, des preuves visibles et une priorité commerciale resserrée.</p>
       </section>
 
@@ -84,7 +84,7 @@ export default function UniversPage() {
         <SectionHeading
           eyebrow="L’activité commerciale"
           title="Trois offres. Une priorité claire."
-          copy="Le Studio concentre maintenant son développement sur les sites professionnels, l’audit et la maintenance. Les tarifs de travail sont distingués de l’offre déjà publiée."
+          copy="Le Studio concentre maintenant son développement sur les sites professionnels, l’audit et la maintenance. L’offre déjà publiée est distinguée des services encore en structuration."
         />
         <div className="bank-offer-grid">
           <article className="bank-offer-card bank-offer-card--active">
@@ -106,7 +106,7 @@ export default function UniversPage() {
           <article className="bank-offer-card">
             <p className="bank-offer-card__status">Récurrence envisagée</p>
             <h3>Maintenance Sérénité</h3>
-            <p className="bank-offer-card__price">79 € / mois <small>tarif de travail</small></p>
+            <p className="bank-offer-card__price">Sur devis <small>offre en structuration</small></p>
             <p>Une maintenance bornée pour sécuriser, actualiser et améliorer les sites livrés.</p>
             <ul><li>Suivi régulier</li><li>Corrections encadrées</li><li>Contenu exact à contractualiser</li></ul>
             <span className="bank-offer-card__pending">Hypothèse commerciale prudente</span>
@@ -122,7 +122,7 @@ export default function UniversPage() {
             title="Six réalisations à ouvrir maintenant."
             copy="Ces démonstrateurs publics montrent la capacité du Studio à transformer un besoin en expérience complète, lisible et utilisable."
           />
-          <p>Démonstrateurs publics fonctionnels. Les parcours de paiement sont intégrés ; leur validation commerciale de bout en bout reste en cours.</p>
+          <p>Démonstrateurs accessibles publiquement. Leurs parcours principaux restent à valider de bout en bout avant toute promesse commerciale.</p>
         </div>
         <div className="bank-proof-grid">
           {publicProofs.map((proof, index) => (
@@ -148,7 +148,7 @@ export default function UniversPage() {
           <p>Le cap est volontairement resserré : commercialiser Artisan Express, consolider une offre d’audit vérifiable, puis construire un revenu récurrent de maintenance.</p>
           <div className="bank-founder__actions">
             <a href="mailto:erwannchevallier@gmail.com?subject=Échange%20avec%20Lefouzèbreizh%20Studio">Contacter le Studio <span aria-hidden="true">→</span></a>
-            <a href="#univers">Voir les 18 expériences</a>
+            <a href="#univers">Voir les 18 projets recensés</a>
           </div>
         </div>
       </section>
@@ -170,8 +170,8 @@ export default function UniversPage() {
         <div className="univers-projects__intro">
           <SectionHeading
             eyebrow="Le portefeuille"
-            title="Dix-huit portes. Un même horizon."
-            copy="Les accès affichés mènent uniquement vers des versions déjà disponibles. Les autres projets restent présentés sans faux bouton ni promesse de mise en ligne."
+            title="Dix-huit projets. Un même horizon."
+            copy="Cette feuille de route réunit des démonstrateurs, des prototypes et des projets prévus. Les accès affichés mènent uniquement vers des versions déjà disponibles."
           />
           <div className="univers-orbit" aria-hidden="true"><span>18</span><small>projets</small></div>
         </div>
@@ -212,6 +212,8 @@ export default function UniversPage() {
         <a href="#offre">Offre</a>
         <a href="#realisations">Réalisations</a>
         <a href="mailto:erwannchevallier@gmail.com">Contact</a>
+        <a href="/mentions-legales">Mentions légales</a>
+        <a href="/cgv">CGV Amorce</a>
       </BrandFooter>
     </main>
   );
