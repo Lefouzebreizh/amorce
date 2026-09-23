@@ -38,12 +38,12 @@ const projects: StudioProject[] = [
 ];
 
 const publicProofs = [
-  { name: 'AvisLocal', description: 'Aide les commerces et indépendants à préparer des réponses personnalisées à leurs avis clients.', href: 'https://avislocal.erwannchevallier.chatgpt.site', mark: 'AL' },
-  { name: 'RecruteClair', description: 'Transforme un besoin de recrutement en offre, entretien et accueil plus clairs pour une petite entreprise.', href: 'https://recrute-clair.erwannchevallier.chatgpt.site', mark: 'RC' },
-  { name: 'ImmoDéclic', description: 'Recompose une annonce immobilière en présentation attractive sans inventer les caractéristiques du bien.', href: 'https://immo-declic.erwannchevallier.chatgpt.site', mark: 'ID' },
-  { name: 'Mémoire en voix', description: 'Transforme des souvenirs et notes vocales en récits familiaux prêts à transmettre.', href: 'https://memoire-en-voix.erwannchevallier.chatgpt.site', mark: 'MV' },
-  { name: 'Les Mots Justes', description: 'Prépare des discours, vœux et hommages personnalisés avec un ton naturel.', href: 'https://les-mots-justes.erwannchevallier.chatgpt.site', mark: 'MJ' },
-  { name: 'Mots & Merveilles', description: 'Réunit image et texte dans des créations numériques personnalisées et prêtes à offrir.', href: 'https://mots-et-merveilles.erwannchevallier.chatgpt.site', mark: 'MM' },
+  { name: 'AvisLocal', description: 'Génère localement une réponse personnalisée à partir de l’enseigne, de la note et du ton choisi.', href: 'https://avislocal.erwannchevallier.chatgpt.site', mark: 'AL' },
+  { name: 'RecruteClair', description: 'Analyse localement la clarté d’une annonce et met à jour un score indicatif selon l’intitulé, les missions et l’information salariale.', href: 'https://recrute-clair.erwannchevallier.chatgpt.site', mark: 'RC' },
+  { name: 'ImmoDéclic', description: 'Propose un diagnostic interactif d’annonce avec score, verdict et conseil, sans inventer les caractéristiques du bien.', href: 'https://immo-declic.erwannchevallier.chatgpt.site', mark: 'ID' },
+  { name: 'Mémoire en voix', description: 'Oriente une demande de récit ou de transmission vers une formule selon la durée et le type de création choisi.', href: 'https://memoire-en-voix.erwannchevallier.chatgpt.site', mark: 'MV' },
+  { name: 'Les Mots Justes', description: 'Guide l’utilisateur en quatre étapes et génère un premier brouillon à partir de ses réponses, avec sauvegarde locale et estimation du temps de lecture.', href: 'https://les-mots-justes.erwannchevallier.chatgpt.site', mark: 'MJ' },
+  { name: 'Mots & Merveilles', description: 'Permet de choisir une ambiance, préparer une demande personnalisée et la télécharger si la messagerie ne s’ouvre pas.', href: 'https://mots-et-merveilles.erwannchevallier.chatgpt.site', mark: 'MM' },
 ];
 
 function scrollTo(id: string) {
@@ -120,7 +120,7 @@ export default function UniversPage() {
           <SectionHeading
             eyebrow="Preuves visibles"
             title="Six réalisations à ouvrir maintenant."
-            copy="Ces démonstrateurs publics montrent la capacité du Studio à transformer un besoin en expérience complète, lisible et utilisable."
+            copy="Ces démonstrateurs publics montrent la capacité du Studio à transformer un besoin en expérience numérique publique, lisible et utilisable."
           />
           <p>Démonstrateurs publics fonctionnels, prêts à tester. Les fonctions indiquées ont été contrôlées ; la validation commerciale, les transactions réelles et la livraison de bout en bout restent à confirmer.</p>
         </div>
