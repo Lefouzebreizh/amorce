@@ -10,7 +10,7 @@ import { ImageResponse } from 'next/og';
  * variables CSS du thème, il lui faut des valeurs littérales.
  */
 export const runtime = 'edge';
-export const alt = 'Amorce — le studio qui rend tes vidéos IA virales';
+export const alt = 'Amorce — création et montage vidéo assistés de bout en bout';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
