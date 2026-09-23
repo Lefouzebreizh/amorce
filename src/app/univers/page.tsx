@@ -122,7 +122,7 @@ export default function UniversPage() {
             title="Six réalisations à ouvrir maintenant."
             copy="Ces démonstrateurs publics montrent la capacité du Studio à transformer un besoin en expérience complète, lisible et utilisable."
           />
-          <p>Démonstrateurs accessibles publiquement. Leurs parcours principaux restent à valider de bout en bout avant toute promesse commerciale.</p>
+          <p>Démonstrateurs publics fonctionnels, prêts à tester. Les fonctions indiquées ont été contrôlées ; la validation commerciale, les transactions réelles et la livraison de bout en bout restent à confirmer.</p>
         </div>
         <div className="bank-proof-grid">
           {publicProofs.map((proof, index) => (
