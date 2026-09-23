@@ -1,4 +1,26 @@
+import type { Metadata } from 'next';
 import UniversPage from './univers/page';
+
+export const metadata: Metadata = {
+  title: 'Lefouzèbreizh Studio — Des horizons plus grands',
+  description:
+    'Sites professionnels, audits et outils numériques assistés par IA : découvrez les offres et les réalisations publiques de Lefouzèbreizh Studio.',
+  openGraph: {
+    title: 'Lefouzèbreizh Studio — Des horizons plus grands',
+    description:
+      'Sites professionnels, audits et outils numériques assistés par IA : découvrez les offres et les réalisations publiques de Lefouzèbreizh Studio.',
+    url: '/',
+    siteName: 'Lefouzèbreizh Studio',
+    locale: 'fr_FR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Lefouzèbreizh Studio — Des horizons plus grands',
+    description:
+      'Sites professionnels, audits et outils numériques assistés par IA : découvrez les offres et les réalisations publiques de Lefouzèbreizh Studio.',
+  },
+};
 
 /**
  * La racine est la porte d'entrée de Lefouzèbreizh Studio.
