@@ -195,7 +195,7 @@ export default function UniversPage() {
             </article>
           ))}
         </div>
-        <p className="univers-roadmap">Ensemble face aux amendes reste une piste de produit à étudier : il n’entre pas dans les dix-huit expériences tant que sa promesse, son cadre et son utilité ne sont pas validés.</p>
+        <p className="univers-roadmap">Ensemble face aux amendes reste une piste de produit à étudier : il n’entre pas dans les dix-huit projets tant que sa promesse, son cadre et son utilité ne sont pas validés.</p>
       </section>
 
       <section id="exigence" className="univers-section univers-quality">
