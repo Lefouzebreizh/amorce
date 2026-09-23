@@ -11,6 +11,49 @@
 .univers-signal span, .univers-signal p { color: rgb(242 239 252 / .62); font: 550 .78rem/1.5 var(--lfz-font-ui); letter-spacing: .05em; }
 .univers-signal p { display: flex; align-items: center; color: rgb(226 255 252 / .78); background: radial-gradient(circle at 0 50%, rgb(64 224 208 / .14), transparent 65%); }
 
+.bank-offer { background: radial-gradient(circle at 10% 12%, rgb(64 224 208 / .12), transparent 28%), linear-gradient(180deg, #02040a, #07101d); }
+.bank-offer-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: clamp(2.8rem, 6vw, 5rem); }
+.bank-offer-card { position: relative; display: flex; flex-direction: column; min-height: 430px; overflow: hidden; padding: clamp(1.35rem, 3vw, 2rem); border: 1px solid rgb(255 255 255 / .11); border-radius: 1.5rem; background: radial-gradient(circle at 90% 5%, rgb(124 58 237 / .16), transparent 30%), linear-gradient(155deg, rgb(15 24 40 / .95), rgb(5 9 17 / .98)); box-shadow: 0 24px 80px rgb(0 0 0 / .35), inset 0 1px rgb(255 255 255 / .05); transition: transform .42s var(--lfz-ease-out), border-color .42s ease, box-shadow .42s ease; }
+.bank-offer-card::before { content: ''; position: absolute; inset: 0; border-radius: inherit; border-top: 1px solid rgb(64 224 208 / .38); pointer-events: none; }
+.bank-offer-card--active { background: radial-gradient(circle at 90% 5%, rgb(64 224 208 / .2), transparent 34%), linear-gradient(155deg, rgb(13 31 43 / .98), rgb(5 12 20 / .98)); border-color: rgb(64 224 208 / .32); }
+.bank-offer-card:hover { transform: translateY(-7px); border-color: rgb(64 224 208 / .38); box-shadow: 0 34px 92px rgb(0 0 0 / .48), 0 0 42px rgb(64 224 208 / .08); }
+.bank-offer-card__status { margin: 0 0 2rem; color: var(--lfz-turquoise); font: 700 .64rem/1 var(--lfz-font-ui); letter-spacing: .14em; text-transform: uppercase; }
+.bank-offer-card h3 { margin: 0; color: #fff; font: 620 clamp(1.65rem, 3vw, 2.35rem)/1 var(--lfz-font-display); letter-spacing: -.045em; }
+.bank-offer-card__price { margin: 1.15rem 0 .9rem; color: #fff; font: 650 clamp(1.6rem, 3.2vw, 2.35rem)/1.1 var(--lfz-font-display); letter-spacing: -.04em; }
+.bank-offer-card__price small { display: block; margin-top: .45rem; color: rgb(242 239 252 / .5); font: 600 .62rem/1.3 var(--lfz-font-ui); letter-spacing: .08em; text-transform: uppercase; }
+.bank-offer-card > p:not(.bank-offer-card__status, .bank-offer-card__price) { color: rgb(242 239 252 / .69); }
+.bank-offer-card ul { display: grid; gap: .5rem; margin: .7rem 0 1.35rem; padding: 0; color: rgb(226 255 252 / .77); font: 500 .88rem/1.5 var(--lfz-font-ui); list-style: none; }
+.bank-offer-card li::before { content: '•'; margin-right: .55rem; color: var(--lfz-turquoise); }
+.bank-offer-card a, .bank-offer-card__pending { display: inline-flex; align-items: center; align-self: flex-start; min-height: 44px; margin-top: auto; font: 700 .72rem/1 var(--lfz-font-ui); }
+.bank-offer-card a { gap: .55rem; padding: .78rem 1rem; border: 1px solid rgb(64 224 208 / .38); border-radius: 999px; color: #fff; text-decoration: none; background: rgb(64 224 208 / .09); transition: transform .2s ease, background .2s ease, box-shadow .2s ease; }
+.bank-offer-card a:hover { transform: translateY(-2px); background: rgb(64 224 208 / .17); box-shadow: 0 0 30px rgb(64 224 208 / .12); }
+.bank-offer-card__pending { color: rgb(242 239 252 / .45); letter-spacing: .06em; text-transform: uppercase; }
+.bank-disclaimer { max-width: 92ch; margin: 1.5rem 0 0; padding: 1rem 1.2rem; border-left: 2px solid var(--lfz-amber); color: rgb(242 239 252 / .6); background: rgb(244 184 80 / .045); font: 500 .83rem/1.65 var(--lfz-font-ui); }
+
+.bank-proofs { background: radial-gradient(circle at 88% 20%, rgb(124 58 237 / .14), transparent 30%), #050913; }
+.bank-proofs__intro { display: grid; grid-template-columns: 1fr minmax(280px, .62fr); gap: clamp(2rem, 7vw, 7rem); align-items: end; }
+.bank-proofs__intro .lfb-section-heading { margin: 0; }
+.bank-proofs__intro > p { margin: 0 0 .7rem; padding: 1.15rem 1.25rem; border: 1px solid rgb(64 224 208 / .2); border-radius: 1rem; color: rgb(226 255 252 / .75); background: rgb(64 224 208 / .055); font: 500 .86rem/1.65 var(--lfz-font-ui); }
+.bank-proof-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: clamp(2.8rem, 6vw, 5rem); }
+.bank-proof-card { position: relative; min-height: 300px; display: flex; flex-direction: column; padding: 1.35rem; border: 1px solid rgb(255 255 255 / .1); border-radius: 1.3rem; background: linear-gradient(155deg, rgb(14 22 37 / .9), rgb(5 9 17 / .96)); box-shadow: 0 22px 70px rgb(0 0 0 / .26), inset 0 1px rgb(255 255 255 / .04); transition: transform .36s var(--lfz-ease-out), border-color .36s ease, box-shadow .36s ease; }
+.bank-proof-card:hover { transform: translateY(-6px); border-color: rgb(124 58 237 / .46); box-shadow: 0 30px 84px rgb(0 0 0 / .42), 0 0 36px rgb(124 58 237 / .1); }
+.bank-proof-card > div { display: flex; align-items: center; justify-content: space-between; color: rgb(242 239 252 / .4); font: 700 .65rem/1 var(--lfz-font-ui); letter-spacing: .14em; }
+.bank-proof-card > div b { display: grid; place-items: center; width: 3rem; height: 3rem; border: 1px solid rgb(64 224 208 / .35); border-radius: 1rem; color: var(--lfz-turquoise); background: rgb(64 224 208 / .07); box-shadow: 0 0 24px rgb(64 224 208 / .08); }
+.bank-proof-card h3 { margin: 2rem 0 .7rem; color: #fff; font: 620 clamp(1.45rem, 2.4vw, 2rem)/1 var(--lfz-font-display); letter-spacing: -.04em; }
+.bank-proof-card p { margin: 0 0 1.2rem; color: rgb(242 239 252 / .67); font: 400 .94rem/1.6 var(--lfz-font-ui); }
+.bank-proof-card a { display: inline-flex; align-items: center; gap: .5rem; align-self: flex-start; min-height: 44px; margin-top: auto; padding: .72rem .9rem; border: 1px solid rgb(124 58 237 / .4); border-radius: 999px; color: #fff; background: rgb(124 58 237 / .08); font: 700 .7rem/1 var(--lfz-font-ui); text-decoration: none; }
+.bank-proof-card a:hover { background: rgb(124 58 237 / .18); }
+
+.bank-founder { display: grid; grid-template-columns: .75fr 1.25fr; gap: clamp(2rem, 8vw, 8rem); background: radial-gradient(circle at 15% 30%, rgb(64 224 208 / .13), transparent 28%), linear-gradient(180deg, #07101d, #03050b); }
+.bank-founder__identity h2 { max-width: 8ch; margin: .65rem 0 1rem; color: #fff; font: 620 clamp(3rem, 6vw, 5.8rem)/.9 var(--lfz-font-display); letter-spacing: -.06em; }
+.bank-founder__identity > p:last-child { max-width: 28rem; color: rgb(226 255 252 / .67); font: 550 .88rem/1.65 var(--lfz-font-ui); }
+.bank-founder__story { padding: clamp(1.5rem, 4vw, 2.5rem); border: 1px solid rgb(255 255 255 / .11); border-radius: 1.6rem; background: linear-gradient(145deg, rgb(13 23 39 / .88), rgb(6 10 19 / .94)); box-shadow: 0 28px 90px rgb(0 0 0 / .32), inset 0 1px rgb(255 255 255 / .05); }
+.bank-founder__story h3 { margin: 0 0 1rem; color: #fff; font: 620 clamp(1.8rem, 3.5vw, 2.8rem)/1 var(--lfz-font-display); letter-spacing: -.045em; }
+.bank-founder__story p { color: rgb(242 239 252 / .69); font: 400 1rem/1.72 var(--lfz-font-ui); }
+.bank-founder__actions { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1.8rem; }
+.bank-founder__actions a { display: inline-flex; align-items: center; gap: .6rem; min-height: 48px; padding: .82rem 1rem; border: 1px solid rgb(255 255 255 / .16); border-radius: 999px; color: #fff; background: rgb(255 255 255 / .035); font: 700 .76rem/1 var(--lfz-font-ui); text-decoration: none; }
+.bank-founder__actions a:first-child { color: #031113; border-color: transparent; background: var(--lfz-gradient-signature); box-shadow: 0 12px 38px rgb(64 224 208 / .16); }
+
 .univers-signature { background: radial-gradient(circle at 82% 30%, rgb(124 58 237 / .14), transparent 28%), linear-gradient(180deg, #02040a, #07101d 72%, #081221); }
 .univers-signature::before { right: -16rem; bottom: -18rem; background: var(--lfz-violet); }
 .univers-pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: clamp(2.5rem, 6vw, 5rem); perspective: 1200px; }
@@ -63,6 +106,9 @@
 @media (max-width: 980px) {
   .univers-signal { grid-template-columns: repeat(3, 1fr); }
   .univers-signal > p { grid-column: 1 / -1; min-height: auto; border-top: 1px solid rgb(255 255 255 / .08); }
+  .bank-offer-grid, .bank-proof-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bank-offer-card--active { grid-column: 1 / -1; min-height: 360px; }
+  .bank-proofs__intro { grid-template-columns: 1fr; gap: 1.5rem; }
   .univers-project-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
@@ -71,6 +117,10 @@
   .univers-signal > div, .univers-signal > p { min-height: auto; padding: 1rem 1.15rem; border-right: 0; border-bottom: 1px solid rgb(255 255 255 / .08); }
   .univers-signal > div { grid-template-columns: 4.2rem 1fr; align-items: center; }
   .univers-signal > p { grid-column: auto; }
+  .bank-offer-grid, .bank-proof-grid, .bank-founder { grid-template-columns: 1fr; }
+  .bank-offer-card--active { grid-column: auto; }
+  .bank-offer-card { min-height: 0; }
+  .bank-founder__identity h2 { max-width: 11ch; }
   .univers-pillars, .univers-project-grid, .univers-quality { grid-template-columns: 1fr; }
   .univers-pillars .lfb-glass-card:nth-child(2), .univers-pillars .lfb-glass-card:nth-child(2):hover { transform: none; }
   .univers-projects__intro { grid-template-columns: 1fr; }
@@ -92,6 +142,6 @@
 @media (prefers-reduced-motion: reduce) {
   .univers-page { scroll-behavior: auto; }
   .univers-orbit::after { animation: none; }
-  .univers-pillars .lfb-glass-card, .studio-project-card, .studio-project-card::before, .studio-project-card__link { transition: none; }
-  .univers-pillars .lfb-glass-card:hover, .univers-pillars .lfb-glass-card:nth-child(2):hover, .studio-project-card:hover, .studio-project-card__link:hover { transform: none; }
+  .bank-offer-card, .bank-offer-card a, .bank-proof-card, .univers-pillars .lfb-glass-card, .studio-project-card, .studio-project-card::before, .studio-project-card__link { transition: none; }
+  .bank-offer-card:hover, .bank-offer-card a:hover, .bank-proof-card:hover, .univers-pillars .lfb-glass-card:hover, .univers-pillars .lfb-glass-card:nth-child(2):hover, .studio-project-card:hover, .studio-project-card__link:hover { transform: none; }
 }
