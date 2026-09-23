@@ -30,7 +30,7 @@ const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
   'https://amorce-erwannchevallier-6916s-projects.vercel.app';
 
-const TITRE = 'Amorce — le studio qui rend tes vidéos IA virales';
+const TITRE = 'Amorce — création et montage vidéo assistés de bout en bout';
 const DESCRIPTION =
   'Monte tes vidéos IA au format vertical : transitions, bruitages, sous-titres, rendu cinéma et note de montage. Tout se passe dans ton navigateur, aucun fichier n’est envoyé sur un serveur.';
 
