@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import type { CSSProperties } from 'react';
 import { useEffect, useRef } from 'react';
 import { BrandButton, BrandMark } from './LefouzebreizhUI';
@@ -23,6 +24,9 @@ type ImmersiveHeroProps = {
   onPrimary?: () => void;
   onSecondary?: () => void;
   layers?: HeroLayer[];
+  sceneImage?: string;
+  sceneAlt?: string;
+  signal?: string;
 };
 
 export function ImmersiveHero({
@@ -35,6 +39,9 @@ export function ImmersiveHero({
   onPrimary,
   onSecondary,
   layers = [],
+  sceneImage,
+  sceneAlt = '',
+  signal,
 }: ImmersiveHeroProps) {
   const rootRef = useRef<HTMLElement>(null);
 
@@ -47,16 +54,22 @@ export function ImmersiveHero({
       const rect = root.getBoundingClientRect();
       const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
       const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+      const lightX = ((event.clientX - rect.left) / rect.width) * 100;
+      const lightY = ((event.clientY - rect.top) / rect.height) * 100;
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         root.style.setProperty('--lfb-pointer-x', x.toFixed(3));
         root.style.setProperty('--lfb-pointer-y', y.toFixed(3));
+        root.style.setProperty('--lfb-light-x', `${lightX.toFixed(2)}%`);
+        root.style.setProperty('--lfb-light-y', `${lightY.toFixed(2)}%`);
       });
     };
 
     const onLeave = () => {
       root.style.setProperty('--lfb-pointer-x', '0');
       root.style.setProperty('--lfb-pointer-y', '0');
+      root.style.setProperty('--lfb-light-x', '38%');
+      root.style.setProperty('--lfb-light-y', '44%');
     };
 
     root.addEventListener('pointermove', onPointerMove);
@@ -70,6 +83,16 @@ export function ImmersiveHero({
 
   return (
     <section ref={rootRef} className="lfb-immersive-hero" aria-labelledby="lfb-immersive-title">
+      {sceneImage ? (
+        <Image
+          className="lfb-immersive-hero__scene"
+          src={sceneImage}
+          alt={sceneAlt}
+          fill
+          priority
+          sizes="100vw"
+        />
+      ) : null}
       <div className="lfb-immersive-hero__sky" aria-hidden="true" />
       <div className="lfb-immersive-hero__mist lfb-immersive-hero__mist--a" aria-hidden="true" />
       <div className="lfb-immersive-hero__mist lfb-immersive-hero__mist--b" aria-hidden="true" />
@@ -94,8 +117,10 @@ export function ImmersiveHero({
       </div>
 
       <div className="lfb-immersive-hero__vignette" aria-hidden="true" />
+      <div className="lfb-immersive-hero__cursor-light" aria-hidden="true" />
       <div className="lfb-immersive-hero__content">
         <BrandMark />
+        {signal ? <p className="lfb-immersive-hero__signal"><span aria-hidden="true" />{signal}</p> : null}
         <p className="lfb-eyebrow">{eyebrow}</p>
         <h1 id="lfb-immersive-title">
           {title} <span>{highlight}</span>

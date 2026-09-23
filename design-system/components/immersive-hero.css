@@ -3,27 +3,32 @@
 .lfb-immersive-hero {
   --lfb-pointer-x: 0;
   --lfb-pointer-y: 0;
+  --lfb-light-x: 38%;
+  --lfb-light-y: 44%;
   position: relative;
-  min-height: min(92svh, 920px);
+  min-height: min(100dvh, 980px);
   overflow: hidden;
   isolation: isolate;
   display: grid;
   align-items: end;
   color: var(--lfb-white, #f8f8f8);
-  background:
-    radial-gradient(circle at 76% 22%, rgb(124 58 237 / .18), transparent 30%),
-    radial-gradient(circle at 28% 40%, rgb(64 224 208 / .11), transparent 30%),
-    linear-gradient(180deg, #1c5260 0%, #17404f 52%, #112b43 100%);
+  background: #02040a;
+}
+
+.lfb-immersive-hero__scene {
+  z-index: -10;
+  object-fit: cover;
+  object-position: 58% center;
+  transform: scale(1.025) translate3d(calc(var(--lfb-pointer-x) * -5px), calc(var(--lfb-pointer-y) * -3px), 0);
+  transition: transform 160ms linear;
+  filter: saturate(1.04) contrast(1.04);
 }
 
 .lfb-immersive-hero__sky {
   position: absolute;
   inset: 0;
   z-index: -8;
-  background:
-    radial-gradient(circle at 70% 32%, rgb(244 184 80 / .13), transparent 11%),
-    radial-gradient(circle at 67% 35%, rgb(124 58 237 / .1), transparent 30%),
-    linear-gradient(180deg, rgb(62 135 146 / .72), rgb(14 46 64 / .18));
+  background: radial-gradient(circle at 74% 22%, rgb(124 58 237 / .14), transparent 25%);
 }
 
 .lfb-immersive-hero__layers { position: absolute; inset: 0; z-index: -5; pointer-events: none; }
@@ -61,8 +66,17 @@
   z-index: -1;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgb(5 22 37 / .68) 0%, rgb(5 22 37 / .28) 42%, transparent 72%),
-    linear-gradient(180deg, rgb(0 0 0 / .02), rgb(4 20 35 / .3) 86%, rgb(5 18 32 / .6));
+    linear-gradient(90deg, rgb(2 4 10 / .94) 0%, rgb(2 4 10 / .72) 38%, rgb(2 4 10 / .08) 72%),
+    linear-gradient(180deg, rgb(0 0 0 / .18), transparent 30%, rgb(2 4 10 / .86) 96%);
+}
+
+.lfb-immersive-hero__cursor-light {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(circle 260px at var(--lfb-light-x) var(--lfb-light-y), rgb(64 224 208 / .14), transparent 70%);
+  mix-blend-mode: screen;
 }
 
 .lfb-immersive-hero__content {
@@ -72,6 +86,8 @@
   display: grid;
   justify-items: start;
   gap: 1rem;
+  position: relative;
+  z-index: 2;
 }
 
 .lfb-immersive-hero__content h1 {
@@ -89,6 +105,34 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  filter: drop-shadow(0 0 28px rgb(64 224 208 / .2));
+}
+
+.lfb-immersive-hero__signal {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  min-height: 32px;
+  margin: .35rem 0 0;
+  padding: .45rem .72rem;
+  border: 1px solid rgb(64 224 208 / .28);
+  border-radius: 999px;
+  color: rgb(226 255 252 / .82);
+  background: rgb(4 13 23 / .56);
+  box-shadow: 0 0 34px rgb(64 224 208 / .08), inset 0 1px rgb(255 255 255 / .05);
+  backdrop-filter: blur(16px);
+  font: 650 .72rem/1 var(--lfb-font-ui, Inter, system-ui, sans-serif);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.lfb-immersive-hero__signal span {
+  width: .52rem;
+  height: .52rem;
+  border-radius: 50%;
+  background: var(--lfb-cyan, #40e0d0);
+  box-shadow: 0 0 18px var(--lfb-cyan, #40e0d0);
+  animation: lfb-signal-pulse 2.8s ease-in-out infinite;
 }
 
 .lfb-immersive-hero__description {
@@ -108,13 +152,18 @@
   width: 46vw;
   height: 12vw;
   min-height: 70px;
-  opacity: .17;
+  opacity: .11;
   filter: blur(9px);
   transform: rotate(-5deg);
   transform-origin: right center;
   background: linear-gradient(90deg, transparent, rgb(244 184 80 / .05) 24%, rgb(244 184 80 / .8));
   clip-path: polygon(0 46%, 100% 0, 100% 100%, 0 54%);
   animation: lfb-beacon-sweep 14s ease-in-out infinite alternate;
+}
+
+@keyframes lfb-signal-pulse {
+  0%, 100% { opacity: .48; transform: scale(.82); }
+  50% { opacity: 1; transform: scale(1); }
 }
 
 .lfb-immersive-hero__ocean {
@@ -161,12 +210,15 @@
   .lfb-immersive-hero__content { align-self: end; padding-top: 8rem; }
   .lfb-immersive-hero__vignette { background: linear-gradient(180deg, rgb(0 0 0 / .05), rgb(0 0 0 / .42) 35%, rgb(0 0 0 / .86) 74%); }
   .lfb-immersive-hero__layer { object-position: 62% center; }
+  .lfb-immersive-hero__scene { object-position: 69% center; opacity: .78; }
   .lfb-immersive-hero__beacon { width: 72vw; right: -18%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .lfb-immersive-hero__scene { transform: scale(1.025); transition: none; }
   .lfb-immersive-hero__layer { transform: scale(1.03); transition: none; }
   .lfb-immersive-hero__mist,
   .lfb-immersive-hero__beacon,
-  .lfb-immersive-hero__ocean span { animation: none; }
+  .lfb-immersive-hero__ocean span,
+  .lfb-immersive-hero__signal span { animation: none; }
 }
