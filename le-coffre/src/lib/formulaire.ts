@@ -15,26 +15,15 @@
  *   (« plat ») — seuls les vrais champs AcroForm sont pris en charge ;
  * - pas de transposition de caractères spéciaux (œ, €) pour une police de
  *   base limitée au latin-1 — pdf-lib embarque une police qui les porte ;
- * - pas de source « abonnement » : Le Tiroir Secret ne modélise pas de
+ * - pas de source « abonnement » : Mon Tiroir Secret ne modélise pas de
  *   contrats, seulement des documents et une identité.
  */
 
-// pdf-lib expose deux bâtiments incompatibles entre eux : le lot CommonJS
-// (`cjs/`, que Node résout pour un `import` faute de champ `exports` dans
-// son package.json) réexporte tout via un helper tslib au lieu d'assigner
-// littéralement chaque nom, ce qu'aucun analyseur statique — celui de
-// Node compris — ne sait détecter, donc un import nommé y échoue toujours ;
-// le lot ESM (`es/`, que Turbopack choisit) n'a lui aucun export par
-// défaut. Un import nommé casse Node, un import par défaut casse Turbopack.
-// L'import en espace de noms lit lequel des deux on a réellement sous la
-// main à l'exécution — `default` n'existe que côté CommonJS — et bascule
-// sur l'un ou l'autre en conséquence.
-import * as pdfLibEspaceDeNoms from 'pdf-lib';
-type PdfLibModule = typeof pdfLibEspaceDeNoms;
-const pdfLib: PdfLibModule = 'default' in pdfLibEspaceDeNoms
-  ? (pdfLibEspaceDeNoms as unknown as { default: PdfLibModule }).default
-  : pdfLibEspaceDeNoms;
-const { PDFDocument, PDFCheckBox, PDFDropdown, PDFRadioGroup, PDFTextField } = pdfLib;
+// Les exports nommés sont compris à la fois par Node et par le compilateur
+// Next actuel. L'ancien détour par `default` produisait un avertissement de
+// compilation et pouvait laisser le remplissage de PDF sans constructeur à
+// l'exécution dans le navigateur.
+import { PDFDocument, PDFCheckBox, PDFDropdown, PDFRadioGroup, PDFTextField } from 'pdf-lib';
 import type { Identite } from './coffre';
 
 export type TypeChamp = 'texte' | 'case' | 'liste' | 'radio' | 'inconnu';

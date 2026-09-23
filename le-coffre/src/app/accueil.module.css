@@ -29,7 +29,7 @@
 .accessLink:focus-visible, .access:focus-visible { outline: 3px solid var(--turquoise); outline-offset: 4px; }
 .access { scroll-margin-top: 24px; }
 .content { min-height: 100dvh; }
-.intro { min-height: min(900px, 100dvh); }
+.intro { min-height: auto; }
 .scene { position: relative; min-height: min(900px, 100dvh); overflow: hidden; isolation: isolate; border-bottom: 1px solid rgb(123 205 255 / .2); background: var(--slab); }
 .scene img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; filter: saturate(1.06) contrast(1.05); transform: scale(1.01); animation: slowCamera 20s ease-in-out infinite alternate; }
 .vignette { position: absolute; z-index: 1; inset: 0; background: linear-gradient(90deg, rgb(1 6 15 / .94) 0%, rgb(2 7 17 / .74) 28%, rgb(2 7 17 / .16) 64%, rgb(2 3 10 / .34)), linear-gradient(0deg, rgb(1 3 10 / .86), transparent 42%); }
@@ -63,6 +63,7 @@
 .submit:disabled { opacity: .7; cursor: wait; }
 .recovery { grid-column: 2; justify-self: start; border: 0; background: transparent; color: #a7d9ff; cursor: pointer; font: inherit; padding: .3rem 0; text-decoration: underline; text-underline-offset: .22em; }
 .recovery:disabled { cursor: default; opacity: .72; }
+.recoveryStatus { grid-column: 2; margin: -.2rem 0 .2rem; color: #a6f2e6; font-size: .9rem; }
 .error { color: #ffb1c4; overflow-wrap: anywhere; }
 .sent { grid-column: 2; padding: 22px; background: var(--slab); border-left: 3px solid var(--turquoise); border-radius: 12px; overflow-wrap: anywhere; }
 .sent p { font-size: 18px; color: var(--secondary); }
@@ -76,6 +77,6 @@
 @keyframes slowCamera { from { transform: scale(1.01) translate3d(0, 0, 0); } to { transform: scale(1.07) translate3d(-.8%, .5%, 0); } }
 @keyframes sweep { 0%, 22% { transform: translateX(-40%) rotate(-10deg); opacity: 0; } 45% { opacity: .38; } 72%, 100% { transform: translateX(190%) rotate(-10deg); opacity: 0; } }
 @keyframes blink { 50% { opacity: .38; box-shadow: 0 0 0 .65rem rgb(64 224 208 / 0), 0 0 .6rem var(--turquoise); } }
-@media (max-width: 760px) { .header { padding: 1.15rem 1rem; } .signature { display: none; } .accessLink { min-height: 40px; padding: .45rem .75rem; font-size: .8rem; } .intro, .scene { min-height: 760px; } .scene img { object-position: 59% center; } .vignette { background: linear-gradient(90deg, rgb(1 6 15 / .9), rgb(2 7 17 / .3) 88%), linear-gradient(0deg, rgb(1 3 10 / .92), transparent 56%); } .heroCopy { width: calc(100% - 2rem); padding-top: 12rem; margin-left: 1rem; } .heroCopy h1 { font-size: clamp(3.65rem, 16vw, 5.1rem); } .description { max-width: 28rem; font-size: 1rem; } .sceneNote { left: 1rem; bottom: 1.1rem; } .liveMark { right: 1rem; bottom: 1.1rem; font-size: .58rem; } .access { display: block; padding: 3.2rem 1.15rem 3rem; } .access h2 { max-width: 12ch; font-size: clamp(3rem, 13vw, 4.5rem); } .accessIntro { margin-top: 1.4rem; } .form, .sent, .recovery { grid-column: auto; } .privacy { margin-top: 1.25rem; } }
+@media (max-width: 760px) { .header { padding: 1.15rem 1rem; } .signature { display: none; } .accessLink { min-height: 40px; padding: .45rem .75rem; font-size: .8rem; } .scene { min-height: 760px; } .scene img { object-position: 59% center; } .vignette { background: linear-gradient(90deg, rgb(1 6 15 / .9), rgb(2 7 17 / .3) 88%), linear-gradient(0deg, rgb(1 3 10 / .92), transparent 56%); } .heroCopy { width: calc(100% - 2rem); padding-top: 12rem; margin-left: 1rem; } .heroCopy h1 { font-size: clamp(3.65rem, 16vw, 5.1rem); } .description { max-width: 28rem; font-size: 1rem; } .sceneNote { left: 1rem; bottom: 1.1rem; } .liveMark { right: 1rem; bottom: 1.1rem; font-size: .58rem; } .access { display: block; padding: 3.2rem 1.15rem 3rem; } .access h2 { max-width: 12ch; font-size: clamp(3rem, 13vw, 4.5rem); } .accessIntro { margin-top: 1.4rem; } .form, .sent, .recovery, .recoveryStatus { grid-column: auto; } .privacy { margin-top: 1.25rem; } }
 @media (forced-colors: active) { .heroCopy h1, .access h2, .brand { background: none; color: CanvasText; } }
 @media (prefers-reduced-motion: reduce) { .scene img, .lightSweep, .liveMark span { animation: none; } .accessLink, .submit { transition: none; } }

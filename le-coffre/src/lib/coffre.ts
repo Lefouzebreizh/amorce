@@ -697,7 +697,7 @@ export function genererICS(libelle: string, date: string, heure?: string | null)
   const lignes = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Le Tiroir Secret//FR',
+    'PRODID:-//Mon Tiroir Secret//FR',
     'BEGIN:VEVENT',
     `UID:${uid}`,
     `DTSTAMP:${horodatage}`,

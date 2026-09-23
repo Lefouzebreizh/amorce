@@ -137,13 +137,18 @@ export default function PageAccueil() {
         <button type="button" onClick={recupererCode} disabled={enCours} className={styles.recovery}>
           {recuperationEnvoyee ? 'Renvoyer le lien de récupération' : 'J’ai oublié mon code'}
         </button>
+        {recuperationEnvoyee && (
+          <p role="status" className={styles.recoveryStatus}>
+            Le lien de récupération vient d&apos;être envoyé.
+          </p>
+        )}
 
           <div className={styles.privacy}>
             <h3>Ta phrase secrète protège le stockage.</h3>
             <p>Tu la choisis à l&apos;étape suivante. Elle chiffre les documents dans ton navigateur avant stockage. Garde-la précieusement : personne ne peut la récupérer.</p>
             <details>
               <summary>Et les fonctions d&apos;intelligence artificielle ?</summary>
-              <p>Le classement automatique transmet les documents analysés en clair à notre serveur, puis au fournisseur d&apos;IA. L&apos;assistant transmet ta question et un résumé de tes papiers au fournisseur d&apos;IA via notre serveur.</p>
+              <p>Par défaut, le rangement reste dans ton navigateur. Si tu choisis plus tard une fonction d&apos;IA, l&apos;application t&apos;indiquera quelles informations doivent être transmises pour ce traitement.</p>
             </details>
           </div>
         </section>

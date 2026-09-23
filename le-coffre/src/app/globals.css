@@ -31,8 +31,8 @@
   --color-bleu-strong: #8cc2ff;
   --color-wine: #ff8cab;
 
-  --font-affiche: 'Instrument Serif', Georgia, serif;
-  --font-corps: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-affiche: var(--font-instrument-serif), Georgia, serif;
+  --font-corps: var(--font-plus-jakarta-sans), system-ui, sans-serif;
 }
 
 /* Trois halos turquoise/violet fixes, flous, sous tout le contenu — demandé
