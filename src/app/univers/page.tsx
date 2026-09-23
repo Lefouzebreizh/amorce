@@ -213,7 +213,6 @@ export default function UniversPage() {
         <a href="#realisations">Réalisations</a>
         <a href="mailto:erwannchevallier@gmail.com">Contact</a>
         <a href="/mentions-legales">Mentions légales</a>
-        <a href="/cgv">CGV Amorce</a>
       </BrandFooter>
     </main>
   );
