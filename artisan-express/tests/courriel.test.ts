@@ -11,6 +11,7 @@ import {
 import type { Demande } from '@/lib/demande';
 
 const DEMANDE: Demande = {
+  offre: 'metier',
   nom: 'Yann Le Goff',
   metier: 'Couvreur',
   ville: 'Quimper',
@@ -134,6 +135,7 @@ describe('lienMailtoDemande', () => {
    * plus sûrement qu'un formulaire en panne.
    */
   const demande: Demande = {
+    offre: 'signature',
     nom: 'Jean Dupont',
     metier: 'Couvreur',
     ville: 'Rennes',
