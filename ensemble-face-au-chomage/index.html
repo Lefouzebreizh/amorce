@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Un point de départ clair après une perte d'emploi ou une fin de droits." />
+    <title>Ensemble face au chômage — prochaine étape claire</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <nav class="nav" aria-label="Navigation principale">
+        <a class="brand" href="#accueil" aria-label="Ensemble face au chômage, retour au début"><span>EC</span> Ensemble</a>
+        <a href="#repere">Comprendre</a>
+        <a href="#sources">Sources officielles</a>
+      </nav>
+
+      <section id="accueil" class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow"><i></i> Repères administratifs, sans jugement</p>
+          <h1>Quand tout bouge,<br /><em>on commence par une chose.</em></h1>
+          <p class="lead">Choisis la situation qui ressemble le plus à la tienne. Tu repars avec une première liste d’actions, à vérifier ensuite auprès des organismes concernés.</p>
+          <p class="privacy">Aucun compte. Rien n’est enregistré.</p>
+        </div>
+        <div class="hero-orbit" aria-hidden="true">
+          <div class="orbit-core"><strong>01</strong><span>prochaine<br />étape</span></div>
+          <span class="orbit-dot dot-one"></span><span class="orbit-dot dot-two"></span><span class="orbit-line"></span>
+        </div>
+      </section>
+
+      <section class="chooser" aria-labelledby="choisir-titre">
+        <div class="section-title">
+          <p class="eyebrow"><i></i> Commencer ici</p>
+          <h2 id="choisir-titre">Qu’est-ce qui t’arrive<br /><em>en ce moment ?</em></h2>
+        </div>
+        <div class="situation-grid" role="list">
+          <button class="situation-card" type="button" data-path="fin-droits" role="listitem">
+            <span class="card-number">01</span><span class="card-icon">↘</span>
+            <strong>Mes droits chômage se terminent</strong>
+            <small>Je veux savoir quelle démarche lancer maintenant.</small>
+          </button>
+          <button class="situation-card" type="button" data-path="activite" role="listitem">
+            <span class="card-number">02</span><span class="card-icon">↗</span>
+            <strong>Je crée ou je reprends une activité</strong>
+            <small>Je veux avancer sans rater les premières démarches.</small>
+          </button>
+          <button class="situation-card" type="button" data-path="perdu" role="listitem">
+            <span class="card-number">03</span><span class="card-icon">?</span>
+            <strong>Je suis perdu dans mes démarches</strong>
+            <small>J’ai besoin d’un ordre simple pour reprendre la main.</small>
+          </button>
+        </div>
+      </section>
+
+      <section id="repere" class="result" aria-live="polite" hidden>
+        <div class="result-head">
+          <p class="eyebrow"><i></i> Ton point de départ</p>
+          <button id="reset" class="text-button" type="button">Changer de situation</button>
+          <h2 id="result-title"></h2>
+          <p id="result-intro"></p>
+        </div>
+        <ol id="steps" class="steps"></ol>
+        <aside class="notice"><strong>Important :</strong> cette liste aide à préparer tes démarches. Elle ne décide pas de tes droits, de tes montants ou de tes délais : seule ta situation complète permet à France Travail, la CAF ou l’organisme compétent de les confirmer.</aside>
+      </section>
+
+      <section id="sources" class="sources">
+        <div>
+          <p class="eyebrow"><i></i> Vérifier auprès des bons interlocuteurs</p>
+          <h2>Pas de raccourci<br /><em>sur tes droits.</em></h2>
+        </div>
+        <div class="source-list">
+          <a href="https://www.francetravail.fr/candidat/" target="_blank" rel="noreferrer"><span>France Travail</span><strong>Inscription, indemnisation et accompagnement</strong><b>↗</b></a>
+          <a href="https://www.caf.fr/allocataires/" target="_blank" rel="noreferrer"><span>CAF</span><strong>Simuler et demander les aides adaptées au foyer</strong><b>↗</b></a>
+          <a href="https://entreprendre.service-public.fr/" target="_blank" rel="noreferrer"><span>Entreprendre.Service-Public.fr</span><strong>Création ou reprise d’entreprise</strong><b>↗</b></a>
+        </div>
+      </section>
+    </main>
+    <footer>Ensemble face au chômage · Un outil de repérage, pas un organisme public.</footer>
+    <script src="app.js"></script>
+  </body>
+</html>
