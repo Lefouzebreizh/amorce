@@ -1,9 +1,8 @@
-# Ce qu'on vend après les 300 €
+# Suite et options après les formules Artisan Express
 
-> Le site à 300 € est une vente unique. Ce fichier existe parce qu'une vente
-> unique ne fait pas vivre : il faut soit en signer une par semaine
-> indéfiniment, soit que chaque client rapporte encore un peu l'année suivante.
-> C'est la seconde voie.
+> La gamme publique comporte trois formules uniques : Express à 300 €, Métier
+> à 690 € et Signature à 1 290 €. Ce fichier documente ce qui peut être proposé
+> après livraison, sans retirer quoi que ce soit de la formule choisie.
 
 ## La règle qui tient tout
 
@@ -111,9 +110,9 @@ revenu, et c'est la seule raison d'écrire ce fichier.
 
 ## Comment les proposer, et quand
 
-**Jamais au moment de la vente du site.** Trois cents euros, c'est déjà une
-décision ; empiler des options la fait reculer. L'offre à 300 € reste nue, et
-c'est ce qui la rend crédible.
+**Jamais comme une obligation au moment de la vente.** Les trois formules sont
+déjà claires ; les options ne doivent jamais brouiller le choix ni retirer une
+fonction déjà payée.
 
 **Les avis Google se proposent à la livraison**, quand le client vient de voir
 son site et qu'il est content. La phrase qui marche : *« votre site est en
