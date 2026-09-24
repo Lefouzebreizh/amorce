@@ -1,10 +1,11 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { BOUTON_PRINCIPAL, SECTION, TITRE_SECTION } from '@/components/ui';
 import { aUnCourrielDirect, aUnTelephone, aUnWhatsapp, contact } from '@/lib/config';
 import { CHAMP_PIEGE, analyserDemande, type ChampDemande, type Demande } from '@/lib/demande';
 import { lienMailtoDemande } from '@/lib/courriel';
+import { OFFRES, type OffreId } from '@/lib/offres';
 
 /*
  * Le formulaire, et le seul morceau interactif de la page.
@@ -65,6 +66,13 @@ function MessageErreur({ id, message }: { id: string; message: string | undefine
 export function FormulaireDevis() {
   const idBase = useId();
   const [etat, setEtat] = useState<Etat>({ nom: 'repos' });
+  const [offre, setOffre] = useState<OffreId>('express');
+
+  useEffect(() => {
+    const choisir = (evenement: Event) => setOffre((evenement as CustomEvent<OffreId>).detail);
+    window.addEventListener('artisan:offre', choisir);
+    return () => window.removeEventListener('artisan:offre', choisir);
+  }, []);
 
   const erreurs = etat.nom === 'invalide' ? etat.erreurs : {};
 
@@ -148,6 +156,17 @@ export function FormulaireDevis() {
               <span>Demande de rappel</span>
               <small>Réponse dans la journée</small>
             </div>
+            <fieldset className="artisan-formulaire__offers sm:col-span-2">
+              <legend>La formule qui t’intéresse</legend>
+              <div>
+                {OFFRES.map((option) => (
+                  <label className={offre === option.id ? 'is-selected' : ''} key={option.id}>
+                    <input name="offre" type="radio" value={option.id} checked={offre === option.id} onChange={() => setOffre(option.id)} />
+                    <span><strong>{option.nom}</strong><small>{option.prix}</small></span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
         <div>
           <label className="block text-lg font-bold text-encre" htmlFor={`${idBase}-nom`}>
             Ton nom
