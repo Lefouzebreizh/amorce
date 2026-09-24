@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 import { CHAMP_PIEGE, analyserDemande, normaliserTelephone } from '@/lib/demande';
 
 const COMPLETE = {
+  offre: 'express',
   nom: 'Yann Le Goff',
   metier: 'Couvreur',
   ville: 'Quimper',

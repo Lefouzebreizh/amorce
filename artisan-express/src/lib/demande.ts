@@ -8,7 +8,10 @@
  * contrôle fait uniquement dans le navigateur ne contrôle rien.
  */
 
+import { estOffreId, type OffreId } from '@/lib/offres';
+
 export type Demande = {
+  offre: OffreId;
   nom: string;
   metier: string;
   ville: string;
@@ -17,7 +20,7 @@ export type Demande = {
   message: string;
 };
 
-export type ChampDemande = keyof Demande;
+export type ChampDemande = Exclude<keyof Demande, 'offre'>;
 
 export type Analyse =
   | { statut: 'valide'; demande: Demande }
@@ -79,6 +82,7 @@ export function analyserDemande(brut: unknown): Analyse {
   }
 
   const demande: Demande = {
+    offre: estOffreId(donnees.offre) ? donnees.offre : 'express',
     nom: texte(donnees.nom),
     metier: texte(donnees.metier),
     ville: texte(donnees.ville),
