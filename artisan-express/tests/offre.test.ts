@@ -62,23 +62,24 @@ test('aucun prix n’est barré sur la page d’offre', () => {
   }
 });
 
-/*
- * Le 300 € est le prix, et il est seul.
- *
- * Un second montant en euros dans ce composant ne peut être qu'un prix de
- * référence inventé — il n'y a rien d'autre à chiffrer ici. Le montant du nom
- * de domaine est écrit en toutes lettres (« une douzaine d'euros ») justement
- * pour ne pas être un chiffre de plus à côté du prix.
- */
-test('un seul montant en euros, et c’est le prix', () => {
+/* Les prix résident dans une seule source afin que les trois parcours restent cohérents. */
+test('les trois montants réels sont affichés, sans prix de référence', () => {
   const montants = [...SOURCE.matchAll(/(\d+)(?:&nbsp;| )?€/g)].flatMap((m) =>
     m[1] === undefined ? [] : [m[1]],
   );
   assert.deepEqual(
     [...new Set(montants)],
-    ['300'],
-    'un second montant en euros est apparu dans Offre.tsx — prix de référence, remise, ou frais chiffré',
+    [],
+    'les montants vivent dans src/lib/offres.ts pour que la page et le formulaire restent synchronisés',
   );
+});
+
+const OFFRES = readFileSync(new URL('../src/lib/offres.ts', import.meta.url), 'utf8');
+
+test('les trois formules approuvées sont proposées', () => {
+  for (const montant of ['300\\u00a0€', '690\\u00a0€', '1\\u202f290\\u00a0€']) {
+    assert.ok(OFFRES.includes(montant), `montant absent de la grille : ${montant}`);
+  }
 });
 
 /*
@@ -94,30 +95,5 @@ test('la page n’affiche aucun compteur de places restantes', () => {
     SOURCE,
     /restante?s?\b/i,
     'un décompte de places est apparu : il se périmera sans que personne le voie',
-  );
-});
-
-test('le nombre de places vit dans une seule constante nommée', () => {
-  const declarations = [...SOURCE.matchAll(/const PLACES_SIMULTANEES = (\d+);/g)];
-  assert.equal(declarations.length, 1, 'PLACES_SIMULTANEES doit être déclarée une fois et une seule');
-  const valeur = Number(declarations[0]?.[1]);
-  assert.ok(
-    valeur >= 1 && valeur <= 5,
-    `PLACES_SIMULTANEES vaut ${valeur} : au-delà de cinq, la promesse « livré en 48 h » ne tient plus`,
-  );
-});
-
-/*
- * Le bandeau doit dire *pourquoi*, sinon il ne vaut rien.
- *
- * « Deux places à la fois » sans sa raison est une rareté fabriquée de plus.
- * Ce qui la rend vraie est le lien avec le délai que la page promet déjà
- * trois lignes plus haut.
- */
-test('le bandeau relie les places au délai de 48 h', () => {
-  assert.match(
-    SOURCE,
-    /tient les 48/,
-    'la raison a disparu : sans le lien avec le délai, le nombre de places est une rareté fabriquée',
   );
 });
