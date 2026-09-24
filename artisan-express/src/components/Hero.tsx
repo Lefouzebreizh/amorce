@@ -54,13 +54,10 @@ export function Hero() {
             Ton téléphone sonne.
           </h1>
 
-          <p className="artisan-hero__price">
-            <strong>300&nbsp;€</strong> pour la création <span>· sans abonnement</span>
-          </p>
+          <div className="artisan-hero__offer-rail" aria-label="Les trois formules Artisan Express">\n            <span><b>Express</b><strong>300&nbsp;€</strong></span>\n            <span className="is-featured"><b>Métier</b><strong>690&nbsp;€</strong></span>\n            <span><b>Signature</b><strong>1&nbsp;290&nbsp;€</strong></span>\n          </div>
 
           <p className="artisan-hero__lead">
-            Tes photos, tes services et un moyen simple de te joindre, réunis dans
-            une page qui te ressemble. Nom de domaine en supplément.
+            Tes photos, tes services et un moyen simple de te joindre, réunis dans une présence qui te ressemble. Choisis le niveau de finition adapté à ton activité. Nom de domaine en supplément.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
