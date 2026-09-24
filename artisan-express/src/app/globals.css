@@ -351,30 +351,31 @@ main {
 .artisan-galerie__card { padding: 1rem; border-radius: 1.15rem; box-shadow: inset 0 1px rgb(255 255 255 / .035), 0 1.3rem 3.5rem rgb(0 0 0 / .16); }
 .artisan-galerie__card:hover { box-shadow: inset 0 1px rgb(255 255 255 / .06), 0 2rem 4.5rem rgb(0 0 0 / .26), 0 0 2.5rem rgb(64 224 208 / .06); transform: translateY(-.3rem); }
 
-/* Offre : prix-scène à gauche, contenu de décision à droite. */
-.artisan-offre { position: relative; isolation: isolate; border-block: 1px solid rgb(255 255 255 / .06); background: linear-gradient(135deg, #10131a, #141827 58%, #11151c); }
-.artisan-offre::before { position: absolute; z-index: -1; top: -16rem; right: -12rem; width: 38rem; height: 38rem; border-radius: 50%; background: rgb(124 58 237 / .12); content: ''; filter: blur(95px); }
-.artisan-offre::after { position: absolute; z-index: -1; bottom: -12rem; left: -8rem; width: 28rem; height: 28rem; border-radius: 50%; background: rgb(64 224 208 / .08); content: ''; filter: blur(90px); }
-.artisan-offre__shell { display: grid; overflow: hidden; margin-top: 3rem; border: 1px solid rgb(255 255 255 / .1); border-radius: 1.6rem; background: rgb(15 17 21 / .65); box-shadow: inset 0 1px rgb(255 255 255 / .06), 0 2.5rem 7rem rgb(0 0 0 / .3); backdrop-filter: blur(18px); }
-.artisan-offre__price { position: relative; overflow: hidden; padding: 2rem; border-bottom: 1px solid rgb(255 255 255 / .1); background: linear-gradient(145deg, rgb(64 224 208 / .19), rgb(124 58 237 / .18) 70%, rgb(15 17 21 / .8)); }
-.artisan-offre__price::before { position: absolute; top: -8rem; right: -6rem; width: 20rem; height: 20rem; border: 1px solid rgb(64 224 208 / .22); border-radius: 50%; box-shadow: 0 0 0 3rem rgb(64 224 208 / .025), 0 0 0 6rem rgb(169 120 255 / .025); content: ''; }
-.artisan-offre__label { position: relative; margin: 0; color: var(--color-accent); font-size: .68rem; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
-.artisan-offre__amount { position: relative; margin: 2.4rem 0 0; color: var(--color-encre); font: 850 clamp(4rem, 9vw, 7rem)/.83 var(--font-titre); letter-spacing: -.075em; }
-.artisan-offre__once { position: relative; max-width: 25rem; margin: 1rem 0 0; color: var(--color-ardoise); font-size: .88rem; line-height: 1.55; }
-.artisan-offre__signal { position: relative; display: flex; height: 3.5rem; align-items: end; gap: .45rem; margin: 2.2rem 0 0; }
-.artisan-offre__signal span { width: .32rem; border-radius: 1rem; background: linear-gradient(to top, var(--color-accent), var(--color-violet-trait)); box-shadow: 0 0 .8rem rgb(64 224 208 / .2); }
-.artisan-offre__signal span:nth-child(1) { height: 32%; }.artisan-offre__signal span:nth-child(2) { height: 58%; }.artisan-offre__signal span:nth-child(3) { height: 42%; }.artisan-offre__signal span:nth-child(4) { height: 80%; }.artisan-offre__signal span:nth-child(5) { height: 100%; }
-.artisan-offre__ownership { position: relative; margin: 1rem 0 0; color: var(--color-ardoise); font-size: .75rem; }
-.artisan-offre__ownership span { color: var(--color-encre); font-size: 1rem; font-weight: 800; }
-.artisan-offre__content { padding: 1.4rem; }
-.artisan-offre__list { display: grid; gap: 0; }
-.artisan-offre__list > div { display: flex; gap: 1rem; padding: 1.2rem 0; border-bottom: 1px solid rgb(255 255 255 / .085); }
-.artisan-offre__list > div > span { display: grid; width: 1.7rem; height: 1.7rem; flex: 0 0 auto; place-items: center; border: 1px solid rgb(64 224 208 / .42); border-radius: 50%; color: var(--color-accent); font-size: .68rem; font-weight: 900; box-shadow: 0 0 1.2rem rgb(64 224 208 / .1); }
-.artisan-offre__list dt { color: var(--color-encre); font-size: .96rem; font-weight: 750; }
-.artisan-offre__list dd { margin: .4rem 0 0; color: var(--color-ardoise); font-size: .82rem; line-height: 1.55; }
-.artisan-offre__aside { margin-top: 1.3rem; padding: 1rem 1.1rem; border: 1px solid var(--color-edge); border-radius: .95rem; background: rgb(39 44 58 / .7); }
-.artisan-offre__availability { display: flex; gap: .9rem; margin-top: 1rem; padding: 1.1rem; border: 1px solid rgb(64 224 208 / .4); border-radius: .95rem; background: rgb(64 224 208 / .045); }
-.artisan-offre__pulse { width: .65rem; height: .65rem; flex: 0 0 auto; margin-top: .45rem; border-radius: 50%; background: var(--color-accent); box-shadow: 0 0 0 .3rem rgb(64 224 208 / .09), 0 0 1.2rem var(--color-accent); }
+/* Offre : trois niveaux, comme un plan qui prend du relief à mesure que le projet grandit. */
+.artisan-offre { position: relative; isolation: isolate; overflow: clip; border-block: 1px solid rgb(255 255 255 / .06); background: linear-gradient(135deg, #0d121c, #15182b 52%, #110f20); }
+.artisan-offre::before { position: absolute; z-index: -1; top: -20rem; right: -13rem; width: 45rem; height: 45rem; border-radius: 50%; background: rgb(124 58 237 / .18); content: ''; filter: blur(100px); }
+.artisan-offre::after { position: absolute; z-index: -1; bottom: -16rem; left: -12rem; width: 38rem; height: 38rem; border-radius: 50%; background: rgb(64 224 208 / .13); content: ''; filter: blur(95px); }
+.artisan-offre__stage { display: grid; position: relative; gap: 1rem; margin-top: 3rem; perspective: 1200px; }
+.artisan-offre__stage::before { position: absolute; z-index: -1; inset: 8% 4% 6%; border: 1px solid rgb(64 224 208 / .12); border-radius: 2rem; background-image: linear-gradient(rgb(64 224 208 / .045) 1px, transparent 1px), linear-gradient(90deg, rgb(64 224 208 / .045) 1px, transparent 1px); background-size: 2rem 2rem; box-shadow: 0 2rem 7rem rgb(0 0 0 / .18); content: ''; transform: rotate(-1deg); }
+.artisan-offre__card { position: relative; display: flex; min-height: 32rem; flex-direction: column; overflow: hidden; padding: 1.55rem; border: 1px solid rgb(255 255 255 / .12); border-radius: 1.5rem; background: linear-gradient(145deg, rgb(28 35 49 / .91), rgb(12 15 25 / .94)); box-shadow: inset 0 1px rgb(255 255 255 / .08), 0 1.75rem 4.5rem rgb(0 0 0 / .25); backdrop-filter: blur(18px); transition: transform .4s cubic-bezier(.2,.8,.2,1), border-color .35s ease, box-shadow .35s ease; }
+.artisan-offre__card::before { position: absolute; top: -7rem; right: -6rem; width: 15rem; height: 15rem; border: 1px solid rgb(64 224 208 / .24); border-radius: 50%; box-shadow: 0 0 0 2.6rem rgb(64 224 208 / .025), 0 0 0 5rem rgb(124 58 237 / .022); content: ''; transition: transform .5s ease; }
+.artisan-offre__card:hover { border-color: rgb(64 224 208 / .66); box-shadow: inset 0 1px rgb(255 255 255 / .13), 0 2.6rem 6rem rgb(0 0 0 / .38), 0 0 4.2rem rgb(64 224 208 / .14); transform: translateY(-.7rem) rotateX(2deg); }
+.artisan-offre__card:hover::before { transform: scale(1.16) translate(-1rem, .7rem); }
+.artisan-offre__card--metier { z-index: 1; border-color: rgb(64 224 208 / .68); background: linear-gradient(150deg, rgb(20 72 76 / .9), rgb(20 23 46 / .96) 60%, rgb(35 19 59 / .94)); box-shadow: inset 0 1px rgb(255 255 255 / .14), 0 2rem 5rem rgb(0 0 0 / .35), 0 0 4.5rem rgb(64 224 208 / .13); }
+.artisan-offre__card--signature { background: linear-gradient(145deg, rgb(38 23 64 / .88), rgb(18 20 35 / .95)); }
+.artisan-offre__badge { position: absolute; top: 1.1rem; right: 1.1rem; margin: 0; padding: .42rem .64rem; border: 1px solid rgb(64 224 208 / .62); border-radius: 999px; background: rgb(6 29 34 / .8); color: var(--color-accent); font-size: .62rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+.artisan-offre__card-head { display: flex; align-items: center; gap: .7rem; color: var(--color-ardoise); font-size: .68rem; font-weight: 760; letter-spacing: .08em; text-transform: uppercase; }
+.artisan-offre__card-head span { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border: 1px solid rgb(64 224 208 / .48); border-radius: 50%; color: var(--color-accent); }
+.artisan-offre__card-head p { margin: 0; }
+.artisan-offre__card h3 { margin: 2.5rem 0 0; color: var(--color-encre); font: 800 clamp(1.8rem, 3vw, 2.45rem)/.95 var(--font-titre); letter-spacing: -.06em; }
+.artisan-offre__amount { margin: .9rem 0 0; color: var(--color-encre); font: 850 clamp(2.7rem, 5.5vw, 4.1rem)/.9 var(--font-titre); letter-spacing: -.07em; }
+.artisan-offre__card--metier .artisan-offre__amount { background: linear-gradient(100deg, #7bfff1, #c4e7ff 54%, #c3a6ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.artisan-offre__description { min-height: 4.7rem; margin: 1rem 0 0; color: var(--color-ardoise); font-size: .89rem; line-height: 1.6; }
+.artisan-offre__card ul { display: grid; gap: .78rem; margin: 1.5rem 0 1.7rem; padding: 0; list-style: none; }
+.artisan-offre__card li { display: flex; gap: .65rem; align-items: start; color: var(--color-encre); font-size: .78rem; line-height: 1.45; }
+.artisan-offre__card li span { color: var(--color-accent); font-weight: 900; }
+.artisan-offre__card a { margin-top: auto; justify-content: center; }
+.artisan-offre__note { max-width: 47rem; margin: 1.4rem auto 0; color: var(--color-ardoise); font-size: .78rem; line-height: 1.55; text-align: center; }
 
 /* Portrait : scène éditoriale, preuve humaine et non témoignage inventé. */
 .artisan-erwann__shell { position: relative; overflow: hidden; padding: 1.35rem; border: 1px solid rgb(255 255 255 / .1); border-radius: 1.7rem; background: linear-gradient(145deg, rgb(32 36 48 / .88), rgb(20 22 30 / .96)); box-shadow: inset 0 1px rgb(255 255 255 / .05), 0 2.5rem 7rem rgb(0 0 0 / .24); }
@@ -411,6 +412,15 @@ main {
 .artisan-formulaire__card-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 1rem; border-bottom: 1px solid rgb(255 255 255 / .09); }
 .artisan-formulaire__card-head span { color: var(--color-encre); font: 750 .9rem/1 var(--font-titre); }
 .artisan-formulaire__card-head small { color: var(--color-accent); font-size: .61rem; font-weight: 750; letter-spacing: .07em; text-transform: uppercase; }
+.artisan-formulaire__offers { border: 0; margin: 0; padding: 0; }
+.artisan-formulaire__offers legend { margin-bottom: .7rem; color: var(--color-encre); font-size: .95rem; font-weight: 750; }
+.artisan-formulaire__offers > div { display: grid; gap: .55rem; }
+.artisan-formulaire__offers label { display: flex; align-items: center; gap: .65rem; min-height: 3.45rem; padding: .65rem .75rem; border: 1px solid rgb(255 255 255 / .12); border-radius: .85rem; background: rgb(32 36 48 / .46); cursor: pointer; transition: border-color .2s ease, background .2s ease, box-shadow .2s ease; }
+.artisan-formulaire__offers label:hover, .artisan-formulaire__offers label.is-selected { border-color: rgb(64 224 208 / .7); background: rgb(64 224 208 / .09); box-shadow: 0 0 1.6rem rgb(64 224 208 / .08); }
+.artisan-formulaire__offers input { width: 1rem; height: 1rem; accent-color: var(--color-accent); }
+.artisan-formulaire__offers label span { display: flex; width: 100%; justify-content: space-between; gap: .8rem; }
+.artisan-formulaire__offers label strong { color: var(--color-encre); font-size: .82rem; }
+.artisan-formulaire__offers label small { color: var(--color-accent); font-size: .76rem; font-weight: 800; }
 .artisan-formulaire__card input,
 .artisan-formulaire__card textarea { background: rgb(32 36 48 / .72); box-shadow: inset 0 1px rgb(255 255 255 / .025); transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease; }
 .artisan-formulaire__card input:hover,
@@ -561,6 +571,12 @@ main {
   .artisan-comparaison__card { padding: 1.65rem; }
   .artisan-erwann__grid { grid-template-columns: minmax(0, 1fr) minmax(0, .9fr); gap: 3rem; }
   .artisan-formulaire__grid { grid-template-columns: minmax(17rem, .72fr) minmax(0, 1.28fr); gap: 3.5rem; }
+  .artisan-offre__stage { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
+  .artisan-offre__card--metier { transform: translateY(-1rem); }
+  .artisan-offre__card--metier:hover { transform: translateY(-1.7rem) rotateX(2deg); }
+  .artisan-formulaire__offers > div { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .artisan-formulaire__offers label { min-height: 4.2rem; }
+  .artisan-formulaire__offers label span { align-items: start; flex-direction: column; gap: .2rem; }
   .artisan-formulaire__intro { position: sticky; top: 7rem; }
 }
 
@@ -572,9 +588,6 @@ main {
   .artisan-inclus__card:nth-child(2),
   .artisan-inclus__card:nth-child(3) { grid-column: span 5; }
   .artisan-galerie__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .artisan-offre__shell { grid-template-columns: minmax(20rem, .78fr) minmax(0, 1.22fr); }
-  .artisan-offre__price { min-height: 100%; border-right: 1px solid rgb(255 255 255 / .1); border-bottom: 0; padding: 2.7rem; }
-  .artisan-offre__content { padding: 2rem 2.25rem; }
   .artisan-erwann__shell { padding: 2.8rem; }
 }
 
