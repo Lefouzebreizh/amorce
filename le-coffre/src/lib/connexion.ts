@@ -5,7 +5,7 @@ import {
 } from '@supabase/supabase-js';
 
 export const MESSAGE_CODE_INCORRECT =
-  'Code incorrect. Si Chrome l\'a rempli automatiquement, efface-le puis saisis le code actuel.';
+  'Mot de passe du compte refusé. Vérifie-le avec « Afficher » : ce n’est pas la phrase secrète de tes documents.';
 export const MESSAGE_CONNEXION_INDISPONIBLE =
   'Connexion indisponible. Vérifie ta connexion puis réessaie.';
 
