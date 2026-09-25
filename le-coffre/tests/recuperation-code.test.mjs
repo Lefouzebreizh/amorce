@@ -50,6 +50,7 @@ test('les jetons de récupération sont retirés de la barre d’adresse', () =>
 
 test('le formulaire met à jour le mot de passe de la session récupérée', () => {
   assert.match(page, /updateUser\(\{ password: code \}\)/);
+  assert.match(page, /messageErreurMiseAJourMotDePasse\(error\)/);
   assert.match(page, /autoComplete="new-password"/);
   assert.match(page, /minLength=\{12\}/);
 });
