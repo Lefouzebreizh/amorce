@@ -49,43 +49,66 @@ accès infrastructure. Ce qu'il ne cache pas, comme en local (voir
 dépôt, et — nouveau ici — l'adresse e-mail associée au compte (nécessaire pour
 l'authentification, jamais liée au contenu déchiffré).
 
-## Mode privé par défaut : aucune analyse IA automatique
+## Mode privé par défaut, IA seulement sur une action explicite
 
-Depuis le 15/09/2026, le parcours publiable ne transmet plus les documents ni
-leur résumé à une IA externe par défaut.
+Depuis le 25/09/2026, l'import classique reste privé par défaut, tandis que
+trois actions clairement nommées réactivent l'assistance intelligente :
+« Photographier et ranger », « Analyser un dossier complet » et l'envoi d'une
+question au copilote.
 
-Au dépôt d'un fichier, le navigateur attribue seulement une catégorie générale
+Lors d'un import classique, le navigateur attribue seulement une catégorie générale
 selon le type MIME (`Papiers`, `Images`, `Vidéos`, `Audio`, `Autre`). Il ne lit
 pas le contenu pour deviner un émetteur, un montant ou une échéance. Ces champs
 restent donc à confirmer ou compléter par l'utilisateur.
 
-La barre « Qu'est-ce que je cherche pour toi ? » fonctionne aussi localement :
-elle interroge l'index déjà déchiffré dans le navigateur avec
-`interpreterQuestion`, sans appeler `assistant-coffre`. Elle peut retrouver des
-papiers, ouvrir la vue dossiers ou ouvrir le module de formulaire, mais elle ne
-propose plus d'action automatique de classement, de suppression ou de recherche
-web.
+« Photographier et ranger » envoie uniquement la photo qui vient d'être prise à
+`classer-document`. La fonction la transmet à Gemini 2.5 Flash pour proposer
+un nom, une catégorie et une éventuelle échéance. La fonction Supabase ne la
+conserve pas. Sur le niveau gratuit retenu pour éviter tout abonnement, Google
+indique cependant pouvoir utiliser les données transmises pour améliorer ses
+produits ; l'interface le signale avant le choix de la fonction. Si la
+lecture est incertaine ou échoue, le fichier revient dans une fiche à vérifier ;
+il n'est jamais rangé au hasard. S'il est lisible, il est chiffré dans le
+navigateur puis stocké dans le dossier proposé.
 
-Les fonctions historiques `classer-document`, `assistant-coffre` et
-`suggerer-champs-formulaire` restent présentes dans le dépôt pour audit et
-éventuelle option future sous consentement explicite. Elles ne sont plus appelées
-par le parcours par défaut.
+« Analyser un dossier complet » applique le même traitement, fichier par
+fichier, aux PDF, images et textes compatibles. Le chemin relatif est transmis
+comme indice faible afin de mieux conserver le contexte d'un dossier, sans
+remplacer la lecture du contenu. Gemini peut proposer une catégorie existante
+ou un nouveau nom de dossier court ; le serveur rejette les noms vides, trop
+longs ou contenant des caractères de chemin. Un format non pris en charge, une
+lecture incertaine ou une erreur rejoint « À vérifier ». Le lot entier reste à
+confirmer avant chiffrement et stockage.
 
-L'avantage produit est volontaire : Mon Tiroir Secret n'est pas un coffre
-numérique qui aspire les papiers dans une IA ; c'est un tiroir d'attention qui
-aide à ranger, retrouver et préparer, tout en gardant les documents privés.
+Quand l'utilisateur envoie une question au copilote, `assistant-coffre` reçoit
+la question, l'historique de ce fil et un résumé court des fiches (nom,
+catégorie, émetteur, montant, échéance, extrait plafonné à 200 caractères).
+Il ne reçoit jamais les fichiers, la clé de chiffrement ou la phrase secrète.
+Il peut rechercher une information à jour, retrouver un CERFA, ouvrir l'import
+d'un dossier et proposer des actions. Toute suppression ou modification reste
+confirmée et exécutée dans le navigateur. Pour un formulaire, la fonction
+`suggerer-champs-formulaire` reçoit uniquement les noms de champs, l'identité
+chiffrée déjà ouverte dans le navigateur et le même résumé court des fiches ;
+elle ne reçoit pas les fichiers. Ses suggestions restent visibles et
+modifiables avant la génération du PDF.
 
-## Anciennes fonctions IA conservées hors parcours par défaut
+Le même régime Gemini gratuit s'applique à la question, à l'historique du fil
+et au résumé transmis. Une personne qui ne souhaite aucun traitement par un
+fournisseur d'IA peut continuer à importer, ranger et rechercher localement ;
+ces parcours ne déclenchent pas Gemini.
 
-Avant le 15/09/2026, `classer-document` lisait un document en clair côté
-fonction Supabase puis le transmettait à Claude pour proposer catégorie, nom et
-échéance. `assistant-coffre` recevait un résumé de l'index pour répondre en
-langage courant. Ce comportement est désormais désactivé dans l'interface
-publiable, précisément pour éviter une promesse de confidentialité ambiguë.
+Si l'une de ces fonctions est indisponible, le dépôt revient vers une validation
+manuelle et le copilote revient vers la recherche locale. Une panne d'IA ne doit
+donc ni perdre un document ni bloquer l'accès au coffre.
 
-Si cette capacité revient un jour, elle devra être présentée comme option
-explicite, avec consentement par document ou par action, jamais comme automatisme
-silencieux.
+## Fonctions IA : exposition limitée et garde-fous
+
+`classer-document`, `assistant-coffre` et `suggerer-champs-formulaire` ne sont
+jamais appelées au chargement, à l'ouverture d'un dossier ou pendant un import
+privé. Elles ne le sont qu'après un clic ou un envoi explicite dont l'interface
+explique les données concernées. Les trois fonctions exigent en plus une vraie
+session Supabase vérifiée auprès de `/auth/v1/user` ; la clé publique anonyme ne
+suffit pas à les appeler.
 
 Trois gardes-fous resteront alors indispensables :
 
@@ -102,6 +125,8 @@ Trois gardes-fous resteront alors indispensables :
 3. Une suppression ne s'exécute jamais si plusieurs documents partagent le
    même nom affiché — l'ambiguïté est signalée plutôt que résolue en
    devinant lequel des deux effacer.
+4. Une catégorie créée par Gemini est normalisée et limitée à 60 caractères ;
+   les caractères de contrôle et de chemin sont rejetés.
 
 ## La lettre de résiliation : un gabarit fixe, jamais du texte deviné
 
@@ -114,7 +139,7 @@ date d'engagement, pas de durée de préavis — donc pas de calcul de date
 d'effet fiable, et un seul gabarit générique, jamais un article de loi cité.
 
 **Le texte du gabarit est fixe, écrit dans le code — jamais généré librement
-par Claude.** En mode privé par défaut, les champs sensibles utiles à cette
+par Gemini.** En mode privé par défaut, les champs sensibles utiles à cette
 lettre (émetteur, référence, date) doivent venir de l'utilisateur ou d'une
 fiche déjà validée, jamais d'une lecture IA automatique. La formulation
 elle-même ne varie pas. C'est le même principe que `paper-manager` : *le

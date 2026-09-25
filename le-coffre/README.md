@@ -32,17 +32,16 @@ mot de passe, Supabase Auth) dit *qui* tu es à ce service. La phrase secrète d
 que tu peux déchiffrer* — elle n'atteint jamais ce service, sous aucune forme.
 Les deux ne se substituent jamais l'un à l'autre.
 
-## Le classement privé par défaut (15/09/2026)
+## Le classement privé par défaut (mis à jour le 25/09/2026)
 
 Au dépôt d'un fichier, l'application pose seulement une catégorie générique
 selon le type du fichier (`Papiers`, `Images`, `Vidéos`, `Audio`, `Autre`).
 Aucun document n'est envoyé automatiquement à une IA externe pour être lu ou
 classé. L'utilisateur valide ensuite le nom, le dossier et les éventuelles
-informations utiles à la main.
-
-Les anciennes fonctions d'analyse IA restent dans le dépôt comme historique et
-option technique future, mais elles ne font plus partie du parcours publiable
-par défaut. Voir `SECURITY.md`, section « Mode privé par défaut ».
+informations utiles à la main. Deux parcours distincts et explicitement nommés
+permettent toutefois de demander l'analyse Gemini : « Photographier et ranger »
+pour une image, et « Analyser un dossier complet » pour un lot de PDF, d'images
+et de fichiers texte. Voir `SECURITY.md`, section « Mode privé par défaut ».
 
 ## Les alertes d'échéance (04/09/2026)
 
@@ -132,9 +131,9 @@ de la liste des papiers permettent de n'en voir qu'une à la fois.
 Le champ de recherche au-dessus de la liste des papiers (`rechercheCorrespond`
 dans `coffre.ts`) filtre sur le nom, la catégorie, l'émetteur et le
 `texteExtrait` quand il existe, entièrement côté navigateur sur l'index déjà
-déchiffré — aucune requête n'est jamais envoyée nulle part. En mode privé par
-défaut, ce texte extrait n'est plus produit automatiquement par une analyse IA
-au dépôt.
+déchiffré — aucune requête de recherche n'est envoyée. L'import classique ne
+produit pas automatiquement ce texte ; le parcours explicite « Photographier
+et ranger » peut le produire pendant l'analyse intelligente de cette photo.
 
 ## Aperçu instantané, sans téléchargement (05/09/2026, PDF corrigé le 06/09/2026)
 
@@ -174,13 +173,42 @@ fichiers d'un coup :
   de départ, et le second écraserait le premier au lieu de s'y ajouter — le
   même risque que le bug d'index corrigé plus haut, pour la même raison.
 
-## Catégories locales sobres (15/09/2026)
+## Analyse intelligente d'un dossier complet (25/09/2026)
 
-Le parcours publiable ne promet plus une lecture automatique fine des papiers.
-Il pose une catégorie de départ volontairement large selon le type du fichier :
+Le bouton « Analyser un dossier complet » ouvre le sélecteur natif de dossier.
+Chaque PDF, image ou fichier texte compatible est envoyé individuellement à
+Gemini 2.5 Flash, avec son chemin relatif comme simple indice. Gemini privilégie
+les catégories déjà présentes et peut proposer un nouveau nom de dossier court
+quand aucune ne convient. Deux analyses tournent au maximum en parallèle afin
+de garder l'interface fluide et de ménager le quota gratuit.
+
+Le lot reste une préparation : rien n'est stocké avant la validation de
+l'utilisateur. Un format non pris en charge, un document illisible ou une panne
+rejoint le dossier « À vérifier » au lieu de bloquer les autres fichiers ou de
+recevoir un classement inventé. Il en va de même au-delà de 12 Mo par fichier,
+afin de rester sous les limites de requête sans charger un fichier géant en
+base64 dans la mémoire du navigateur. L'import classique et le glisser-déposer
+restent entièrement privés et locaux.
+
+## Import privé et photo intelligente (25/09/2026)
+
+L'import classique pose une catégorie de départ volontairement large selon le type du fichier :
 `Papiers`, `Images`, `Vidéos`, `Audio` ou `Autre`. Le rangement précis vient
-ensuite de l'utilisateur, avec une interface plus calme et plus honnête que des
-déductions automatiques sur des documents personnels.
+ensuite de l'utilisateur. Le bouton distinct « Photographier et ranger » demande
+l'appareil arrière, fait lire uniquement cette photo par `classer-document`,
+puis la chiffre et la range directement si le document est lisible. Une lecture
+incertaine ou une panne revient vers la fiche de vérification, jamais vers un
+classement inventé.
+
+Le copilote utilise `assistant-coffre` après l'envoi explicite d'une question.
+Il reçoit un résumé court des fiches, jamais les fichiers ni la phrase secrète,
+et retombe sur la recherche locale si le modèle est indisponible.
+
+Depuis le même copilote, une demande libre comme « analyse ce dossier » ouvre le
+sélecteur de dossier. Une demande de formulaire peut rechercher un PDF officiel,
+puis `suggerer-champs-formulaire` rapproche les champs détectés de l'identité et
+du résumé des papiers. Toutes les valeurs restent visibles et modifiables avant
+la génération du PDF.
 
 ## Trois vrais bugs remontés par l'usage réel (05/09/2026)
 
@@ -205,14 +233,20 @@ Trouvés sur des vidéos montrant l'appli en main, pas devinés :
   pousse maintenant une entrée d'historique, et un écouteur `popstate`
   referme la fiche au lieu de laisser le navigateur sortir de l'application.
 
-## L'assistant local (15/09/2026)
+## Le copilote Gemini et son repli local (25/09/2026)
 
-La barre « Qu'est-ce que je cherche pour toi ? » s'appuie désormais sur
-`interpreterQuestion` et l'index déjà déchiffré dans le navigateur. Elle aide à
-retrouver un papier, ouvrir les dossiers ou préparer un formulaire, sans
-envoyer le résumé du coffre à une fonction serveur. L'ancien assistant Claude
-reste dans l'historique technique du dépôt, mais il n'est plus appelé par le
-parcours par défaut.
+La barre « Qu'est-ce que je cherche pour toi ? » ouvre désormais le copilote
+`assistant-coffre`, alimenté par Gemini 2.5 Flash au niveau gratuit. Il reçoit
+uniquement le résumé utile des fiches et l'historique de la conversation, jamais
+les fichiers chiffrés ni la phrase secrète. Il peut raisonner, rédiger, retrouver
+un document, proposer une action contrôlée ou utiliser l'ancrage Google pour une
+information actuelle. Une modification ou une suppression reste soumise à une
+confirmation dans l'interface.
+
+Si Gemini est indisponible ou si le quota gratuit est atteint,
+`interpreterQuestion` conserve un repli local : la recherche des papiers et les
+raccourcis vers les dossiers ou les formulaires restent utilisables sans appel
+réseau.
 
 ## Un seul point d'entrée pour chercher et demander (06/09/2026)
 
@@ -220,8 +254,8 @@ Les deux moteurs ci-dessus vivaient derrière deux entrées séparées : la barr
 de recherche en haut d'écran, et un second bouton flottant « Demander au
 coffre » ouvrant l'assistant à blanc — une confusion réelle, vécue en usage
 (deux frappes au mauvais endroit le même soir). Fusion de l'**interface**,
-pas des deux moteurs (qui restent utiles séparément : l'un gratuit et
-instantané, l'autre payant) :
+pas des deux moteurs (qui restent utiles séparément : l'un local et instantané,
+l'autre généraliste sous quota gratuit) :
 
 - Le bouton flottant « Demander au coffre » disparaît. Il ne reste qu'un seul
   bouton flottant : « Ajouter un papier ».
@@ -234,8 +268,8 @@ instantané, l'autre payant) :
   qui ne concerne aucun document précis (« comment résilier une assurance
   habitation ») — ouvre le chat à blanc, comme avant.
 - L'escalade n'est **jamais automatique** : une recherche locale qui échoue
-  ne déclenche pas d'appel payant tout seul (une faute de frappe ne coûte
-  rien) — il faut le geste explicite sur la puce ou le lien.
+  ne consomme pas le quota Gemini à cause d'une simple faute de frappe — il
+  faut le geste explicite sur la puce ou le lien.
 
 ## Accès direct aux rendez-vous, à l'identité et au formulaire (06/09/2026)
 
@@ -273,8 +307,9 @@ le-coffre/
 │       ├── supabase.ts         client Supabase (clé publiable, sécurité par RLS)
 │       └── coffre.ts           les opérations du coffre, contre Supabase
 ├── supabase/functions/
-│   ├── classer-document/       ancienne option IA conservée hors parcours par défaut
-│   ├── assistant-coffre/       ancienne option IA conservée hors parcours par défaut
+│   ├── classer-document/       lecture du parcours explicite « Photographier et ranger »
+│   ├── assistant-coffre/       copilote LLM, appelé après envoi d'une question
+│   ├── suggerer-champs-formulaire/  suggestions contrôlées pour un PDF à remplir
 │   └── envoyer-alertes-echeances/  tâche quotidienne, envoie les alertes via Resend
 └── .env.example                 variables à copier en .env.local
 ```
