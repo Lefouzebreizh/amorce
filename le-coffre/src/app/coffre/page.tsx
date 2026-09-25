@@ -440,7 +440,7 @@ export default function PageCoffre() {
   const entreeDossier = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const previewDeBranche = /^mon-tiroir-secret-.+-erwannchevallier-6916s-projects\.vercel\.app$/.test(window.location.hostname);
+    const previewDeBranche = /^mon-tiroir-secret-git-(?!main(?:-|$))[a-z0-9-]+-erwannchevallier-6916s-projects\.vercel\.app$/.test(window.location.hostname);
     const modeDemoAutorise = process.env.NODE_ENV !== 'production' || previewDeBranche;
     if (modeDemoAutorise && new URLSearchParams(window.location.search).get('demo') === '1') {
       void crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']).then((cleDemo) => {
