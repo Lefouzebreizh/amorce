@@ -4,12 +4,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import {
-  Bell, Briefcase, Camera, Car, ChevronRight, File, FileText, Folder, Heart, Home, Landmark, LogOut,
-  MessageCircle, Plus, Shield, ShieldCheck, Wallet, Wifi, X, Zap, type LucideIcon,
+  ArrowUpRight, Bell, Bot, Briefcase, Camera, Car, CheckCircle2, ChevronRight, File, FileText, Folder,
+  FolderUp, Heart, Home, Landmark, LoaderCircle, LogOut, MessageCircle, ScanLine, Shield, ShieldCheck,
+  Sparkles, Upload, Wallet, Wifi, X, Zap, type LucideIcon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
-  coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
+  analyserDocumentPourClassement, coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
   enregistrerIdentite, composerLettreResiliation, modifierObjet, modifierPlusieursObjets, ecarterEcheance, statutEcheance,
   interpreterQuestion, genererICS, SEUIL_BIENTOT_JOURS, clesParNomAffiche,
@@ -85,6 +86,39 @@ type EnAttente = {
 };
 
 type Correction = { nom: string; categorie: string; montant: string };
+
+type EtatCapture = {
+  etat: 'repos' | 'analyse' | 'chiffrement' | 'range' | 'a-verifier' | 'erreur';
+  message: string;
+  cleDocument?: string;
+};
+
+type EtatImportIntelligent = {
+  etat: 'repos' | 'analyse' | 'pret' | 'erreur';
+  fait: number;
+  total: number;
+  message: string;
+};
+
+// Jeu de données uniquement disponible avec `?demo=1` en développement. Il
+// permet la recette visuelle de l'espace privé sans compte ni document réel ;
+// la condition NODE_ENV est éliminée du bundle de production.
+function indexDemonstration(): IndexCoffre {
+  const date = '2026-09-25T08:00:00.000Z';
+  return {
+    objets: {
+      demo1: { nom: 'Facture EDF septembre', taille: 284_000, type: 'application/pdf', categorie: 'Énergie', deposeLe: date, montant: '89,90 €', emetteur: 'EDF', echeance: { presente: true, date: '2026-10-04', libelle: 'Paiement EDF', confiance: 'haute' } },
+      demo2: { nom: 'Attestation mutuelle', taille: 612_000, type: 'image/jpeg', categorie: 'Santé', deposeLe: date },
+      demo3: { nom: 'Carte grise Scénic', taille: 940_000, type: 'image/jpeg', categorie: 'Véhicule', deposeLe: date },
+      demo4: { nom: 'Avis impôts 2026', taille: 1_250_000, type: 'application/pdf', categorie: 'Impôts', deposeLe: date },
+      demo5: { nom: 'Contrat habitation', taille: 780_000, type: 'application/pdf', categorie: 'Assurance', deposeLe: date },
+    },
+    rendezVous: {
+      rdv1: { id: 'rdv1', libelle: 'Renouvellement passeport', date: '2026-10-12', heure: '10:30' },
+    },
+    identite: { nom: 'Erwann Chevallier', adresse: 'Adresse de démonstration', codePostal: '35000', ville: 'Rennes' },
+  };
+}
 
 // Trois états lisibles d'un coup d'œil, dérivés du même calcul que la
 // bannière d'alerte — voir statutEcheance dans coffre.ts pour les seuils.
@@ -323,6 +357,19 @@ async function fichiersDuGlisserDeposer(dataTransfer: DataTransfer): Promise<Fil
   return listes.flat();
 }
 
+async function executerAvecConcurrence<T>(
+  elements: T[], limite: number, tache: (element: T) => Promise<void>,
+): Promise<void> {
+  let prochain = 0;
+  async function travailleur() {
+    while (prochain < elements.length) {
+      const element = elements[prochain++] as T;
+      await tache(element);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limite, elements.length) }, () => travailleur()));
+}
+
 // Champ de saisie commun aux petits formulaires (identité, rendez-vous) —
 // un seul endroit à toucher pour l'habillage plutôt que de le répéter.
 function Champ(props: React.InputHTMLAttributes<HTMLInputElement>) {
@@ -384,10 +431,24 @@ export default function PageCoffre() {
   // Dossiers dépliés dans la vue « Ranger en dossiers » — vide par défaut,
   // donc tous repliés : voir le rendu de `dossiers.map` plus bas.
   const [dossiersOuverts, setDossiersOuverts] = useState<Set<string>>(new Set());
+  const [etatCapture, setEtatCapture] = useState<EtatCapture>({ etat: 'repos', message: '' });
+  const [etatImportIntelligent, setEtatImportIntelligent] = useState<EtatImportIntelligent>({
+    etat: 'repos', fait: 0, total: 0, message: '',
+  });
   const entreeFichier = useRef<HTMLInputElement>(null);
   const entreePhoto = useRef<HTMLInputElement>(null);
+  const entreeDossier = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (process.env.NODE_ENV !== 'production' && new URLSearchParams(window.location.search).get('demo') === '1') {
+      void crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']).then((cleDemo) => {
+        setUtilisateur({ id: 'demo-local', email: 'erwann@demo.local', user_metadata: {} } as User);
+        setCle(cleDemo);
+        setIndex(indexDemonstration());
+        setEtape('ouvert');
+      });
+      return;
+    }
     supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) {
         routeur.replace('/');
@@ -496,7 +557,7 @@ export default function PageCoffre() {
   // fiche simple, classée localement par type de fichier. Aucun document ne
   // part vers un modèle externe par défaut ; rien ne bouge tant que
   // l'utilisateur n'a pas validé chaque fiche.
-  async function surDepot(fichiers: File[]) {
+  async function surDepot(fichiers: File[], analyseIntelligente = false) {
     if (!fichiers.length || !utilisateur || !cle) return;
     setErreur('');
 
@@ -545,6 +606,14 @@ export default function PageCoffre() {
     }));
     setAValider((precedent) => [...precedent, ...nouveaux]);
     if (entreeFichier.current) entreeFichier.current.value = '';
+    if (entreeDossier.current) entreeDossier.current.value = '';
+
+    if (analyseIntelligente) {
+      setEtatImportIntelligent({
+        etat: 'analyse', fait: 0, total: nouveaux.length,
+        message: `Gemini analyse ${nouveaux.length} document${nouveaux.length > 1 ? 's' : ''}…`,
+      });
+    }
 
     // En parallèle, pas un par un : même sans IA externe, laisser chaque
     // fichier terminer sa préparation indépendamment rend les gros dépôts
@@ -555,11 +624,20 @@ export default function PageCoffre() {
     //
     // La voie privée est la règle : proposerClassement reste une fonction de
     // confort locale, jamais un envoi automatique du document.
-    await Promise.all(nouveaux.map(async (item) => {
-      const proposition = await proposerClassement(item.fichier);
+    const categoriesConnues = new Set(
+      Object.values(index.objets).map((objet) => objet.categorie).filter(Boolean),
+    );
+    let analysesTerminees = 0;
+    await executerAvecConcurrence(nouveaux, analyseIntelligente ? 2 : nouveaux.length, async (item) => {
+      const proposition = analyseIntelligente
+        ? await analyserDocumentPourClassement(item.fichier, Array.from(categoriesConnues))
+        : await proposerClassement(item.fichier);
+      if (analyseIntelligente && proposition.lisible && proposition.categorie) {
+        categoriesConnues.add(proposition.categorie);
+      }
       setAValider((precedent) => precedent.map((p) => (p.cle === item.cle ? {
         ...p, enAnalyse: false,
-        categorie: proposition.lisible ? proposition.categorie : '',
+        categorie: proposition.lisible ? proposition.categorie : (analyseIntelligente ? 'À vérifier' : ''),
         nomAffiche: proposition.lisible && proposition.nomSuggere ? proposition.nomSuggere : p.fichier.name,
         echeance: proposition.echeance,
         emetteur: proposition.emetteur || '',
@@ -567,7 +645,74 @@ export default function PageCoffre() {
         montant: proposition.montant || '',
         texteExtrait: proposition.texteExtrait || '',
       } : p)));
-    }));
+      if (analyseIntelligente) {
+        analysesTerminees += 1;
+        setEtatImportIntelligent({
+          etat: analysesTerminees === nouveaux.length ? 'pret' : 'analyse',
+          fait: analysesTerminees,
+          total: nouveaux.length,
+          message: analysesTerminees === nouveaux.length
+            ? `${nouveaux.length} document${nouveaux.length > 1 ? 's sont prêts' : ' est prêt'} : vérifie puis dépose tout en un clic.`
+            : `Gemini analyse le dossier… ${analysesTerminees}/${nouveaux.length}`,
+        });
+      }
+    });
+  }
+
+  // Parcours express demandé pour le téléphone : une photo, une lecture
+  // intelligente, puis chiffrement et rangement sans fiche intermédiaire si
+  // le document est réellement lisible. Au moindre doute ou incident, la
+  // photo rejoint la file de vérification au lieu d'être rangée au hasard.
+  async function photographierEtRanger(fichiers: File[]) {
+    const fichier = fichiers[0];
+    if (!fichier || !utilisateur || !cle) return;
+    if (fichier.size > TAILLE_MAX_OCTETS) {
+      setEtatCapture({ etat: 'erreur', message: `Cette photo dépasse ${formatTaille(TAILLE_MAX_OCTETS)}.` });
+      return;
+    }
+    const tailleDejaUtilisee = Object.values(index.objets).reduce((total, o) => total + o.taille, 0);
+    if (tailleDejaUtilisee + fichier.size > QUOTA_TOTAL_OCTETS) {
+      setEtatCapture({ etat: 'erreur', message: `Ton espace de ${formatTaille(QUOTA_TOTAL_OCTETS)} est atteint.` });
+      return;
+    }
+
+    setErreur('');
+    setEtatCapture({ etat: 'analyse', message: 'Je lis le document et cherche le bon dossier…' });
+    const proposition = await analyserDocumentPourClassement(fichier);
+    if (!proposition.lisible || proposition.erreurTechnique) {
+      setEtatCapture({
+        etat: 'a-verifier',
+        message: proposition.erreurTechnique
+          ? "L'analyse intelligente est indisponible. La photo est prête à être vérifiée, rien n'est perdu."
+          : "Je ne peux pas lire ce document avec assez de certitude. Vérifie son nom et son dossier avant dépôt.",
+      });
+      await surDepot([fichier]);
+      return;
+    }
+
+    setEtatCapture({ etat: 'chiffrement', message: 'Classement trouvé. Je chiffre la photo avant de la ranger…' });
+    try {
+      const avant = new Set(Object.keys(index.objets));
+      const nouvelIndex = await deposerFichier(
+        utilisateur.id, cle, fichier, proposition.categorie, index,
+        proposition.nomSuggere || fichier.name, proposition.echeance,
+        proposition.emetteur, proposition.referenceClient, proposition.montant,
+        proposition.texteExtrait,
+      );
+      setIndex(nouvelIndex);
+      const cleDocument = Object.keys(nouvelIndex.objets).find((nom) => !avant.has(nom));
+      setEtatCapture({
+        etat: 'range',
+        message: `« ${proposition.nomSuggere || fichier.name} » est chiffré et rangé dans ${proposition.categorie}.`,
+        cleDocument,
+      });
+    } catch (err) {
+      setEtatCapture({
+        etat: 'erreur',
+        message: `Le rangement n'a pas abouti : ${err instanceof Error ? err.message : String(err)}.`,
+      });
+      await surDepot([fichier]);
+    }
   }
 
   function modifierAttente(cleItem: string, champs: Partial<EnAttente>) {
@@ -827,7 +972,9 @@ export default function PageCoffre() {
     if (champs.length === 0) {
       throw new Error("Ce formulaire n'a pas de champs détectables — dépose-le à la main pour le remplir.");
     }
-    const suggestionsDocument = await suggererChampsFormulaire(champs.map((c) => c.nom), index, demarche);
+    const suggestionsDocument = await suggererChampsFormulaire(
+      champs.map((c) => c.nom), index, demarche, index.identite,
+    );
     setFormulairePrerempli({ nomFichier: `${demarche}.pdf`, demarche, bytes, suggestionsDocument });
     setFormulaireOuvert(true);
     fermerAssistant();
@@ -1158,7 +1305,19 @@ export default function PageCoffre() {
         onChange={(e) => {
           const fichiers = Array.from(e.target.files || []);
           e.target.value = '';
-          if (fichiers.length) void surDepot(fichiers);
+          if (fichiers.length) void photographierEtRanger(fichiers);
+        }}
+      />
+      <input
+        ref={entreeDossier}
+        type="file"
+        multiple
+        hidden
+        {...({ webkitdirectory: '', directory: '' } as React.InputHTMLAttributes<HTMLInputElement>)}
+        onChange={(e) => {
+          const fichiers = Array.from(e.target.files || []);
+          e.target.value = '';
+          if (fichiers.length) void surDepot(fichiers, true);
         }}
       />
       {/* Suggestions d'étiquettes déjà utilisées — jamais une liste imposée,
@@ -1171,7 +1330,10 @@ export default function PageCoffre() {
             seulement sur l'écran de connexion. Violet plutôt que turquoise :
             les deux sont censés dominer à parts égales, et le turquoise
             porte déjà l'eyebrow « Bonjour » juste en dessous. */}
-        <p className="text-sm font-semibold tracking-widest text-violet uppercase">Mon Tiroir Secret</p>
+        <div className="coffre-topbar">
+          <p className="coffre-wordmark"><span>Mon</span> Tiroir Secret</p>
+          <p className="coffre-private"><ShieldCheck size={14} /> Chiffré avant stockage</p>
+        </div>
         {/* En-tête */}
         <header className="coffre-hero coffre-hero--scene studio-overview rounded-3xl border border-line bg-paper-raised p-6 sm:p-8">
           <div className="coffre-vault" aria-hidden="true"><span className="coffre-vault__bar" /><span className="coffre-vault__dial" /></div>
@@ -1179,9 +1341,9 @@ export default function PageCoffre() {
             <p className="text-sm font-semibold tracking-widest text-accent uppercase">
               Bonjour {prenom || 'toi'}
             </p>
-            <h1 className="mt-2 font-affiche text-3xl sm:text-4xl texte-degrade">Voici où en sont tes papiers</h1>
+            <h1 className="mt-2 font-affiche text-3xl sm:text-4xl texte-degrade">Tes papiers rangés.<br />Ta tête plus légère.</h1>
             <p className="mt-3 max-w-md text-ink-soft">
-              Ton tiroir garde tes papiers privés, puis te montre calmement ce qui demande ton attention.
+              Photographier, classer, retrouver, préparer : ton espace privé s&apos;occupe du désordre et te laisse les décisions.
             </p>
             <p className="mt-4 flex items-center gap-2 text-sm text-vert">
               <ShieldCheck size={16} /> Classement local par défaut : aucun papier n&apos;est envoyé à une IA externe.
@@ -1206,8 +1368,101 @@ export default function PageCoffre() {
           </div>
         </header>
 
-        <section className="grid gap-3 sm:grid-cols-3" aria-label="Vue d'attention du tiroir secret">
-          <div className="rounded-2xl border border-line bg-paper-raised p-5">
+        <section className="coffre-command" aria-labelledby="titre-actions-rapides">
+          <div className="coffre-command__intro">
+            <p className="coffre-kicker"><Sparkles size={15} /> Action immédiate</p>
+            <h2 id="titre-actions-rapides">Que veux-tu confier au tiroir ?</h2>
+            <p>
+              Trois chemins clairs. La photo choisie est envoyée à Gemini pour être lue puis rangée ;
+              l&apos;import classique reste privé et te laisse valider chaque fiche.
+            </p>
+          </div>
+          <div className="coffre-command__actions">
+            <button type="button" onClick={() => entreePhoto.current?.click()} className="coffre-action coffre-action--primary">
+              <span className="coffre-action__icon"><ScanLine size={24} /></span>
+              <span className="coffre-action__copy">
+                <strong>Photographier et ranger</strong>
+                <small>Gemini lit la photo ; le tiroir la chiffre ensuite et la classe.</small>
+              </span>
+              <ArrowUpRight size={19} className="coffre-action__arrow" />
+            </button>
+            <button type="button" onClick={() => entreeFichier.current?.click()} className="coffre-action">
+              <span className="coffre-action__icon"><Upload size={23} /></span>
+              <span className="coffre-action__copy">
+                <strong>Importer des fichiers</strong>
+                <small>PDF, photos et dossiers, avec validation avant dépôt.</small>
+              </span>
+              <ChevronRight size={19} className="coffre-action__arrow" />
+            </button>
+            <button type="button" onClick={() => entreeDossier.current?.click()} className="coffre-action">
+              <span className="coffre-action__icon"><FolderUp size={23} /></span>
+              <span className="coffre-action__copy">
+                <strong>Analyser un dossier complet</strong>
+                <small>Gemini lit les PDF, images et textes, puis crée les dossiers utiles.</small>
+              </span>
+              <ChevronRight size={19} className="coffre-action__arrow" />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAssistantOuvert(true);
+                setQuestionAssistant('');
+                setTimeout(() => document.getElementById('assistant-du-tiroir')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 0);
+              }}
+              className="coffre-action"
+            >
+              <span className="coffre-action__icon"><Bot size={23} /></span>
+              <span className="coffre-action__copy">
+                <strong>Demander au copilote</strong>
+                <small>Une vraie conversation pour retrouver, expliquer et agir.</small>
+              </span>
+              <ChevronRight size={19} className="coffre-action__arrow" />
+            </button>
+          </div>
+          <p className="coffre-command__privacy">
+            Gemini gratuit : Google peut utiliser les données transmises pour améliorer ses produits.
+            Pour ne transmettre aucun document à une IA, choisis « Importer des fichiers ».
+          </p>
+          {etatImportIntelligent.etat !== 'repos' && (
+            <div className={`coffre-capture-status coffre-capture-status--${etatImportIntelligent.etat}`} role="status" aria-live="polite">
+              <span className="coffre-capture-status__icon">
+                {etatImportIntelligent.etat === 'analyse'
+                  ? <LoaderCircle size={20} className="animate-spin" />
+                  : etatImportIntelligent.etat === 'pret' ? <CheckCircle2 size={20} /> : <FolderUp size={20} />}
+              </span>
+              <p>{etatImportIntelligent.message}</p>
+              {etatImportIntelligent.total > 0 && (
+                <span className="text-xs text-ink-soft">{etatImportIntelligent.fait}/{etatImportIntelligent.total}</span>
+              )}
+              {(etatImportIntelligent.etat === 'pret' || etatImportIntelligent.etat === 'erreur') && (
+                <button type="button" className="coffre-capture-status__close" onClick={() => setEtatImportIntelligent({ etat: 'repos', fait: 0, total: 0, message: '' })} aria-label="Fermer">
+                  <X size={17} />
+                </button>
+              )}
+            </div>
+          )}
+          {etatCapture.etat !== 'repos' && (
+            <div className={`coffre-capture-status coffre-capture-status--${etatCapture.etat}`} role="status" aria-live="polite">
+              <span className="coffre-capture-status__icon">
+                {etatCapture.etat === 'analyse' || etatCapture.etat === 'chiffrement'
+                  ? <LoaderCircle size={20} className="animate-spin" />
+                  : etatCapture.etat === 'range' ? <CheckCircle2 size={20} /> : <Camera size={20} />}
+              </span>
+              <p>{etatCapture.message}</p>
+              {etatCapture.etat === 'range' && etatCapture.cleDocument && (
+                <button type="button" onClick={() => ouvrirDetail(etatCapture.cleDocument!)}>Voir le document</button>
+              )}
+              {(etatCapture.etat === 'range' || etatCapture.etat === 'erreur') && (
+                <button type="button" className="coffre-capture-status__close" onClick={() => setEtatCapture({ etat: 'repos', message: '' })} aria-label="Fermer">
+                  <X size={17} />
+                </button>
+              )}
+            </div>
+          )}
+        </section>
+
+        <section className="coffre-vitals grid gap-3 sm:grid-cols-3" aria-label="Vue d'attention du tiroir secret">
+          <div className="coffre-vital rounded-2xl border border-line bg-paper-raised p-5">
             <p className="flex items-center gap-2 text-sm font-semibold tracking-widest text-accent uppercase">
               <ShieldCheck size={15} /> Privé d&apos;abord
             </p>
@@ -1216,7 +1471,7 @@ export default function PageCoffre() {
               papier{tousLesNoms.length > 1 ? 's' : ''} gardé{tousLesNoms.length > 1 ? 's' : ''} dans le tiroir.
             </p>
           </div>
-          <div className="rounded-2xl border border-line bg-paper-raised p-5">
+          <div className="coffre-vital rounded-2xl border border-line bg-paper-raised p-5">
             <p className="flex items-center gap-2 text-sm font-semibold tracking-widest text-violet uppercase">
               <Bell size={15} /> À surveiller
             </p>
@@ -1225,7 +1480,7 @@ export default function PageCoffre() {
               échéance{papiersAvecEcheance + rendezVousTries.length > 1 ? 's' : ''} ou rendez-vous à garder en tête.
             </p>
           </div>
-          <div className="rounded-2xl border border-line bg-paper-raised p-5">
+          <div className="coffre-vital rounded-2xl border border-line bg-paper-raised p-5">
             <p className="flex items-center gap-2 text-sm font-semibold tracking-widest text-vert uppercase">
               <Folder size={15} /> À clarifier
             </p>
@@ -1244,9 +1499,18 @@ export default function PageCoffre() {
             moment où avoir un point d'entrée pour demander de l'aide compte
             le plus. Elle est désormais toujours affichée, centrée dans son
             propre bloc plutôt que collée au bord supérieur de l'écran. */}
-        <div className="coffre-question rounded-3xl border border-line bg-paper-raised p-6 sm:p-7">
-          <p className="coffre-question__title font-affiche text-xl texte-degrade sm:text-2xl">
-            Qu&apos;est-ce que je cherche pour toi ?
+        <div id="assistant-du-tiroir" className="coffre-question rounded-3xl border border-line bg-paper-raised p-6 sm:p-7">
+          <div className="coffre-question__heading">
+            <div>
+              <p className="coffre-kicker"><Bot size={15} /> Copilote LLM</p>
+              <p className="coffre-question__title font-affiche text-xl texte-degrade sm:text-2xl">
+                Demande vraiment ce dont tu as besoin.
+              </p>
+            </div>
+            <span className="coffre-question__badge">Comprend · raisonne · agit</span>
+          </div>
+          <p className="coffre-question__lead">
+            Retrouver un papier, comprendre une démarche, préparer un formulaire ou classer un document : parle-lui naturellement.
           </p>
           {/* Un seul champ est monté à la fois. La saisie initiale disparaît
               dès que la conversation s'ouvre ; le champ du fil devient alors
@@ -1269,10 +1533,22 @@ export default function PageCoffre() {
                   type="search"
                   value={recherche}
                   onChange={(e) => setRecherche(e.target.value)}
-                  placeholder="Pose une question : « mes photos », « le papier de la mutuelle »…"
+                  placeholder="Ex. « Retrouve ma dernière facture EDF et dis-moi quand elle arrive à échéance »"
                   className="w-full rounded-2xl border border-line bg-paper py-3.5 pr-4 pl-12 text-base outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
                 />
               </form>
+              <div className="coffre-prompts" aria-label="Exemples de demandes">
+                {[
+                  'Retrouve ma dernière facture',
+                  'Aide-moi pour une démarche',
+                  'Range mes papiers',
+                ].map((invite) => (
+                  <button key={invite} type="button" onClick={() => demanderAAssistant(invite)}>{invite}</button>
+                ))}
+              </div>
+              <p className="coffre-question__privacy">
+                <ShieldCheck size={14} /> Jamais les fichiers ni ta phrase secrète : seulement ta question et le résumé utile des fiches.
+              </p>
               {recherche.trim() && (
                 <div className="mx-auto mt-3 flex max-w-xl flex-wrap items-center justify-center gap-2">
                   <p className="text-sm text-accent">{reponseRecherche}</p>
@@ -1314,6 +1590,7 @@ export default function PageCoffre() {
                 }}
                 onOuvrirFormulaire={() => setFormulaireOuvert(true)}
                 onOuvrirRangement={() => setVueDossiers(true)}
+                onOuvrirImportDossier={() => entreeDossier.current?.click()}
                 onExecuterAction={executerActionAssistant}
                 onPreparerFormulaireCerfa={preparerFormulaireCerfa}
                 triAuto={{
@@ -1683,36 +1960,6 @@ export default function PageCoffre() {
           onFermer={() => { setFormulaireOuvert(false); setFormulairePrerempli(undefined); }}
         />
       )}
-
-      {/* Un seul bouton flottant désormais : ajouter un papier — seul point
-          d'entrée visible pour ça (la page entière reste aussi déposable,
-          voir onDrop sur <main>). « Demander au coffre » n'a plus de bouton
-          flottant séparé : la barre de recherche du haut est le point
-          d'entrée unique, qui n'ouvre l'assistant que sur une recherche
-          restée sans résultat ou une question explicitement plus large (voir
-          demanderAAssistant) — plus de deux entrées concurrentes pour le
-          même besoin. `pointer-events-none` sur le conteneur pleine largeur,
-          `auto` sur le bouton : sans ça, toute la bande invisible du bas de
-          l'écran — pas seulement le bouton visible — interceptait les taps
-          destinés aux lignes de documents rendues dessous, quel que soit le
-          défilement (position `fixed`). */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center gap-2 px-4">
-        <button
-          type="button"
-          onClick={() => entreePhoto.current?.click()}
-          className="pointer-events-auto flex items-center gap-2 rounded-full border border-accent bg-paper-raised px-4 py-3.5 font-semibold text-accent shadow-lg transition hover:bg-line"
-          aria-label="Photographier un document"
-        >
-          <Camera size={20} /> <span className="hidden sm:inline">Photographier</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => entreeFichier.current?.click()}
-          className="pointer-events-auto flex items-center gap-2 rounded-full bg-bleu px-6 py-3.5 font-semibold text-paper shadow-lg transition hover:bg-bleu-strong"
-        >
-          <Plus size={20} /> Ajouter un papier
-        </button>
-      </div>
 
       {/* Fiche détail : ouverte au clic sur un document, porte la correction
           du classement et les actions (télécharger / supprimer). */}

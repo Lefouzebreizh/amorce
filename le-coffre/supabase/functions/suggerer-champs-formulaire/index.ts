@@ -9,8 +9,8 @@
 // Une suggestion reste une suggestion — jamais écrite dans le PDF sans que
 // l'utilisateur la voie et la valide dans l'écran de remplissage.
 
-const CLE_ANTHROPIC = Deno.env.get("ANTHROPIC_API_KEY");
-const MODELE = "claude-sonnet-4-5-20250929";
+const CLE_GEMINI = Deno.env.get("GEMINI_API_KEY") ?? Deno.env.get("GOOGLE_API_KEY");
+const MODELE = "gemini-2.5-flash";
 
 const ORIGINES_AUTORISEES = new Set([
   "https://coffre-puce.vercel.app",
@@ -18,8 +18,10 @@ const ORIGINES_AUTORISEES = new Set([
   "https://coffre-git-main-erwannchevallier-6916s-projects.vercel.app",
 ]);
 
+const ORIGINE_APERCU_VERCEL = /^https:\/\/coffre-[a-z0-9-]+-erwannchevallier-6916s-projects\.vercel\.app$/;
+
 function origineAutorisee(origin: string | null): boolean {
-  return !origin || ORIGINES_AUTORISEES.has(origin);
+  return !origin || ORIGINES_AUTORISEES.has(origin) || ORIGINE_APERCU_VERCEL.test(origin);
 }
 
 function entetesCors(origin: string | null): Record<string, string> {
@@ -28,7 +30,7 @@ function entetesCors(origin: string | null): Record<string, string> {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     Vary: "Origin",
   };
-  if (origin && ORIGINES_AUTORISEES.has(origin)) {
+  if (origin && origineAutorisee(origin)) {
     headers["Access-Control-Allow-Origin"] = origin;
   }
   return headers;
@@ -48,6 +50,17 @@ function reponseJson(corps: unknown, statut = 200, origin: string | null = null)
   });
 }
 
+async function utilisateurAuthentifie(requete: Request): Promise<boolean> {
+  const autorisation = requete.headers.get("authorization");
+  const url = Deno.env.get("SUPABASE_URL");
+  const clePublique = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!autorisation?.startsWith("Bearer ") || !url || !clePublique) return false;
+  const verification = await fetch(`${url}/auth/v1/user`, {
+    headers: { Authorization: autorisation, apikey: clePublique },
+  });
+  return verification.ok;
+}
+
 Deno.serve(async (requete: Request) => {
   const origin = requete.headers.get("origin");
   if (!origineAutorisee(origin)) {
@@ -56,8 +69,14 @@ Deno.serve(async (requete: Request) => {
   if (requete.method === "OPTIONS") {
     return new Response("ok", { headers: entetesCors(origin) });
   }
-  if (!CLE_ANTHROPIC) {
-    return reponseJson({ erreur: "ANTHROPIC_API_KEY absente côté serveur." }, 500, origin);
+  if (requete.method !== "POST") {
+    return reponseJson({ erreur: "Méthode non autorisée." }, 405, origin);
+  }
+  if (!(await utilisateurAuthentifie(requete))) {
+    return reponseJson({ erreur: "Session utilisateur requise." }, 401, origin);
+  }
+  if (!CLE_GEMINI) {
+    return reponseJson({ erreur: "GEMINI_API_KEY absente côté serveur." }, 500, origin);
   }
 
   let corps: { champs?: string[]; documents?: DigestDocument[]; identite?: Identite; demarche?: string };
@@ -89,28 +108,33 @@ Deno.serve(async (requete: Request) => {
     `{"valeurs": {"<nom exact du champ>": "<valeur trouvée, texte court>", ...}} — n'inclus que les champs ` +
     `pour lesquels tu as une valeur sûre, omets tous les autres plutôt que d'y mettre une chaîne vide.`;
 
-  const reponse = await fetch("https://api.anthropic.com/v1/messages", {
+  const reponse = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${MODELE}:generateContent`,
+    {
     method: "POST",
     headers: {
-      "x-api-key": CLE_ANTHROPIC,
-      "anthropic-version": "2023-06-01",
+      "x-goog-api-key": CLE_GEMINI,
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: MODELE,
-      max_tokens: 1024,
-      temperature: 0,
-      messages: [{ role: "user", content: invite }],
+      contents: [{ role: "user", parts: [{ text: invite }] }],
+      generationConfig: {
+        responseMimeType: "application/json",
+        maxOutputTokens: 1600,
+        temperature: 0,
+        thinkingConfig: { thinkingBudget: 0 },
+      },
     }),
   });
 
   if (!reponse.ok) {
     const detail = await reponse.text();
-    return reponseJson({ erreur: `Appel Claude en échec (${reponse.status}) : ${detail.slice(0, 300)}` }, 502, origin);
+    return reponseJson({ erreur: `Appel Gemini en échec (${reponse.status}) : ${detail.slice(0, 300)}` }, 502, origin);
   }
 
   const donneesReponse = await reponse.json();
-  const texte: string = donneesReponse?.content?.[0]?.text ?? "";
+  const parties: Array<{ text?: string }> = donneesReponse?.candidates?.[0]?.content?.parts ?? [];
+  const texte = parties.map((partie) => partie.text ?? "").join("\n");
   try {
     const debut = texte.indexOf("{");
     const fin = texte.lastIndexOf("}");
@@ -125,6 +149,6 @@ Deno.serve(async (requete: Request) => {
     }
     return reponseJson({ valeurs }, 200, origin);
   } catch {
-    return reponseJson({ erreur: "Réponse de Claude illisible.", brut: texte.slice(0, 300) }, 502, origin);
+    return reponseJson({ erreur: "Réponse de Gemini illisible.", brut: texte.slice(0, 300) }, 502, origin);
   }
 });

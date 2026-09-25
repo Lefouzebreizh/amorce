@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { FileText, Folder, Globe, Trash2, Triangle, X } from 'lucide-react';
+import { Bot, FileText, Folder, Globe, ShieldCheck, Sparkles, Trash2, Triangle, X } from 'lucide-react';
 import { demanderAuCoffre, type ActionAssistant, type IndexCoffre, type TourConversation } from '@/lib/coffre';
 
 type Message = TourConversation & {
@@ -9,6 +9,7 @@ type Message = TourConversation & {
   // pour un message de l'utilisateur, qui n'a rien de tout ça.
   documentsCites?: string[];
   ouvrirFormulaire?: boolean;
+  ouvrirImportDossier?: boolean;
   ouvrirRangement?: boolean;
   // Un seul bot (10/09/2026) : le message propose de lancer le tri en lot
   // depuis la conversation même — voir le bloc TriAutomatique plus bas.
@@ -48,7 +49,8 @@ function libelleAction(a: ActionAssistant): string {
 
 export function AssistantCoffre({
   index, questionInitiale, onFermer, onOuvrirDocument, onOuvrirFormulaire, onOuvrirRangement,
-  onExecuterAction, onPreparerFormulaireCerfa, triAuto, onLancerTriAutomatique, onBasculerDetailTriAutomatique,
+  onOuvrirImportDossier, onExecuterAction, onPreparerFormulaireCerfa, triAuto,
+  onLancerTriAutomatique, onBasculerDetailTriAutomatique,
 }: {
   index: IndexCoffre;
   // Posée par la recherche locale restée sans résultat, envoyée une seule
@@ -59,6 +61,7 @@ export function AssistantCoffre({
   onOuvrirDocument: (nom: string) => void;
   onOuvrirFormulaire: () => void;
   onOuvrirRangement: () => void;
+  onOuvrirImportDossier: () => void;
   // Exécute une action proposée par l'assistant (classer, supprimer) après
   // confirmation de l'utilisateur — jamais toute seule. Rend un message
   // court à afficher à la place du bouton, succès ou échec.
@@ -121,7 +124,7 @@ export function AssistantCoffre({
   }, [messages, triAuto.enCours]);
 
   // Retrouve le nom réel d'un document cité par son nom exact — jamais
-  // deviné : si Claude a mal recopié un nom, on ne montre pas de lien plutôt
+  // deviné : si Gemini a mal recopié un nom, on ne montre pas de lien plutôt
   // que d'en montrer un faux.
   function nomExistant(nom: string): boolean {
     return Object.values(index.objets).some((o) => o.nom === nom);
@@ -139,6 +142,7 @@ export function AssistantCoffre({
         texte: reponse.reponse,
         documentsCites: reponse.documentsCites,
         ouvrirFormulaire: reponse.ouvrirFormulaire,
+        ouvrirImportDossier: reponse.ouvrirImportDossier,
         ouvrirRangement: reponse.ouvrirRangement,
         declencherTriAutomatique: reponse.declencherTriAutomatique,
         rechercheWebEffectuee: reponse.rechercheWebEffectuee,
@@ -214,6 +218,11 @@ export function AssistantCoffre({
     onOuvrirRangement();
   }
 
+  function ouvrirImportDossierEtFermer() {
+    onFermer();
+    onOuvrirImportDossier();
+  }
+
   return (
     // Une seule barre, un seul bot (10/09/2026) : plus de panneau plein
     // écran par-dessus la page — la conversation vit directement sous la
@@ -221,9 +230,15 @@ export function AssistantCoffre({
     // Une hauteur bornée (pas `100dvh`) évite qu'un long échange n'avale
     // tout l'écran ; `onFermer` referme le bloc sans jamais recouvrir quoi
     // que ce soit d'autre à fermer par-dessus.
-    <div className="rounded-2xl border border-line bg-paper-raised">
-      <div className="flex items-center justify-between border-b border-line p-4">
-        <p className="text-sm font-semibold text-ink-soft">Conversation</p>
+    <div className="assistant-panel rounded-2xl border border-line bg-paper-raised">
+      <div className="assistant-panel__header flex items-center justify-between border-b border-line p-4">
+        <div className="flex items-center gap-3">
+          <span className="assistant-panel__avatar"><Bot size={18} /></span>
+          <div>
+            <p className="text-sm font-semibold text-ink">Copilote du tiroir</p>
+            <p className="flex items-center gap-1 text-xs text-ink-soft"><Sparkles size={11} /> Modèle de langage complet</p>
+          </div>
+        </div>
         <button onClick={onFermer} className="rounded-lg p-1.5 text-ink-soft transition hover:bg-line/40" aria-label="Fermer la conversation">
           <X size={18} />
         </button>
@@ -231,11 +246,15 @@ export function AssistantCoffre({
 
       <div className="max-h-[50vh] overflow-y-auto p-4">
         {messages.length === 0 && (
-          <p className="rounded-2xl border border-dashed border-line bg-paper p-4 text-sm text-ink-soft">
-            Essaie « trouve mes photos », « range la facture EDF dans Énergie », « supprime le
-            doublon de la carte grise », « comment résilier une assurance habitation », ou « je
-            veux remplir un formulaire ».
-          </p>
+          <div className="assistant-panel__empty rounded-2xl border border-dashed border-line bg-paper p-4 text-sm text-ink-soft">
+            <p className="font-medium text-ink">Je peux réfléchir avec toi et agir dans le tiroir.</p>
+            <p className="mt-1">Demande-moi de retrouver un papier, expliquer une démarche, préparer un CERFA, classer un document précis ou chercher une information à jour.</p>
+            <p className="mt-3 flex items-start gap-1.5 text-xs text-ink-soft">
+              <ShieldCheck size={13} className="mt-0.5 shrink-0 text-accent" />
+              Gemini reçoit le résumé utile des fiches, jamais les fichiers chiffrés ni ta phrase secrète.
+              Sur son niveau gratuit, Google peut utiliser les données transmises pour améliorer ses produits.
+            </p>
+          </div>
         )}
         <ul className="flex flex-col gap-3">
             {messages.map((m, i) => (
@@ -281,6 +300,15 @@ export function AssistantCoffre({
                       className="mt-2 flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
                     >
                       <Folder size={12} /> Ranger en dossiers
+                    </button>
+                  )}
+                  {m.ouvrirImportDossier && (
+                    <button
+                      type="button"
+                      onClick={ouvrirImportDossierEtFermer}
+                      className="mt-2 flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
+                    >
+                      <Folder size={12} /> Choisir le dossier à analyser
                     </button>
                   )}
                   {m.actions && m.actions.length > 0 && (
@@ -421,12 +449,12 @@ export function AssistantCoffre({
           <div ref={finDesMessages} />
         </div>
 
-        <form onSubmit={envoyer} className="flex gap-2 border-t border-line p-4">
+        <form onSubmit={envoyer} className="assistant-panel__composer flex gap-2 border-t border-line p-4">
           <input
             type="text"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Pose ta question…"
+            placeholder="Écris comme tu parlerais à quelqu'un…"
             disabled={enCours}
             autoFocus
             className="min-w-0 flex-1 rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition focus:border-accent focus:ring-1 focus:ring-accent disabled:opacity-60"

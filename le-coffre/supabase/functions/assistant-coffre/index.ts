@@ -2,25 +2,29 @@
 // les papiers déjà déposés. Reçoit un RÉSUMÉ des documents (nom, catégorie,
 // émetteur, montant, échéance, jusqu'à 200 caractères de texte extrait —
 // voir digestIndex dans src/lib/coffre.ts), jamais un fichier ni son contenu
-// intégral. Peut aussi chercher sur le web (outil hébergé de Claude) pour une
+// intégral. Peut aussi chercher sur le web (ancrage Google de Gemini) pour une
 // question qui déborde de la paperasse personnelle. Ne conserve rien —
 // mêmes garanties que classer-document, voir SECURITY.md.
 
-const CLE_ANTHROPIC = Deno.env.get("ANTHROPIC_API_KEY");
-const MODELE = "claude-sonnet-4-5-20250929";
-// Un plafond bas : chaque recherche web a un coût, et la plupart des
-// questions n'en demandent aucune — mieux vaut que Claude en manque une que
-// d'en déclencher dix pour une seule question mal comprise.
-const RECHERCHES_WEB_MAX = 3;
-
+const CLE_GEMINI = Deno.env.get("GEMINI_API_KEY") ?? Deno.env.get("GOOGLE_API_KEY");
+// Flash 2.5 reste multimodal, prend en charge l'ancrage Google et dispose d'un
+// niveau gratuit. Le nom est explicite pour qu'un changement de modèle ne
+// puisse pas introduire un coût en silence.
+const MODELE = "gemini-2.5-flash";
 const ORIGINES_AUTORISEES = new Set([
   "https://coffre-puce.vercel.app",
   "https://coffre-erwannchevallier-6916s-projects.vercel.app",
   "https://coffre-git-main-erwannchevallier-6916s-projects.vercel.app",
 ]);
 
+// Les aperçus Git du seul projet `coffre` et du seul compte Vercel d'Erwann
+// changent de sous-domaine à chaque déploiement. Cette expression conserve
+// une liste fermée au projet/compte sans devoir republier la fonction à
+// chaque nouvelle URL temporaire.
+const ORIGINE_APERCU_VERCEL = /^https:\/\/coffre-[a-z0-9-]+-erwannchevallier-6916s-projects\.vercel\.app$/;
+
 function origineAutorisee(origin: string | null): boolean {
-  return !origin || ORIGINES_AUTORISEES.has(origin);
+  return !origin || ORIGINES_AUTORISEES.has(origin) || ORIGINE_APERCU_VERCEL.test(origin);
 }
 
 function entetesCors(origin: string | null): Record<string, string> {
@@ -29,7 +33,7 @@ function entetesCors(origin: string | null): Record<string, string> {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     Vary: "Origin",
   };
-  if (origin && ORIGINES_AUTORISEES.has(origin)) {
+  if (origin && origineAutorisee(origin)) {
     headers["Access-Control-Allow-Origin"] = origin;
   }
   return headers;
@@ -79,10 +83,11 @@ type Resultat = {
   reponse: string;
   documentsCites: string[];
   ouvrirFormulaire: boolean;
+  ouvrirImportDossier: boolean;
   ouvrirRangement: boolean;
   // Un seul bot (10/09/2026) : le tri en lot ne renvoie plus vers un bouton
   // séparé du tableau de bord, il se déclenche depuis la conversation même —
-  // voir point 3 du système ci-dessous et trierAutomatiquement() côté client.
+  // voir point 5 du système ci-dessous et trierAutomatiquement() côté client.
   declencherTriAutomatique: boolean;
   rechercheWebEffectuee: boolean;
   actions: ActionProposee[];
@@ -100,6 +105,17 @@ function reponseJson(corps: unknown, statut = 200, origin: string | null = null)
   });
 }
 
+async function utilisateurAuthentifie(requete: Request): Promise<boolean> {
+  const autorisation = requete.headers.get("authorization");
+  const url = Deno.env.get("SUPABASE_URL");
+  const clePublique = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!autorisation?.startsWith("Bearer ") || !url || !clePublique) return false;
+  const verification = await fetch(`${url}/auth/v1/user`, {
+    headers: { Authorization: autorisation, apikey: clePublique },
+  });
+  return verification.ok;
+}
+
 Deno.serve(async (requete: Request) => {
   const origin = requete.headers.get("origin");
   if (!origineAutorisee(origin)) {
@@ -108,8 +124,14 @@ Deno.serve(async (requete: Request) => {
   if (requete.method === "OPTIONS") {
     return new Response("ok", { headers: entetesCors(origin) });
   }
-  if (!CLE_ANTHROPIC) {
-    return reponseJson({ erreur: "ANTHROPIC_API_KEY absente côté serveur." }, 500, origin);
+  if (requete.method !== "POST") {
+    return reponseJson({ erreur: "Méthode non autorisée." }, 405, origin);
+  }
+  if (!(await utilisateurAuthentifie(requete))) {
+    return reponseJson({ erreur: "Session utilisateur requise." }, 401, origin);
+  }
+  if (!CLE_GEMINI) {
+    return reponseJson({ erreur: "GEMINI_API_KEY absente côté serveur." }, 500, origin);
   }
 
   let corps: { question?: string; historique?: Tour[]; documents?: DigestDocument[] };
@@ -129,7 +151,9 @@ Deno.serve(async (requete: Request) => {
     `Aujourd'hui : ${aujourdhui}.\n\n` +
     `Voici la liste des papiers déjà déposés par cet utilisateur, en JSON — jamais le contenu ` +
     `des fichiers eux-mêmes, seulement ce résumé :\n${JSON.stringify(documents ?? [])}\n\n` +
-    `Ton rôle a six volets :\n` +
+    `Tu es un vrai copilote généraliste, pas un moteur de mots-clés. Tu comprends les demandes ` +
+    `libres, relies plusieurs informations, expliques ton raisonnement de façon simple et admets ` +
+    `clairement ce que tu ne peux pas vérifier. Ton rôle a huit volets :\n` +
     `1. Retrouver un ou plusieurs papiers dans CETTE liste, jamais en inventer un qui n'y est ` +
     `pas. Mets leur "nom" exact (tel qu'écrit ci-dessus, caractère pour caractère) dans ` +
     `"documentsCites". Liste vide si aucun ne correspond, plutôt que d'en approcher un au hasard.\n` +
@@ -145,12 +169,15 @@ Deno.serve(async (requete: Request) => {
     `3. Si l'utilisateur veut remplir, compléter ou signer un document dont il a déjà le PDF vierge, ` +
     `ou si le point 2 n'a rien trouvé de fiable, explique dans "reponse" que l'outil « Remplir un ` +
     `formulaire » du tableau de bord fait ça, et mets "ouvrirFormulaire": true.\n` +
-    `4. Si l'utilisateur veut ranger, classer ou trier TOUS ses papiers ou un lot indéterminé ` +
+    `4. Si l'utilisateur veut envoyer, importer, analyser ou ranger un DOSSIER de fichiers qui ` +
+    `n'est pas encore dans le tiroir, explique que tu peux lire les PDF, images et textes, créer ` +
+    `les catégories utiles et préparer tout le lot, puis mets "ouvrirImportDossier": true.\n` +
+    `5. Si l'utilisateur veut ranger, classer ou trier TOUS ses papiers déjà présents ou un lot indéterminé ` +
     `(« range tout », « trie mes papiers »), dis dans "reponse" que tu t'en occupes maintenant ` +
     `(jamais une question du genre « veux-tu que je... » — ça part automatiquement, sans clic) ` +
     `et mets "declencherTriAutomatique": true — ne propose aucune action précise dans ce cas, ` +
     `ce tri en lot traite tous les papiers non classés bien mieux qu'une action par document.\n` +
-    `5. Si l'utilisateur désigne un ou plusieurs documents PRÉCIS (nommés ou clairement identifiables ` +
+    `6. Si l'utilisateur désigne un ou plusieurs documents PRÉCIS (nommés ou clairement identifiables ` +
     `dans la liste) et demande de les classer dans une catégorie — existante ou nouvelle, ce qui ` +
     `revient à créer un dossier, un dossier n'étant qu'une catégorie partagée par des documents — ` +
     `ou de les supprimer, propose une ou plusieurs entrées dans "actions" plutôt que de renvoyer ` +
@@ -158,66 +185,71 @@ Deno.serve(async (requete: Request) => {
     `{"type": "supprimer", "nom": "..."}. "nom" doit toujours être un nom EXACT de la liste ` +
     `ci-dessus, jamais inventé ni approché. Dis dans "reponse" ce que tu proposes, en clair — ` +
     `l'action ne s'exécute qu'après confirmation de l'utilisateur, jamais toute seule.\n` +
-    `6. Pour une vraie question générale (définition, actualité, calcul, culture générale...) qui ` +
-    `ne concerne pas directement ses papiers, tu peux chercher sur le web avec l'outil fourni — ` +
-    `dis alors clairement dans "reponse" que ça vient d'une recherche web, jamais confondu avec ` +
-    `le contenu de ses papiers personnels.\n\n` +
+    `7. Pour une vraie question générale (définition, actualité, calcul, rédaction, comparaison, ` +
+    `préparation d'un plan ou aide à la décision), réponds utilement avec tes connaissances. Si la ` +
+    `réponse dépend d'une information actuelle, cherche sur le web avec l'outil fourni et indique-le ` +
+    `clairement, sans la confondre avec le contenu de ses papiers personnels.\n` +
+    `8. Tu peux rédiger un brouillon de courrier, une checklist ou un plan d'action dans "reponse". ` +
+    `Tu n'affirmes jamais avoir envoyé, signé, payé ou supprimé quelque chose : seules les actions ` +
+    `structurées proposées ci-dessous peuvent être exécutées, après confirmation dans l'interface.\n\n` +
     `Ne devine jamais un fait sur un papier qui n'est pas dans la liste ci-dessus : dans le ` +
     `doute, dis que tu ne le trouves pas plutôt que d'en inventer un.\n` +
-    `Réponds toujours en français, court et concret (quelques phrases maximum), en texte ` +
+    `Réponds toujours en français, naturel, chaleureux et concret. Adapte la longueur à la demande, en texte ` +
     `naturel uniquement : jamais de balise comme <cite> ou de crochet de note ([1], [2]…), ` +
     `même après une recherche web — nomme la source dans la phrase si besoin.\n\n` +
     `Réponds UNIQUEMENT avec un objet JSON, sans texte autour, avec exactement ces champs : ` +
     `{"reponse": ta réponse en langage naturel, ` +
     `"documentsCites": [noms exacts trouvés dans la liste, tableau vide si aucun], ` +
     `"ouvrirFormulaire": booléen, ` +
+    `"ouvrirImportDossier": booléen, ` +
     `"ouvrirRangement": booléen (toujours faux désormais, conservé pour compatibilité), ` +
     `"declencherTriAutomatique": booléen, ` +
-    `"actions": [actions précises proposées comme au point 5, tableau vide si aucune], ` +
+    `"actions": [actions précises proposées comme au point 6, tableau vide si aucune], ` +
     `"formulaireCerfa": {"demarche": "...", "url": "..."} comme au point 2, ou null si aucun formulaire trouvé, ` +
     `"rechercheWebEffectuee": vrai seulement si tu as réellement utilisé l'outil de recherche ` +
     `web pour cette réponse précise}.`;
 
-  const messages = [
+  const contenus = [
     ...(Array.isArray(historique) ? historique : []).map((tour) => ({
-      role: tour.role,
-      content: tour.texte,
+      role: tour.role === "assistant" ? "model" : "user",
+      parts: [{ text: tour.texte }],
     })),
-    { role: "user", content: question },
+    { role: "user", parts: [{ text: question }] },
   ];
 
-  const reponse = await fetch("https://api.anthropic.com/v1/messages", {
+  const reponse = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${MODELE}:generateContent`,
+    {
     method: "POST",
     headers: {
-      "x-api-key": CLE_ANTHROPIC,
-      "anthropic-version": "2023-06-01",
+      "x-goog-api-key": CLE_GEMINI,
       "content-type": "application/json",
     },
     body: JSON.stringify({
-      model: MODELE,
-      max_tokens: 1024,
-      temperature: 0,
-      system: systeme,
-      tools: [{ type: "web_search_20250305", name: "web_search", max_uses: RECHERCHES_WEB_MAX }],
-      messages,
+      systemInstruction: { parts: [{ text: systeme }] },
+      contents: contenus,
+      tools: [{ googleSearch: {} }],
+      generationConfig: {
+        maxOutputTokens: 4096,
+        temperature: 0.2,
+        thinkingConfig: { thinkingBudget: 512 },
+      },
     }),
   });
 
   if (!reponse.ok) {
     const detail = await reponse.text();
-    return reponseJson({ erreur: `Appel Claude en échec (${reponse.status}) : ${detail.slice(0, 300)}` }, 502, origin);
+    return reponseJson({ erreur: `Appel Gemini en échec (${reponse.status}) : ${detail.slice(0, 300)}` }, 502, origin);
   }
 
   const donneesReponse = await reponse.json();
-  const blocs: Array<{ type: string; text?: string }> = donneesReponse?.content ?? [];
-  const rechercheWebEffectuee = blocs.some(
-    (b) => b.type === "server_tool_use" || b.type === "web_search_tool_result",
+  const candidat = donneesReponse?.candidates?.[0];
+  const parties: Array<{ text?: string }> = candidat?.content?.parts ?? [];
+  const rechercheWebEffectuee = Boolean(
+    candidat?.groundingMetadata?.webSearchQueries?.length
+    || candidat?.groundingMetadata?.groundingChunks?.length,
   );
-  // La réponse finale (le JSON attendu) suit toujours les blocs d'outil quand
-  // il y en a — jamais le premier bloc texte, qui peut n'être qu'un
-  // raisonnement intermédiaire avant la recherche web.
-  const blocsTexte = blocs.filter((b): b is { type: string; text: string } => b.type === "text" && Boolean(b.text));
-  const texte = blocsTexte.length > 0 ? blocsTexte[blocsTexte.length - 1].text : "";
+  const texte = parties.map((partie) => partie.text ?? "").join("\n");
 
   try {
     const debut = texte.indexOf("{");
@@ -225,6 +257,8 @@ Deno.serve(async (requete: Request) => {
     const resultat = JSON.parse(texte.slice(debut, fin + 1)) as Resultat;
     resultat.rechercheWebEffectuee = Boolean(resultat.rechercheWebEffectuee) || rechercheWebEffectuee;
     if (!Array.isArray(resultat.documentsCites)) resultat.documentsCites = [];
+    resultat.ouvrirFormulaire = Boolean(resultat.ouvrirFormulaire);
+    resultat.ouvrirImportDossier = Boolean(resultat.ouvrirImportDossier);
     resultat.ouvrirRangement = Boolean(resultat.ouvrirRangement);
     resultat.declencherTriAutomatique = Boolean(resultat.declencherTriAutomatique);
     // Filet défensif sur les actions, la partie la plus sensible de la
@@ -263,6 +297,6 @@ Deno.serve(async (requete: Request) => {
     }
     return reponseJson(resultat, 200, origin);
   } catch {
-    return reponseJson({ erreur: "Réponse de Claude illisible.", brut: texte.slice(0, 300) }, 502, origin);
+    return reponseJson({ erreur: "Réponse de Gemini illisible.", brut: texte.slice(0, 300) }, 502, origin);
   }
 });

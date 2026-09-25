@@ -265,6 +265,54 @@ export async function proposerClassement(fichier: File): Promise<PropositionClas
   };
 }
 
+function b64FromFichier(buf: ArrayBuffer): string {
+  // Conversion par blocs : une photo récente peut peser plusieurs mégaoctets
+  // et `String.fromCharCode(...octets)` ferait déborder la pile du navigateur.
+  const octets = new Uint8Array(buf);
+  const TAILLE_BLOC = 32768;
+  let binaire = '';
+  for (let i = 0; i < octets.length; i += TAILLE_BLOC) {
+    binaire += String.fromCharCode(...octets.subarray(i, i + TAILLE_BLOC));
+  }
+  return btoa(binaire);
+}
+
+// Parcours volontaire « Photographier et ranger » : le clic sur cette action
+// vaut consentement pour envoyer CETTE photo en clair à la fonction de lecture
+// éphémère. Elle n'est jamais appelée par l'import privé classique. Le fichier
+// est ensuite chiffré dans le navigateur avant son stockage, comme tous les
+// autres documents. Une panne ou un document illisible revient vers la fiche
+// de vérification plutôt que d'inventer un classement.
+export async function analyserDocumentPourClassement(
+  fichier: File, categoriesExistantes: string[] = [],
+): Promise<PropositionClassement> {
+  const vide: PropositionClassement = {
+    lisible: false, categorie: '', nomSuggere: '', emetteur: null, referenceClient: null, montant: null,
+    texteExtrait: null,
+    echeance: { presente: false, date: null, libelle: null, confiance: 'basse' },
+  };
+  // La requête transporte le fichier en base64 (+33 % environ). Garder une
+  // marge sous la limite des requêtes Edge/Gemini évite de dupliquer en
+  // mémoire un fichier de plusieurs Go autorisé par le stockage du coffre.
+  // Il reste importable, mais passe par la fiche « À vérifier ».
+  if (fichier.size > 12 * 1024 * 1024) return { ...vide, erreurTechnique: true };
+  try {
+    const buf = await fichier.arrayBuffer();
+    const { data, error } = await supabase.functions.invoke('classer-document', {
+      body: {
+        donnees: b64FromFichier(buf),
+        type: fichier.type || 'application/octet-stream',
+        cheminRelatif: fichier.webkitRelativePath || fichier.name,
+        categoriesExistantes: categoriesExistantes.filter(Boolean).slice(0, 100),
+      },
+    });
+    if (error || !data || 'erreur' in data) return { ...vide, erreurTechnique: true };
+    return data as PropositionClassement;
+  } catch {
+    return { ...vide, erreurTechnique: true };
+  }
+}
+
 // Catégorie générique posée sans appel réseau. C'est elle qui garantit
 // qu'aucun fichier n'est jamais refusé ni laissé de côté : l'utilisateur peut
 // ensuite affiner le nom ou le dossier à la main.
@@ -302,6 +350,7 @@ export type ReponseAssistant = {
   reponse: string;
   documentsCites: string[];
   ouvrirFormulaire: boolean;
+  ouvrirImportDossier: boolean;
   ouvrirRangement: boolean;
   // Un seul bot (10/09/2026) : demande de tri en lot proposée depuis la
   // conversation elle-même — voir trierAutomatiquement() dans page.tsx.
@@ -345,25 +394,45 @@ export function digestIndex(index: IndexCoffre): DigestDocument[] {
   }));
 }
 
-// Assistant local par défaut : répond avec l'index déjà déchiffré dans ce
-// navigateur, sans appeler de modèle externe ni transmettre le résumé des
-// papiers. Les fonctions IA serveur peuvent rester dans le dépôt pour une
-// option future explicite, mais l'expérience publiable est d'abord privée.
+// L'envoi d'une question depuis le panneau Assistant est une action explicite :
+// seuls un résumé court des fiches et l'historique de CE fil sont transmis,
+// jamais les fichiers ni la phrase secrète. Si le service est indisponible,
+// on retombe sur la recherche locale au lieu de casser le parcours.
 export async function demanderAuCoffre(
   question: string, historique: TourConversation[], index: IndexCoffre,
 ): Promise<ReponseAssistant> {
-  void historique;
   const resultatLocal = interpreterQuestion(index, question);
-  return {
-    reponse: resultatLocal.reponse || 'Dis-moi ce que tu cherches : un papier, un dossier, un PDF, une photo, ou un formulaire à préparer.',
+  const repliLocal: ReponseAssistant = {
+    reponse: resultatLocal.reponse
+      ? `${resultatLocal.reponse} L'assistant enrichi est momentanément indisponible ; cette réponse vient de la recherche privée locale.`
+      : "L'assistant enrichi est momentanément indisponible. Réessaie dans un instant.",
     documentsCites: resultatLocal.noms.map((nom) => index.objets[nom]?.nom).filter((nom): nom is string => Boolean(nom)),
     ouvrirFormulaire: resultatLocal.action === 'formulaire',
+    ouvrirImportDossier: false,
     ouvrirRangement: resultatLocal.action === 'rangement',
     declencherTriAutomatique: false,
     rechercheWebEffectuee: false,
     actions: [],
     formulaireCerfa: null,
   };
+  try {
+    const { data, error } = await supabase.functions.invoke('assistant-coffre', {
+      body: { question, historique, documents: digestIndex(index) },
+    });
+    if (error || !data || 'erreur' in data) return repliLocal;
+    const resultat = data as ReponseAssistant;
+    resultat.documentsCites = Array.isArray(resultat.documentsCites) ? resultat.documentsCites : [];
+    resultat.actions = Array.isArray(resultat.actions) ? resultat.actions : [];
+    resultat.ouvrirFormulaire = Boolean(resultat.ouvrirFormulaire);
+    resultat.ouvrirImportDossier = Boolean(resultat.ouvrirImportDossier);
+    resultat.ouvrirRangement = Boolean(resultat.ouvrirRangement);
+    resultat.declencherTriAutomatique = Boolean(resultat.declencherTriAutomatique);
+    resultat.rechercheWebEffectuee = Boolean(resultat.rechercheWebEffectuee);
+    if (!resultat.formulaireCerfa || typeof resultat.formulaireCerfa !== 'object') resultat.formulaireCerfa = null;
+    return resultat;
+  } catch {
+    return repliLocal;
+  }
 }
 
 // Récupère les octets d'un CERFA officiel dont l'assistant a trouvé
@@ -383,16 +452,21 @@ export async function recupererFormulaireCerfa(url: string): Promise<ArrayBuffer
   return octets.buffer;
 }
 
-// En mode privé, on ne déduit plus de valeurs depuis les papiers via une IA
-// externe. Le remplissage automatique reste local : identité, date du jour et
-// texte libre corrigé par l'utilisateur.
+// Appel explicite depuis le parcours assistant « prépare ce formulaire ».
+// Gemini ne reçoit que les noms de champs, l'identité enregistrée et le résumé
+// des fiches ; chaque suggestion reste visible et modifiable avant génération.
 export async function suggererChampsFormulaire(
-  champs: string[], index: IndexCoffre, demarche?: string,
+  champs: string[], index: IndexCoffre, demarche?: string, identite?: Identite,
 ): Promise<Record<string, string>> {
-  void champs;
-  void index;
-  void demarche;
-  return {};
+  try {
+    const { data, error } = await supabase.functions.invoke('suggerer-champs-formulaire', {
+      body: { champs, documents: digestIndex(index), identite, demarche },
+    });
+    if (error || !data || 'erreur' in data || !data.valeurs || typeof data.valeurs !== 'object') return {};
+    return data.valeurs as Record<string, string>;
+  } catch {
+    return {};
+  }
 }
 
 export async function coffreExiste(userId: string): Promise<boolean> {
