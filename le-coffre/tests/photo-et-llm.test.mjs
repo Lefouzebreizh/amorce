@@ -16,7 +16,7 @@ test('la photo est une action principale visible, jamais une icône seule sur mo
 });
 
 test('les données de démonstration restent fictives et limitées à un aperçu Vercel', () => {
-  assert.match(page, /mon-tiroir-secret-git-\(\?!main/);
+  assert.match(page, /estApercuVercelDuCoffre\(window\.location\.hostname\)/);
   assert.match(page, /modeDemoAutorise && new URLSearchParams/);
   assert.match(page, /alex\.martin@example\.invalid/);
   assert.doesNotMatch(page, /erwann@demo\.local/);
@@ -84,6 +84,10 @@ test('la fonction LLM utilise le modèle généraliste actuel et ses outils', ()
   assert.match(assistant, /googleSearch/);
   assert.match(assistant, /GEMINI_API_KEY/);
   assert.match(assistant, /vrai copilote généraliste/);
+  assert.match(assistant, /\[assistant-coffre\] réponse Gemini/);
+  assert.match(assistant, /statut: reponse\.status/);
+  assert.match(assistant, /nombrePiecesJointes: piecesJointes\.length/);
+  assert.match(assistant, /Gemini indisponible/);
 });
 
 test('aucune fonction IA du coffre ne dépend encore de Claude', () => {

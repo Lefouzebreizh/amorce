@@ -230,25 +230,39 @@ Deno.serve(async (requete: Request) => {
     { role: "user", parts: partiesUtilisateur },
   ];
 
-  const reponse = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${MODELE}:generateContent`,
-    {
-    method: "POST",
-    headers: {
-      "x-goog-api-key": CLE_GEMINI,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: systeme }] },
-      contents: contenus,
-      tools: [{ googleSearch: {} }],
-      generationConfig: {
-        maxOutputTokens: 4096,
-        temperature: 0.2,
-        thinkingConfig: { thinkingBudget: 512 },
+  let reponse: Response;
+  const debutAppel = Date.now();
+  try {
+    reponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODELE}:generateContent`,
+      {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": CLE_GEMINI,
+        "content-type": "application/json",
       },
-    }),
-  });
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systeme }] },
+        contents: contenus,
+        tools: [{ googleSearch: {} }],
+        generationConfig: {
+          maxOutputTokens: 4096,
+          temperature: 0.2,
+          thinkingConfig: { thinkingBudget: 512 },
+        },
+      }),
+    });
+  } catch {
+    console.warn("[assistant-coffre] Gemini indisponible", JSON.stringify({ modele: MODELE }));
+    return reponseJson({ erreur: "Gemini est momentanément injoignable. Réessaie dans un instant." }, 502, origin);
+  }
+  // Journal minimal sans texte de la demande, noms, contenus, identifiants ni clé.
+  console.info("[assistant-coffre] réponse Gemini", JSON.stringify({
+    modele: MODELE,
+    statut: reponse.status,
+    dureeMs: Date.now() - debutAppel,
+    nombrePiecesJointes: piecesJointes.length,
+  }));
 
   if (!reponse.ok) {
     const detail = await reponse.text();
