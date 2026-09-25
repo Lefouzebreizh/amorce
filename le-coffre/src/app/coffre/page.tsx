@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import {
-  Bell, Briefcase, Car, ChevronRight, File, FileText, Folder, Heart, Home, Landmark, LogOut,
+  Bell, Briefcase, Camera, Car, ChevronRight, File, FileText, Folder, Heart, Home, Landmark, LogOut,
   MessageCircle, Plus, Shield, ShieldCheck, Wallet, Wifi, X, Zap, type LucideIcon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -385,6 +385,7 @@ export default function PageCoffre() {
   // donc tous repliés : voir le rendu de `dossiers.map` plus bas.
   const [dossiersOuverts, setDossiersOuverts] = useState<Set<string>>(new Set());
   const entreeFichier = useRef<HTMLInputElement>(null);
+  const entreePhoto = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -998,7 +999,7 @@ export default function PageCoffre() {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
         <div>
-          <p className="text-sm tracking-widest text-ink-soft uppercase">Le Tiroir Secret</p>
+          <p className="text-sm tracking-widest text-ink-soft uppercase">Mon Tiroir Secret</p>
           <h1 className="mt-2 font-affiche text-4xl texte-degrade">Crée ton accès direct</h1>
           <p className="mt-3 text-ink-soft">La prochaine fois, tu entreras directement avec ce mot de passe.</p>
         </div>
@@ -1024,7 +1025,7 @@ export default function PageCoffre() {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
         <div>
-          <p className="text-sm tracking-widest text-ink-soft uppercase">Le Tiroir Secret</p>
+          <p className="text-sm tracking-widest text-ink-soft uppercase">Mon Tiroir Secret</p>
           <h1 className="mt-2 font-affiche text-4xl texte-degrade">Choisis ta phrase secrète</h1>
           <p className="mt-3 text-ink-soft">
             Elle chiffre chaque document déposé, entièrement dans ce navigateur. Nous ne la
@@ -1054,7 +1055,7 @@ export default function PageCoffre() {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-6 px-6 py-16">
         <div>
-          <p className="text-sm tracking-widest text-ink-soft uppercase">Le Tiroir Secret</p>
+          <p className="text-sm tracking-widest text-ink-soft uppercase">Mon Tiroir Secret</p>
           <h1 className="mt-2 font-affiche text-4xl texte-degrade">Entre ta phrase secrète</h1>
         </div>
         <form onSubmit={deverrouiller} className="flex flex-col gap-3">
@@ -1140,7 +1141,25 @@ export default function PageCoffre() {
         type="file"
         multiple
         hidden
-        onChange={(e) => surDepot(Array.from(e.target.files || []))}
+        onChange={(e) => {
+          const fichiers = Array.from(e.target.files || []);
+          e.target.value = '';
+          if (fichiers.length) void surDepot(fichiers);
+        }}
+      />
+      {/* Sur mobile, capture=environment demande l'appareil photo arrière.
+          La photo rejoint le même aperçu et la même validation que tout dépôt. */}
+      <input
+        ref={entreePhoto}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        hidden
+        onChange={(e) => {
+          const fichiers = Array.from(e.target.files || []);
+          e.target.value = '';
+          if (fichiers.length) void surDepot(fichiers);
+        }}
       />
       {/* Suggestions d'étiquettes déjà utilisées — jamais une liste imposée,
           juste ce que l'utilisateur a lui-même déjà tapé. */}
@@ -1152,7 +1171,7 @@ export default function PageCoffre() {
             seulement sur l'écran de connexion. Violet plutôt que turquoise :
             les deux sont censés dominer à parts égales, et le turquoise
             porte déjà l'eyebrow « Bonjour » juste en dessous. */}
-        <p className="text-sm font-semibold tracking-widest text-violet uppercase">Le Tiroir Secret</p>
+        <p className="text-sm font-semibold tracking-widest text-violet uppercase">Mon Tiroir Secret</p>
         {/* En-tête */}
         <header className="coffre-hero coffre-hero--scene studio-overview rounded-3xl border border-line bg-paper-raised p-6 sm:p-8">
           <div className="coffre-vault" aria-hidden="true"><span className="coffre-vault__bar" /><span className="coffre-vault__dial" /></div>
@@ -1229,52 +1248,56 @@ export default function PageCoffre() {
           <p className="coffre-question__title font-affiche text-xl texte-degrade sm:text-2xl">
             Qu&apos;est-ce que je cherche pour toi ?
           </p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (recherche.trim()) demanderAAssistant(recherche.trim());
-            }}
-            className="relative"
-          >
-            {/* Bulle de discussion plutôt qu'une loupe (10/09/2026) : cette
-                barre interroge un assistant en langage naturel, elle ne
-                filtre pas une liste par mots-clés — la loupe suggérait le
-                mauvais geste. */}
-            <MessageCircle size={20} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-soft" />
-            <input
-              type="search"
-              value={recherche}
-              onChange={(e) => setRecherche(e.target.value)}
-              placeholder="Pose une question : « mes photos », « le papier de la mutuelle »…"
-              className="w-full rounded-2xl border border-line bg-paper py-3.5 pr-4 pl-12 text-base outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
-            />
-          </form>
-          {recherche.trim() && (
-            <div className="mx-auto mt-3 flex max-w-xl flex-wrap items-center justify-center gap-2">
-              <p className="text-sm text-accent">{reponseRecherche}</p>
-              {actionRecherche === 'rangement' && (
-                <button
-                  type="button"
-                  onClick={() => { setRecherche(''); setVueDossiers(true); }}
-                  className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
-                >
-                  <Folder size={12} /> Ranger en dossiers
-                </button>
+          {/* Un seul champ est monté à la fois. La saisie initiale disparaît
+              dès que la conversation s'ouvre ; le champ du fil devient alors
+              l'unique point de saisie, jusqu'à la fermeture du fil. */}
+          {!assistantOuvert && (
+            <>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (recherche.trim()) demanderAAssistant(recherche.trim());
+                }}
+                className="relative"
+              >
+                {/* Bulle de discussion plutôt qu'une loupe (10/09/2026) : cette
+                    barre interroge un assistant en langage naturel, elle ne
+                    filtre pas une liste par mots-clés — la loupe suggérait le
+                    mauvais geste. */}
+                <MessageCircle size={20} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-soft" />
+                <input
+                  type="search"
+                  value={recherche}
+                  onChange={(e) => setRecherche(e.target.value)}
+                  placeholder="Pose une question : « mes photos », « le papier de la mutuelle »…"
+                  className="w-full rounded-2xl border border-line bg-paper py-3.5 pr-4 pl-12 text-base outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
+                />
+              </form>
+              {recherche.trim() && (
+                <div className="mx-auto mt-3 flex max-w-xl flex-wrap items-center justify-center gap-2">
+                  <p className="text-sm text-accent">{reponseRecherche}</p>
+                  {actionRecherche === 'rangement' && (
+                    <button
+                      type="button"
+                      onClick={() => { setRecherche(''); setVueDossiers(true); }}
+                      className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
+                    >
+                      <Folder size={12} /> Ranger en dossiers
+                    </button>
+                  )}
+                  {actionRecherche === 'formulaire' && (
+                    <button
+                      type="button"
+                      onClick={() => { setRecherche(''); setFormulaireOuvert(true); }}
+                      className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
+                    >
+                      <FileText size={12} /> Remplir un formulaire
+                    </button>
+                  )}
+                </div>
               )}
-              {actionRecherche === 'formulaire' && (
-                <button
-                  type="button"
-                  onClick={() => { setRecherche(''); setFormulaireOuvert(true); }}
-                  className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
-                >
-                  <FileText size={12} /> Remplir un formulaire
-                </button>
-              )}
-            </div>
+            </>
           )}
-          {/* Une seule barre, un seul bot (10/09/2026) : la conversation
-              s'affiche ici, directement sous la barre qui l'a ouverte — plus
-              de panneau plein écran séparé. */}
           {assistantOuvert && (
             <div className="mx-auto mt-5 max-w-xl">
               <AssistantCoffre
@@ -1673,7 +1696,15 @@ export default function PageCoffre() {
           l'écran — pas seulement le bouton visible — interceptait les taps
           destinés aux lignes de documents rendues dessous, quel que soit le
           défilement (position `fixed`). */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
+      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center gap-2 px-4">
+        <button
+          type="button"
+          onClick={() => entreePhoto.current?.click()}
+          className="pointer-events-auto flex items-center gap-2 rounded-full border border-accent bg-paper-raised px-4 py-3.5 font-semibold text-accent shadow-lg transition hover:bg-line"
+          aria-label="Photographier un document"
+        >
+          <Camera size={20} /> <span className="hidden sm:inline">Photographier</span>
+        </button>
         <button
           type="button"
           onClick={() => entreeFichier.current?.click()}

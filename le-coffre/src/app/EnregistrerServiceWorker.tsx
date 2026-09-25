@@ -9,10 +9,12 @@ import { useEffect } from 'react';
 export function EnregistrerServiceWorker() {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {
-        // Une PWA non installable en repli reste une application qui
-        // fonctionne normalement dans l'onglet — jamais bloquant.
-      });
+      navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+        .then((enregistrement) => enregistrement.update())
+        .catch(() => {
+          // Une PWA non installable en repli reste une application qui
+          // fonctionne normalement dans l'onglet — jamais bloquant.
+        });
     }
   }, []);
   return null;

@@ -1,8 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import {
+  MESSAGE_CONNEXION_INDISPONIBLE,
+  messageErreurConnexion,
+} from '@/lib/connexion';
 import { CoffreMer } from './coffre/CoffreMer';
 import styles from './accueil.module.css';
 
@@ -33,6 +37,8 @@ export default function PageAccueil() {
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState('');
   const [recuperationEnvoyee, setRecuperationEnvoyee] = useState(false);
+  const [codeVisible, setCodeVisible] = useState(false);
+  const champCode = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -44,27 +50,37 @@ export default function PageAccueil() {
     e.preventDefault();
     setErreur('');
     setEnCours(true);
-    const { data, error: erreurFonction } = await supabase.functions.invoke('connexion-coffre', {
-      body: { identifiant: 'lefouzebreizh', motDePasse },
-    });
-    const error = erreurFonction || (data?.error ? new Error(data.error) : null);
-    if (!error && data?.access_token && data?.refresh_token) {
+    try {
+      const { data, error: erreurFonction } = await supabase.functions.invoke('connexion-coffre', {
+        body: { identifiant: 'lefouzebreizh', motDePasse },
+      });
+      const messageErreur = await messageErreurConnexion(erreurFonction, data);
+      if (messageErreur) {
+        setErreur(messageErreur);
+        requestAnimationFrame(() => {
+          champCode.current?.focus();
+          champCode.current?.select();
+        });
+        return;
+      }
+      if (!data?.access_token || !data?.refresh_token) {
+        setErreur(MESSAGE_CONNEXION_INDISPONIBLE);
+        return;
+      }
       const { error: erreurSession } = await supabase.auth.setSession({
         access_token: data.access_token,
         refresh_token: data.refresh_token,
       });
       if (erreurSession) {
-        setEnCours(false);
-        setErreur('Connexion indisponible. Réessaie.');
+        setErreur(MESSAGE_CONNEXION_INDISPONIBLE);
         return;
       }
+      routeur.replace('/coffre');
+    } catch {
+      setErreur(MESSAGE_CONNEXION_INDISPONIBLE);
+    } finally {
+      setEnCours(false);
     }
-    setEnCours(false);
-    if (error) {
-      setErreur(error.message === 'Trop de tentatives. Réessaie dans quelques minutes.' ? error.message : 'Identifiant ou mot de passe incorrect.');
-      return;
-    }
-    routeur.replace('/coffre');
   }
 
   async function recupererCode() {
@@ -98,7 +114,7 @@ export default function PageAccueil() {
             <p className={styles.eyebrow}>Accès personnel</p>
             <h2 id="titre-connexion">Entre quand tu es prêt.</h2>
           </div>
-          <p className={styles.accessIntro}>Entre ton code d&apos;accès. Aucun lien à attendre dans ta boîte mail.</p>
+          <p className={styles.accessIntro}>Entre le mot de passe de ton compte. Aucun lien à attendre dans ta boîte mail.</p>
 
         <form onSubmit={seConnecter} className={styles.form} aria-busy={enCours} autoComplete="on">
           <input
@@ -111,20 +127,40 @@ export default function PageAccueil() {
             aria-hidden="true"
             className="sr-only"
           />
-          <label htmlFor="mot-de-passe" className="text-sm text-ink-soft">Ton code d&apos;accès</label>
-          <input
-            id="mot-de-passe"
-            name="mot-de-passe"
-            type="password"
-            required
-            autoComplete="current-password"
-            value={motDePasse}
-            onChange={(e) => setMotDePasse(e.target.value)}
-            className={styles.input}
-            aria-invalid={!!erreur}
-            aria-describedby={erreur ? 'erreur-connexion' : undefined}
-            placeholder="Ton code"
-          />
+          <label htmlFor="mot-de-passe" className="text-sm text-ink-soft">Mot de passe du compte</label>
+          <div className={styles.inputWrap}>
+            <input
+              ref={champCode}
+              id="mot-de-passe"
+              name="password"
+              type={codeVisible ? 'text' : 'password'}
+              required
+              autoComplete="current-password"
+              autoCapitalize="none"
+              spellCheck={false}
+              value={motDePasse}
+              onChange={(e) => {
+                setMotDePasse(e.target.value);
+                if (erreur) setErreur('');
+              }}
+              className={styles.input}
+              aria-invalid={!!erreur}
+              aria-describedby={erreur ? 'conseil-code erreur-connexion' : 'conseil-code'}
+              placeholder="Ton code"
+            />
+            <button
+              type="button"
+              className={styles.visibility}
+              aria-pressed={codeVisible}
+              aria-label={codeVisible ? 'Masquer le code' : 'Afficher le code'}
+              onClick={() => setCodeVisible((visible) => !visible)}
+            >
+              {codeVisible ? 'Masquer' : 'Afficher'}
+            </button>
+          </div>
+          <p id="conseil-code" className={styles.codeHint}>
+            C&apos;est le mot de passe du compte, pas la phrase secrète qui chiffre tes documents. Chrome peut maintenant l&apos;enregistrer.
+          </p>
           {erreur && <p id="erreur-connexion" role="alert" className={styles.error}>{erreur}</p>}
           <button
             type="submit"
@@ -137,13 +173,18 @@ export default function PageAccueil() {
         <button type="button" onClick={recupererCode} disabled={enCours} className={styles.recovery}>
           {recuperationEnvoyee ? 'Renvoyer le lien de récupération' : 'J’ai oublié mon code'}
         </button>
+        {recuperationEnvoyee && (
+          <p role="status" className={styles.recoveryStatus}>
+            Le lien de récupération vient d&apos;être envoyé.
+          </p>
+        )}
 
           <div className={styles.privacy}>
             <h3>Ta phrase secrète protège le stockage.</h3>
             <p>Tu la choisis à l&apos;étape suivante. Elle chiffre les documents dans ton navigateur avant stockage. Garde-la précieusement : personne ne peut la récupérer.</p>
             <details>
               <summary>Et les fonctions d&apos;intelligence artificielle ?</summary>
-              <p>Le classement automatique transmet les documents analysés en clair à notre serveur, puis au fournisseur d&apos;IA. L&apos;assistant transmet ta question et un résumé de tes papiers au fournisseur d&apos;IA via notre serveur.</p>
+              <p>Par défaut, le rangement reste dans ton navigateur. Si tu choisis plus tard une fonction d&apos;IA, l&apos;application t&apos;indiquera quelles informations doivent être transmises pour ce traitement.</p>
             </details>
           </div>
         </section>
