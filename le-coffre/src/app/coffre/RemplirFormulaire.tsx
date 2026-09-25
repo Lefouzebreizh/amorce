@@ -26,14 +26,17 @@ export type FormulairePreRempli = {
   demarche: string;
   bytes: ArrayBuffer;
   suggestionsDocument: Record<string, string>;
+  sourcesTransmises: string[];
 };
 
 export function RemplirFormulaire({
-  identite, onFermer, prerempli,
+  identite, onFermer, prerempli, documentsDisponibles, onSuggérerValeurs,
 }: {
   identite: Identite | undefined;
   onFermer: () => void;
   prerempli?: FormulairePreRempli;
+  documentsDisponibles: { cle: string; nom: string }[];
+  onSuggérerValeurs: (champs: string[], cles: string[]) => Promise<Record<string, string>>;
 }) {
   const [fichier, setFichier] = useState<File | null>(null);
   const [champs, setChamps] = useState<ChampFormulaire[]>([]);
@@ -42,6 +45,8 @@ export function RemplirFormulaire({
   const [cases, setCases] = useState<Record<string, boolean>>({});
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState('');
+  const [sourcesSelectionnees, setSourcesSelectionnees] = useState<Set<string>>(new Set());
+  const [suggestionsReçues, setSuggestionsReçues] = useState(0);
 
   function repartirDesChamps(trouves: ChampFormulaire[], suggestionsDocument: Record<string, string>) {
     setChamps(trouves);
@@ -125,6 +130,27 @@ export function RemplirFormulaire({
     }
   }
 
+  async function surSuggérer() {
+    if (sourcesSelectionnees.size === 0 || champs.length === 0) return;
+    setEnCours(true);
+    setErreur('');
+    try {
+      const suggestions = await onSuggérerValeurs(champs.map((champ) => champ.nom), Array.from(sourcesSelectionnees));
+      setTexteLibre((precedent) => ({ ...precedent, ...suggestions }));
+      setValeurs((precedent) => {
+        const suivant = { ...precedent };
+        for (const nom of Object.keys(suggestions)) if (suivant[nom] !== 'identite.nomComplet' && suivant[nom] !== 'identite.adresse' && suivant[nom] !== 'identite.codePostal' && suivant[nom] !== 'identite.ville') suivant[nom] = 'libre';
+        return suivant;
+      });
+      setSuggestionsReçues(Object.keys(suggestions).length);
+      if (Object.keys(suggestions).length === 0) setErreur('Gemini n’a trouvé aucune valeur suffisamment fiable dans les documents choisis.');
+    } catch (err) {
+      setErreur(err instanceof Error ? err.message : 'Gemini n’a pas pu proposer de valeurs.');
+    } finally {
+      setEnCours(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/60 p-0 sm:items-center sm:p-6" onClick={onFermer}>
       <div
@@ -142,8 +168,8 @@ export function RemplirFormulaire({
 
         {prerempli ? (
           <p className="mb-4 text-sm text-ink-soft">
-            Le CERFA officiel de cette démarche a été trouvé et pré-rempli avec ce que tes papiers
-            permettent — vérifie chaque champ avant de générer, comme pour un formulaire déposé à la main.
+            Le CERFA officiel de cette démarche a été trouvé. Vérifie chaque valeur proposée avant de générer le PDF.
+            {prerempli.sourcesTransmises.length > 0 && <> Gemini a analysé uniquement : {prerempli.sourcesTransmises.join(', ')}.</>}
           </p>
         ) : (
           <p className="mb-4 text-sm text-ink-soft">
@@ -174,6 +200,28 @@ export function RemplirFormulaire({
 
         {champs.length > 0 && (
           <div className="mb-5 flex flex-col gap-3">
+            {!prerempli && documentsDisponibles.length > 0 && (
+              <section className="rounded-xl border border-line bg-paper p-3">
+                <p className="text-sm font-medium">Demander des propositions à Gemini</p>
+                <p className="mt-1 text-xs text-ink-soft">Coche les papiers que tu autorises pour cette analyse. Gemini ne recevra que ces fiches et les noms des champs.</p>
+                <div className="mt-2 max-h-36 overflow-auto">
+                  {documentsDisponibles.map((document) => (
+                    <label key={document.cle} className="flex cursor-pointer items-center gap-2 rounded px-1 py-1.5 text-sm hover:bg-white/5">
+                      <input type="checkbox" checked={sourcesSelectionnees.has(document.cle)} onChange={() => setSourcesSelectionnees((precedent) => {
+                        const suivant = new Set(precedent);
+                        if (suivant.has(document.cle)) suivant.delete(document.cle); else suivant.add(document.cle);
+                        return suivant;
+                      })} />
+                      <span className="truncate">{document.nom}</span>
+                    </label>
+                  ))}
+                </div>
+                <button type="button" disabled={enCours || sourcesSelectionnees.size === 0} onClick={surSuggérer} className="mt-2 rounded-full border border-accent/50 px-3 py-2 text-xs font-semibold text-accent disabled:opacity-50">
+                  {enCours ? 'Gemini analyse les fiches choisies…' : `Proposer des valeurs${sourcesSelectionnees.size ? ` avec ${sourcesSelectionnees.size} document(s)` : ''}`}
+                </button>
+                {suggestionsReçues > 0 && <p role="status" className="mt-2 text-xs text-vert">{suggestionsReçues} proposition{suggestionsReçues > 1 ? 's' : ''} ajoutée{suggestionsReçues > 1 ? 's' : ''} ci-dessous. Vérifie-les avant de générer le PDF.</p>}
+              </section>
+            )}
             <p className="text-sm font-medium text-ink-soft">
               {champs.length} champ{champs.length > 1 ? 's' : ''} détecté{champs.length > 1 ? 's' : ''} —
               vérifie chaque suggestion avant de remplir.

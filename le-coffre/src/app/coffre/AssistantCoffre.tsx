@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Bot, FileText, Folder, Globe, ShieldCheck, Sparkles, Trash2, Triangle, X } from 'lucide-react';
+import { Bot, FileText, Folder, Globe, Paperclip, ShieldCheck, Sparkles, Trash2, Triangle, X } from 'lucide-react';
+import { b64FromBuf } from '@/lib/crypto';
 import { demanderAuCoffre, type ActionAssistant, type IndexCoffre, type TourConversation } from '@/lib/coffre';
 
 type Message = TourConversation & {
@@ -23,7 +24,10 @@ type Message = TourConversation & {
   // Un CERFA officiel trouvé par recherche web pour une démarche nommée par
   // l'utilisateur — voir onPreparerFormulaireCerfa plus bas.
   formulaireCerfa?: { demarche: string; url: string } | null;
+  echecGemini?: boolean;
 };
+
+type DocumentDisponible = { cle: string; nom: string; type: string };
 
 // État du tri en lot, porté par page.tsx (deux passes — instantanée puis IA,
 // voir trierAutomatiquement) et seulement affiché ici — un seul moteur, un
@@ -50,7 +54,7 @@ function libelleAction(a: ActionAssistant): string {
 export function AssistantCoffre({
   index, questionInitiale, onFermer, onOuvrirDocument, onOuvrirFormulaire, onOuvrirRangement,
   onOuvrirImportDossier, onExecuterAction, onPreparerFormulaireCerfa, triAuto,
-  onLancerTriAutomatique, onBasculerDetailTriAutomatique,
+  onLancerTriAutomatique, onBasculerDetailTriAutomatique, documentsDisponibles, lireDocument,
 }: {
   index: IndexCoffre;
   // Posée par la recherche locale restée sans résultat, envoyée une seule
@@ -71,12 +75,14 @@ export function AssistantCoffre({
   // rempli — jamais généré ni téléchargé sans que l'utilisateur ne le voie
   // d'abord. Lève une erreur (message affiché) si le formulaire n'a pas pu
   // être récupéré ou lu.
-  onPreparerFormulaireCerfa: (demarche: string, url: string) => Promise<void>;
+  onPreparerFormulaireCerfa: (demarche: string, url: string, documentsSelectionnes: string[]) => Promise<void>;
   // Tri en lot : état et déclencheurs portés par page.tsx, affichés ici
   // seulement quand un message porte `declencherTriAutomatique`.
   triAuto: EtatTriAutomatique;
   onLancerTriAutomatique: () => void;
   onBasculerDetailTriAutomatique: () => void;
+  documentsDisponibles: DocumentDisponible[];
+  lireDocument: (document: DocumentDisponible) => Promise<File>;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [question, setQuestion] = useState('');
@@ -85,6 +91,10 @@ export function AssistantCoffre({
   const [cerfaEnCours, setCerfaEnCours] = useState<number | null>(null);
   const [erreurCerfa, setErreurCerfa] = useState<{ indexMessage: number; texte: string } | null>(null);
   const [enCours, setEnCours] = useState(false);
+  const [documentsSelectionnes, setDocumentsSelectionnes] = useState<Set<string>>(new Set());
+  const [fichiersLocaux, setFichiersLocaux] = useState<File[]>([]);
+  const [erreurGemini, setErreurGemini] = useState('');
+  const [geminiConfirme, setGeminiConfirme] = useState(false);
   // Position (index de message, index d'action) de l'action en cours
   // d'exécution — désactive son bouton le temps de l'appel, sans bloquer
   // le reste du chat.
@@ -99,29 +109,10 @@ export function AssistantCoffre({
   // — sans ça, la barre avait l'air d'un simple filtre de recherche après
   // le premier message, chaque commande suivante disparaissant en silence.
   const derniereQuestionEnvoyee = useRef<string | null>(null);
-  // Indices de message déjà exploités pour lancer le tri — sans cette
-  // mémoire, un nouveau rendu (ou un second message qui redemande la même
-  // chose) relancerait le tri en boucle sur un message déjà traité.
-  const triAutoDejaDeclenche = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     finDesMessages.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  // Un seul bot, aucune étape à valider (10/09/2026) : dès que la
-  // conversation propose de trier, ça part tout seul — ta phrase dans le
-  // chat vaut déjà l'accord, un second clic n'ajouterait rien. Ne se
-  // déclenche jamais si un tri est déjà en cours.
-  useEffect(() => {
-    if (triAuto.enCours) return;
-    const indexAtraiter = messages.findIndex(
-      (m, i) => m.declencherTriAutomatique && !triAutoDejaDeclenche.current.has(i),
-    );
-    if (indexAtraiter === -1) return;
-    triAutoDejaDeclenche.current.add(indexAtraiter);
-    onLancerTriAutomatique();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, triAuto.enCours]);
 
   // Retrouve le nom réel d'un document cité par son nom exact — jamais
   // deviné : si Gemini a mal recopié un nom, on ne montre pas de lien plutôt
@@ -133,10 +124,25 @@ export function AssistantCoffre({
   async function envoyerTexte(texte: string) {
     if (!texte || enCours) return;
     const historique = messages.map(({ role, texte: t }) => ({ role, texte: t }));
+    setErreurGemini('');
     setMessages((precedent) => [...precedent, { role: 'user', texte }]);
     setEnCours(true);
     try {
-      const reponse = await demanderAuCoffre(texte, historique, index);
+      const attaches = documentsDisponibles.filter((document) => documentsSelectionnes.has(document.cle));
+      const fichiersDuCoffre = await Promise.all(attaches.map((document) => lireDocument(document)));
+      const tousLesFichiers = [...fichiersDuCoffre, ...fichiersLocaux];
+      const tailleTotale = tousLesFichiers.reduce((somme, fichier) => somme + fichier.size, 0);
+      if (tousLesFichiers.length > 5) throw new Error('Choisis au maximum cinq documents par message.');
+      if (tailleTotale > 4 * 1024 * 1024) throw new Error('Ces fichiers dépassent 4 Mo au total. Réduis la sélection avant l’envoi à Gemini.');
+      const piecesJointes = await Promise.all(tousLesFichiers.map(async (fichier) => {
+        const type = fichier.type || 'application/octet-stream';
+        if (!['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'text/plain'].includes(type)) {
+          throw new Error(`Le format « ${fichier.name} » ne peut pas être lu ici. Choisis un PDF, une image PNG/JPEG/WebP ou un fichier texte.`);
+        }
+        return { nom: fichier.name, type, donnees: b64FromBuf(await fichier.arrayBuffer()) };
+      }));
+      const reponse = await demanderAuCoffre(texte, historique, piecesJointes);
+      setGeminiConfirme(true);
       setMessages((precedent) => [...precedent, {
         role: 'assistant',
         texte: reponse.reponse,
@@ -149,6 +155,10 @@ export function AssistantCoffre({
         actions: reponse.actions,
         formulaireCerfa: reponse.formulaireCerfa,
       }]);
+    } catch (erreur) {
+      const message = erreur instanceof Error ? erreur.message : 'Gemini est momentanément indisponible.';
+      setErreurGemini(message);
+      setMessages((precedent) => [...precedent, { role: 'assistant', texte: `Je n’ai pas pu joindre Gemini : ${message}`, echecGemini: true }]);
     } finally {
       setEnCours(false);
     }
@@ -159,7 +169,7 @@ export function AssistantCoffre({
     setErreurCerfa(null);
     setCerfaEnCours(indexMessage);
     try {
-      await onPreparerFormulaireCerfa(demarche, url);
+      await onPreparerFormulaireCerfa(demarche, url, Array.from(documentsSelectionnes));
     } catch (err) {
       setErreurCerfa({ indexMessage, texte: err instanceof Error ? err.message : String(err) });
     } finally {
@@ -236,7 +246,7 @@ export function AssistantCoffre({
           <span className="assistant-panel__avatar"><Bot size={18} /></span>
           <div>
             <p className="text-sm font-semibold text-ink">Copilote du tiroir</p>
-            <p className="flex items-center gap-1 text-xs text-ink-soft"><Sparkles size={11} /> Modèle de langage complet</p>
+            <p className="flex items-center gap-1 text-xs text-ink-soft"><Sparkles size={11} /> Gemini 2.5 Flash · {geminiConfirme ? 'connexion vérifiée' : 'connexion au moment de ta demande'}</p>
           </div>
         </div>
         <button onClick={onFermer} className="rounded-lg p-1.5 text-ink-soft transition hover:bg-line/40" aria-label="Fermer la conversation">
@@ -248,11 +258,10 @@ export function AssistantCoffre({
         {messages.length === 0 && (
           <div className="assistant-panel__empty rounded-2xl border border-dashed border-line bg-paper p-4 text-sm text-ink-soft">
             <p className="font-medium text-ink">Je peux réfléchir avec toi et agir dans le tiroir.</p>
-            <p className="mt-1">Demande-moi de retrouver un papier, expliquer une démarche, préparer un CERFA, classer un document précis ou chercher une information à jour.</p>
+            <p className="mt-1">Pose une question libre, demande une explication, un résumé, une comparaison, un courrier, de l’aide sur un formulaire ou une recherche à jour.</p>
             <p className="mt-3 flex items-start gap-1.5 text-xs text-ink-soft">
               <ShieldCheck size={13} className="mt-0.5 shrink-0 text-accent" />
-              Gemini reçoit le résumé utile des fiches, jamais les fichiers chiffrés ni ta phrase secrète.
-              Sur son niveau gratuit, Google peut utiliser les données transmises pour améliorer ses produits.
+              Sans document choisi, Gemini ne reçoit que ta demande et le fil de cette conversation. Pour interroger un papier, sélectionne-le ci-dessous : il est déchiffré dans ce navigateur et envoyé avec ton message. Ta phrase secrète ne quitte jamais l’appareil. Selon le palier de ta clé Google, les règles de confidentialité de Google s’appliquent aux données envoyées.
             </p>
           </div>
         )}
@@ -261,7 +270,7 @@ export function AssistantCoffre({
               <li key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
                   className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${
-                    m.role === 'user' ? 'bg-bleu text-paper' : 'border border-line bg-paper'
+                    m.role === 'user' ? 'bg-bleu text-paper' : m.echecGemini ? 'border border-wine/50 bg-wine/10 text-ink' : 'border border-line bg-paper'
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{m.texte}</p>
@@ -357,9 +366,8 @@ export function AssistantCoffre({
                   )}
                   {m.declencherTriAutomatique && (
                     <div className="mt-2 flex flex-col items-start gap-2">
-                      {/* Aucun bouton : le tri part tout seul dès que ce
-                          message existe — voir l'effet de déclenchement
-                          plus haut. Ici, seulement le statut. */}
+                      {/* Le rangement de plusieurs fichiers nécessite un
+                          clic explicite après affichage de la portée. */}
                       {triAuto.progres ? (
                         <p className="flex items-center gap-1.5 text-xs text-ink-soft">
                           <Folder size={12} />
@@ -370,9 +378,18 @@ export function AssistantCoffre({
                           <Folder size={12} /> Classement en cours…
                         </p>
                       ) : (
-                        <p className="flex items-center gap-1.5 text-xs text-ink-soft">
-                          <Folder size={12} /> Fait.
-                        </p>
+                        <>
+                          <p className="flex items-center gap-1.5 text-xs text-ink-soft">
+                            <Folder size={12} /> Le classement automatique utilise des catégories de base et ne transmet aucun document à Gemini.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={onLancerTriAutomatique}
+                            className="rounded-lg bg-accent px-3 py-2 text-xs font-bold text-ink transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                          >
+                            Appliquer le classement automatique
+                          </button>
+                        </>
                       )}
                       {triAuto.progres && (
                         <div
@@ -449,6 +466,40 @@ export function AssistantCoffre({
           <div ref={finDesMessages} />
         </div>
 
+        <details className="assistant-panel__sources mx-4 border-t border-line pt-3">
+            <summary className="flex cursor-pointer list-none items-center gap-2 py-2 text-sm font-medium text-ink-soft hover:text-accent">
+              <Paperclip size={15} /> Ajouter des papiers au contexte
+              {documentsSelectionnes.size > 0 && <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">{documentsSelectionnes.size} choisi{documentsSelectionnes.size > 1 ? 's' : ''}</span>}
+            </summary>
+            <div className="max-h-44 overflow-auto py-2">
+              {documentsDisponibles.map((document) => (
+                <label key={document.cle} className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-sm hover:bg-white/5">
+                  <input type="checkbox" checked={documentsSelectionnes.has(document.cle)} onChange={() => setDocumentsSelectionnes((precedent) => {
+                    const suivant = new Set(precedent);
+                    if (suivant.has(document.cle)) suivant.delete(document.cle); else suivant.add(document.cle);
+                    return suivant;
+                  })} />
+                  <span className="truncate">{document.nom}</span>
+                </label>
+              ))}
+            </div>
+            <label className="mt-2 flex w-fit cursor-pointer items-center gap-2 rounded-full border border-line px-3 py-2 text-xs text-ink-soft hover:border-accent hover:text-accent">
+              <Paperclip size={13} /> Joindre depuis cet appareil
+              <input type="file" multiple accept="application/pdf,image/jpeg,image/png,image/webp,text/plain" className="sr-only" onChange={(event) => {
+                const nouveaux = Array.from(event.target.files || []);
+                setFichiersLocaux((precedent) => [...precedent, ...nouveaux].slice(0, 5));
+                event.target.value = '';
+              }} />
+            </label>
+            {fichiersLocaux.map((fichier, position) => (
+              <p key={`${fichier.name}-${position}`} className="mt-1 flex items-center justify-between gap-2 text-xs text-ink-soft">
+                <span className="truncate">{fichier.name} · appareil</span>
+                <button type="button" onClick={() => setFichiersLocaux((precedent) => precedent.filter((_, i) => i !== position))} aria-label={`Retirer ${fichier.name}`}><X size={13} /></button>
+              </p>
+            ))}
+            <p className="mt-2 flex items-start gap-1.5 text-xs text-ink-soft"><ShieldCheck size={13} className="mt-0.5 shrink-0 text-accent" />Le contenu des seuls fichiers choisis sera transmis à Google Gemini au clic sur Envoyer (4 Mo maximum par message).</p>
+        </details>
+        {erreurGemini && <p role="alert" className="mx-4 mt-3 text-sm text-wine">Gemini n’a pas répondu : {erreurGemini}</p>}
         <form onSubmit={envoyer} className="assistant-panel__composer flex gap-2 border-t border-line p-4">
           <input
             type="text"
@@ -463,7 +514,7 @@ export function AssistantCoffre({
             type="submit"
             disabled={enCours || !question.trim()}
             className="flex shrink-0 items-center justify-center rounded-lg bg-bleu px-4 py-2.5 text-paper transition hover:bg-bleu-strong disabled:opacity-60"
-            aria-label="Envoyer"
+            aria-label={documentsSelectionnes.size || fichiersLocaux.length ? `Envoyer à Gemini avec ${documentsSelectionnes.size + fichiersLocaux.length} document(s)` : 'Envoyer à Gemini'}
           >
             <Triangle size={16} fill="currentColor" />
           </button>

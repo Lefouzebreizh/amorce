@@ -554,37 +554,39 @@ describe('la catégorie instantanée', () => {
 // ─────────────────────────────── L'assistant ───────────────────────────────
 
 describe('demander au coffre', () => {
-  const INDEX_ASSISTANT: IndexCoffre = {
-    objets: {
-      abc: {
-        nom: 'Facture EDF', taille: 100, type: 'application/pdf', categorie: 'Énergie',
-        deposeLe: '2026-09-01T00:00:00.000Z', emetteur: 'EDF', montant: '89,90 €',
-        texteExtrait: 'x'.repeat(500),
-      },
-    },
-  };
-
-  it('répond localement même si les fonctions serveur sont indisponibles', async () => {
+  it('ne fait pas passer une réponse locale pour une réponse Gemini quand le serveur échoue', async () => {
     poser(clientFactice({ fonction: { data: null, error: { message: 'panne' } } }));
-    const reponse = await coffre.demanderAuCoffre('où est ma facture EDF', [], INDEX_ASSISTANT);
-    assert.deepEqual(reponse.documentsCites, ['Facture EDF']);
-    assert.equal(reponse.rechercheWebEffectuee, false);
-    assert.ok(reponse.reponse.length > 0);
+    await assert.rejects(() => coffre.demanderAuCoffre('résume ce courrier', []), /panne/);
   });
 
-  it('transmet au LLM seulement le résumé court des fiches, jamais les fichiers', async () => {
+  it('n’envoie aucun document du coffre sans pièce jointe explicitement sélectionnée', async () => {
     const f = poser(clientFactice({ fonction: { data: {
       reponse: 'Je l’ai trouvée.', documentsCites: ['Facture EDF'], ouvrirFormulaire: false,
       ouvrirRangement: false, declencherTriAutomatique: false, rechercheWebEffectuee: false,
       actions: [], formulaireCerfa: null,
     }, error: null } }));
-    await coffre.demanderAuCoffre('où est ma facture EDF', [], INDEX_ASSISTANT);
+    await coffre.demanderAuCoffre('Explique la différence entre médiation et conciliation.', []);
     const [nom, options] = f.premier('invoke') as [string, { body: Record<string, unknown> }];
     assert.equal(nom, 'assistant-coffre');
-    const documents = options.body.documents as Array<{ nom: string; extrait: string }>;
-    assert.equal(documents[0]?.nom, 'Facture EDF');
-    assert.equal(documents[0]?.extrait.length, 200);
-    assert.equal('fichier' in documents[0], false);
+    assert.deepEqual(options.body, {
+      question: 'Explique la différence entre médiation et conciliation.', historique: [], piecesJointes: [],
+    });
+    assert.equal('documents' in options.body, false);
+    assert.equal(JSON.stringify(options.body).includes('Facture EDF'), false);
+  });
+
+  it('transmet uniquement le contenu des pièces jointes choisies', async () => {
+    const f = poser(clientFactice({ fonction: { data: {
+      reponse: 'Ce document est un exemple.', documentsCites: ['faux-exemple.pdf'], ouvrirFormulaire: false,
+      ouvrirRangement: false, declencherTriAutomatique: false, rechercheWebEffectuee: false,
+      actions: [], formulaireCerfa: null,
+    }, error: null } }));
+    const piecesJointes = [{ nom: 'faux-exemple.pdf', type: 'application/pdf', donnees: 'JVBERiQ=' }];
+    await coffre.demanderAuCoffre('Résume ce document.', [], piecesJointes);
+    const [, options] = f.premier('invoke') as [string, { body: Record<string, unknown> }];
+    assert.deepEqual(options.body.piecesJointes, piecesJointes);
+    assert.equal(JSON.stringify(options.body).includes('Facture EDF'), false);
+    assert.equal(JSON.stringify(options.body).includes('phrase secrète'), false);
   });
 
   it('envoie l’historique du fil pour garder une vraie conversation', async () => {
@@ -594,7 +596,7 @@ describe('demander au coffre', () => {
       actions: [], formulaireCerfa: null,
     }, error: null } }));
     const historique = [{ role: 'user' as const, texte: 'bonjour' }, { role: 'assistant' as const, texte: 'salut' }];
-    await coffre.demanderAuCoffre('et ensuite ?', historique, INDEX_ASSISTANT);
+    await coffre.demanderAuCoffre('et ensuite ?', historique);
     const [, options] = f.premier('invoke') as [string, { body: Record<string, unknown> }];
     assert.deepEqual(options.body.historique, historique);
   });
@@ -605,21 +607,13 @@ describe('demander au coffre', () => {
       ouvrirRangement: false, declencherTriAutomatique: false, rechercheWebEffectuee: false,
       actions: [{ type: 'classer', nom: 'Facture EDF', categorie: 'Énergie' }], formulaireCerfa: null,
     }, error: null } }));
-    const reponse = await coffre.demanderAuCoffre('classe ma facture EDF dans Énergie', [], INDEX_ASSISTANT);
+    const reponse = await coffre.demanderAuCoffre('classe le document joint dans Énergie', [], [{ nom: 'Facture EDF', type: 'application/pdf', donnees: 'JVBERiQ=' }]);
     assert.deepEqual(reponse.actions, [{ type: 'classer', nom: 'Facture EDF', categorie: 'Énergie' }]);
   });
 
-  it('retombe sur le module formulaire local si le LLM est indisponible', async () => {
+  it('signale l’indisponibilité Gemini au lieu de déclencher une réponse locale', async () => {
     poser(clientFactice({ fonction: { data: null, error: { message: 'panne' } } }));
-    const reponse = await coffre.demanderAuCoffre('remplir le formulaire de carte grise', [], INDEX_ASSISTANT);
-    assert.equal(reponse.ouvrirFormulaire, true);
-    assert.equal(reponse.formulaireCerfa, null);
-  });
-
-  it('rend formulaireCerfa à null dans le repli local', async () => {
-    poser(clientFactice({ fonction: { data: null, error: { message: 'panne' } } }));
-    const reponse = await coffre.demanderAuCoffre('où est ma facture EDF', [], INDEX_ASSISTANT);
-    assert.equal(reponse.formulaireCerfa, null);
+    await assert.rejects(() => coffre.demanderAuCoffre('remplir le formulaire de carte grise', []), /panne/);
   });
 });
 
@@ -651,38 +645,29 @@ describe('récupérer un formulaire CERFA trouvé par l’assistant', () => {
 });
 
 describe('suggérer des valeurs pour un formulaire à partir des papiers', () => {
-  const INDEX_SUGGESTION: IndexCoffre = {
-    objets: {
-      abc: {
-        nom: 'Facture EDF', taille: 100, type: 'application/pdf', categorie: 'Énergie',
-        deposeLe: '2026-09-01T00:00:00.000Z', emetteur: 'EDF', montant: '89,90 €',
-      },
-    },
-  };
+  const DOCUMENTS_CHOISIS = [{ nom: 'Facture EDF', categorie: 'Énergie', type: 'application/pdf', emetteur: 'EDF', montant: '89,90 €', extrait: 'Client fictif 123456789' }];
 
   it('rend les suggestions Gemini proposées pour les champs reconnus', async () => {
     poser(clientFactice({ fonction: { data: { valeurs: { numero_client: '123456789' } }, error: null } }));
-    const valeurs = await coffre.suggererChampsFormulaire(['numero_client'], INDEX_SUGGESTION, 'Carte grise');
+    const valeurs = await coffre.suggererChampsFormulaire(['numero_client'], DOCUMENTS_CHOISIS, 'Carte grise');
     assert.deepEqual(valeurs, { numero_client: '123456789' });
   });
 
-  it('transmet seulement les champs, le résumé des fiches, la démarche et l’identité', async () => {
+  it('transmet uniquement les champs et les fiches choisies, jamais l’identité complète', async () => {
     const f = poser(clientFactice({ fonction: { data: { valeurs: {} }, error: null } }));
-    const identite = { nom: 'Jean Test', adresse: '1 rue du Test', codePostal: '35000', ville: 'Rennes' };
-    await coffre.suggererChampsFormulaire(['numero_client'], INDEX_SUGGESTION, 'Carte grise', identite);
+    await coffre.suggererChampsFormulaire(['numero_client'], DOCUMENTS_CHOISIS, 'Carte grise');
     const [nom, options] = f.premier('invoke') as [string, { body: Record<string, unknown> }];
     assert.equal(nom, 'suggerer-champs-formulaire');
     assert.deepEqual(options.body.champs, ['numero_client']);
     assert.equal(options.body.demarche, 'Carte grise');
-    assert.deepEqual(options.body.identite, identite);
-    assert.equal(Array.isArray(options.body.documents), true);
-    assert.equal('donnees' in options.body, false);
+    assert.deepEqual(options.body.documents, DOCUMENTS_CHOISIS);
+    assert.equal('identite' in options.body, false);
+    assert.equal(JSON.stringify(options.body).includes('Jean Test'), false);
   });
 
-  it('rend un objet vide plutôt que d’échouer quand la fonction tombe', async () => {
+  it('signale une panne Gemini au lieu de masquer l’échec', async () => {
     poser(clientFactice({ fonction: { data: null, error: { message: 'panne' } } }));
-    const valeurs = await coffre.suggererChampsFormulaire(['numero_client'], INDEX_SUGGESTION, 'Carte grise');
-    assert.deepEqual(valeurs, {});
+    await assert.rejects(() => coffre.suggererChampsFormulaire(['numero_client'], DOCUMENTS_CHOISIS, 'Carte grise'), /panne/);
   });
 });
 

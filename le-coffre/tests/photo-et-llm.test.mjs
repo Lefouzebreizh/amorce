@@ -5,6 +5,7 @@ import fs from 'node:fs';
 const page = fs.readFileSync(new URL('../src/app/coffre/page.tsx', import.meta.url), 'utf8');
 const coffre = fs.readFileSync(new URL('../src/lib/coffre.ts', import.meta.url), 'utf8');
 const assistant = fs.readFileSync(new URL('../supabase/functions/assistant-coffre/index.ts', import.meta.url), 'utf8');
+const assistantUi = fs.readFileSync(new URL('../src/app/coffre/AssistantCoffre.tsx', import.meta.url), 'utf8');
 const classement = fs.readFileSync(new URL('../supabase/functions/classer-document/index.ts', import.meta.url), 'utf8');
 const formulaire = fs.readFileSync(new URL('../supabase/functions/suggerer-champs-formulaire/index.ts', import.meta.url), 'utf8');
 
@@ -12,6 +13,13 @@ test('la photo est une action principale visible, jamais une icône seule sur mo
   assert.equal((page.match(/Photographier et ranger/g) || []).length, 1);
   assert.match(page, /<strong>Photographier et ranger<\/strong>/);
   assert.doesNotMatch(page, /hidden sm:inline">Photographier/);
+});
+
+test('les données de démonstration restent fictives et limitées à un aperçu Vercel', () => {
+  assert.match(page, /mon-tiroir-secret-\.\+-erwannchevallier-6916s-projects/);
+  assert.match(page, /modeDemoAutorise && new URLSearchParams/);
+  assert.match(page, /alex\.martin@example\.invalid/);
+  assert.doesNotMatch(page, /erwann@demo\.local/);
 });
 
 test('le choix Gemini gratuit et son compromis de confidentialité sont visibles', () => {
@@ -44,10 +52,21 @@ test('un dossier complet peut être choisi et classé par Gemini avec une file d
   assert.match(page, /executerAvecConcurrence\(nouveaux, analyseIntelligente \? 2/);
 });
 
-test('le copilote appelle réellement la fonction LLM et conserve un repli local', () => {
+test('le copilote appelle Gemini sans envoyer la liste des documents du coffre', () => {
   assert.match(coffre, /invoke\('assistant-coffre'/);
-  assert.match(coffre, /documents: digestIndex\(index\)/);
-  assert.match(coffre, /return repliLocal/);
+  assert.match(coffre, /body: \{ question, historique, piecesJointes \}/);
+  assert.doesNotMatch(coffre, /documents: digestIndex\(index\)/);
+  assert.doesNotMatch(coffre, /return repliLocal/);
+  assert.match(assistant, /const MODELE = "gemini-2\.5-flash"/);
+  assert.match(assistantUi, /documentsDisponibles/);
+});
+
+test('Gemini ne reçoit que les pièces jointes choisies, sous des types et une taille bornés', () => {
+  assert.match(assistant, /piecesJointes\?: PieceJointe\[\]/);
+  assert.match(assistant, /TYPES_JOINTS/);
+  assert.match(assistant, /MAX_TAILLE_JOINTES/);
+  assert.match(assistant, /inlineData: \{ mimeType: piece.type, data: piece.donnees \}/);
+  assert.match(assistant, /nomsSelectionnes/);
 });
 
 test('la fonction LLM utilise le modèle généraliste actuel et ses outils', () => {

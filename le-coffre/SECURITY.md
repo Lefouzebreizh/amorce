@@ -81,25 +81,26 @@ lecture incertaine ou une erreur rejoint « À vérifier ». Le lot entier reste
 confirmer avant chiffrement et stockage.
 
 Quand l'utilisateur envoie une question au copilote, `assistant-coffre` reçoit
-la question, l'historique de ce fil et un résumé court des fiches (nom,
-catégorie, émetteur, montant, échéance, extrait plafonné à 200 caractères).
-Il ne reçoit jamais les fichiers, la clé de chiffrement ou la phrase secrète.
-Il peut rechercher une information à jour, retrouver un CERFA, ouvrir l'import
-d'un dossier et proposer des actions. Toute suppression ou modification reste
-confirmée et exécutée dans le navigateur. Pour un formulaire, la fonction
-`suggerer-champs-formulaire` reçoit uniquement les noms de champs, l'identité
-chiffrée déjà ouverte dans le navigateur et le même résumé court des fiches ;
-elle ne reçoit pas les fichiers. Ses suggestions restent visibles et
-modifiables avant la génération du PDF.
+la question et l'historique de cette conversation pour en garder le contexte.
+Il ne reçoit aucun index, identité ou fichier du coffre par défaut. Les
+documents disponibles n'entrent dans le contexte qu'après sélection explicite ;
+le navigateur les déchiffre alors et transmet leur contenu à Gemini avec la
+demande. Les pièces jointes sont limitées aux PDF, PNG/JPEG/WebP et texte,
+cinq fichiers et 4 Mo cumulés par message. Le navigateur n'envoie jamais la
+phrase secrète ni la clé de chiffrement. Une erreur Gemini est affichée : le
+copilote ne simule pas une réponse de LLM par la recherche locale.
 
-Le même régime Gemini gratuit s'applique à la question, à l'historique du fil
-et au résumé transmis. Une personne qui ne souhaite aucun traitement par un
-fournisseur d'IA peut continuer à importer, ranger et rechercher localement ;
-ces parcours ne déclenchent pas Gemini.
+Gemini peut rechercher une information à jour, expliquer et comparer les
+documents choisis, rédiger, retrouver un CERFA et proposer des actions. Toute
+modification ou suppression reste confirmée avant exécution. Pour remplir un
+formulaire, les champs sont lus dans le navigateur et les suggestions sont
+présentées et modifiables avant la génération du PDF. Les données envoyées à
+Google suivent les conditions de confidentialité du palier associé à la clé.
 
-Si l'une de ces fonctions est indisponible, le dépôt revient vers une validation
-manuelle et le copilote revient vers la recherche locale. Une panne d'IA ne doit
-donc ni perdre un document ni bloquer l'accès au coffre.
+L'import privé classique, le classement manuel et la recherche locale restent
+disponibles sans transmettre de document à Gemini. Si une fonction IA est
+indisponible, cette panne apparaît dans l'interface et le parcours local reste
+accessible ; aucun document n'est perdu.
 
 ## Fonctions IA : exposition limitée et garde-fous
 
@@ -113,15 +114,11 @@ suffit pas à les appeler.
 Trois gardes-fous resteront alors indispensables :
 
 1. Le serveur ne retient une action que si son `nom` figure mot pour mot dans
-   la liste transmise — un nom halluciné ou approché est rejeté avant même de
-   sortir de la fonction.
-2. `nom` est le nom AFFICHÉ (`.nom`), jamais la clé opaque de stockage
-   (`nomOpaque()`) qui identifie réellement l'entrée dans l'index — les deux
-   sont des textes différents, et le confondre a longtemps rendu impossible
-   d'ouvrir un document cité par l'assistant. `clesParNomAffiche` (dans
-   `src/lib/coffre.ts`) fait la résolution côté navigateur, jamais côté
-   serveur, et rend toutes les clés qui partagent ce nom plutôt que d'en
-   choisir une au hasard.
+   les pièces jointes de ce message — un nom halluciné ou approché est rejeté
+   avant même de sortir de la fonction.
+2. `nom` reste le nom affiché, jamais la clé opaque de stockage. Le navigateur
+   refuse d'exécuter une action si plusieurs fichiers portent le même nom, au
+   lieu d'en choisir un ou d'en modifier plusieurs au hasard.
 3. Une suppression ne s'exécute jamais si plusieurs documents partagent le
    même nom affiché — l'ambiguïté est signalée plutôt que résolue en
    devinant lequel des deux effacer.

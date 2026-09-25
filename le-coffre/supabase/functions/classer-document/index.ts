@@ -15,11 +15,12 @@ const MODELE = "gemini-2.5-flash";
 
 const ORIGINES_AUTORISEES = new Set([
   "https://coffre-puce.vercel.app",
+  "https://mon-tiroir-secret-erwann.vercel.app",
   "https://coffre-erwannchevallier-6916s-projects.vercel.app",
   "https://coffre-git-main-erwannchevallier-6916s-projects.vercel.app",
 ]);
 
-const ORIGINE_APERCU_VERCEL = /^https:\/\/coffre-[a-z0-9-]+-erwannchevallier-6916s-projects\.vercel\.app$/;
+const ORIGINE_APERCU_VERCEL = /^https:\/\/(?:coffre|mon-tiroir-secret)-[a-z0-9-]+-erwannchevallier-6916s-projects\.vercel\.app$/;
 
 function origineAutorisee(origin: string | null): boolean {
   return !origin || ORIGINES_AUTORISEES.has(origin) || ORIGINE_APERCU_VERCEL.test(origin);

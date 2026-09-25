@@ -9,13 +9,17 @@
 // mêmes garanties que classer-document, voir SECURITY.md.
 
 const ORIGINES_AUTORISEES = new Set([
+  "https://mon-tiroir-secret-erwann.vercel.app",
   "https://coffre-puce.vercel.app",
+  "https://mon-tiroir-secret-erwann.vercel.app",
   "https://coffre-erwannchevallier-6916s-projects.vercel.app",
   "https://coffre-git-main-erwannchevallier-6916s-projects.vercel.app",
 ]);
 
+const ORIGINE_APERCU_VERCEL = /^https:\/\/(?:coffre|mon-tiroir-secret)-[a-z0-9-]+-erwannchevallier-6916s-projects\.vercel\.app$/;
+
 function origineAutorisee(origin: string | null): boolean {
-  return !origin || ORIGINES_AUTORISEES.has(origin);
+  return !origin || ORIGINES_AUTORISEES.has(origin) || ORIGINE_APERCU_VERCEL.test(origin);
 }
 
 function entetesCors(origin: string | null): Record<string, string> {
@@ -24,7 +28,7 @@ function entetesCors(origin: string | null): Record<string, string> {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     Vary: "Origin",
   };
-  if (origin && ORIGINES_AUTORISEES.has(origin)) {
+  if (origin && origineAutorisee(origin)) {
     headers["Access-Control-Allow-Origin"] = origin;
   }
   return headers;
