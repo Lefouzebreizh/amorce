@@ -7,7 +7,7 @@
 // jamais par ce fichier.
 
 // Actualise la coquille et le manifeste avec le nom Mon Tiroir Secret.
-const VERSION = 'tiroir-secret-v2';
+const VERSION = 'tiroir-secret-v3';
 const COQUILLE = ['/', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (evenement) => {

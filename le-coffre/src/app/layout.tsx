@@ -1,9 +1,24 @@
 import type { Metadata, Viewport } from 'next';
+import { Instrument_Serif, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { EnregistrerServiceWorker } from './EnregistrerServiceWorker';
 
 const URL_PUBLIQUE = 'https://coffre-puce.vercel.app';
 const IMAGE_PARTAGE = '/brand/tiroir-secret-coffre-mer-phare-v2.jpg';
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-instrument-serif',
+  display: 'swap',
+});
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-plus-jakarta-sans',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(URL_PUBLIQUE),
@@ -66,15 +81,7 @@ export const viewport: Viewport = {
 export default function RacineMiseEnPage({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body>
+      <body className={`${instrumentSerif.variable} ${plusJakartaSans.variable}`}>
         {children}
         <EnregistrerServiceWorker />
       </body>
