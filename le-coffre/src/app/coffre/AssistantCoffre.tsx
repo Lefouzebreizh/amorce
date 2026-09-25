@@ -380,14 +380,14 @@ export function AssistantCoffre({
                       ) : (
                         <>
                           <p className="flex items-center gap-1.5 text-xs text-ink-soft">
-                            <Folder size={12} /> Ce rangement analysera les fichiers du lot puis proposera leur classement.
+                            <Folder size={12} /> Le classement automatique utilise des catégories de base et ne transmet aucun document à Gemini.
                           </p>
                           <button
                             type="button"
                             onClick={onLancerTriAutomatique}
                             className="rounded-lg bg-accent px-3 py-2 text-xs font-bold text-ink transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                           >
-                            Analyser et proposer le classement
+                            Appliquer le classement automatique
                           </button>
                         </>
                       )}
