@@ -51,10 +51,20 @@ export default function PageAccueil() {
     setErreur('');
     setEnCours(true);
     try {
-      const { data, error: erreurFonction } = await supabase.functions.invoke('connexion-coffre', {
-        body: { identifiant: 'lefouzebreizh', motDePasse },
+      const motDePasseSaisi = champCode.current?.value ?? motDePasse;
+      const urlSupabase = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      if (!urlSupabase) throw new Error('Configuration Supabase absente.');
+
+      const reponse = await fetch(`${urlSupabase.replace(/\/$/, '')}/functions/v1/connexion-coffre`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+        body: JSON.stringify({ identifiant: 'lefouzebreizh', motDePasse: motDePasseSaisi }),
       });
-      const messageErreur = await messageErreurConnexion(erreurFonction, data);
+      const data = await reponse.json();
+      const messageErreur = await messageErreurConnexion(
+        reponse.ok ? null : new Error(`Connexion refusée (${reponse.status}).`),
+        data,
+      );
       if (messageErreur) {
         setErreur(messageErreur);
         requestAnimationFrame(() => {

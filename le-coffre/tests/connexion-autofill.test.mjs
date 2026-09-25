@@ -11,6 +11,12 @@ test('la connexion reste compatible avec le gestionnaire de mots de passe', () =
   assert.doesNotMatch(page, /name="code-acces-tiroir-secret"/);
 });
 
+test('la connexion lit le champ saisi et évite le prévol CORS du navigateur', () => {
+  assert.match(page, /champCode\.current\?\.value/);
+  assert.match(page, /Content-Type': 'text\/plain;charset=UTF-8'/);
+  assert.doesNotMatch(page, /functions\.invoke\('connexion-coffre'/);
+});
+
 test('un refus conserve la valeur pour permettre sa vérification', () => {
   const brancheRefus = page.match(/if \(messageErreur\) \{([\s\S]*?)\n\s*return;/)?.[1] ?? '';
   assert.ok(brancheRefus, 'la branche de refus doit exister');
