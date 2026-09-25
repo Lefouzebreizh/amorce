@@ -168,6 +168,17 @@
       "score_avis": 4.3,
       "description_longue": "## Notre verdict\nAu primaire, l'écart entre les élèves sur la lecture se creuse vite, et un professeur seul devant vingt-cinq enfants ne peut pas écouter chacun lire assez souvent. Lalilo prend cette tâche-là : exercices adaptés au niveau réel de chaque élève, et surtout un relevé qui dit au professeur qui bute sur quel son. Née en France, la plateforme s'est étendue depuis à d'autres pays.\n\n## Points forts\n- Adapte le travail au niveau réel de chaque élève, sans intervention\n- Relevé précis des difficultés, exploitable en classe\n- Conçue au départ pour le français et l'école primaire\n- Utilisée en établissement, avec un cadre d'usage établi\n\n## Points faibles\n- Périmètre étroit : lecture et primaire, rien au-delà\n- Ne remplace pas l'écoute directe d'un enfant qui lit\n- Suppose un accès individuel aux écrans en classe\n- Abonnement porté par l'établissement\n\n## Idéal pour\nLes professeurs des écoles qui veulent savoir précisément où en est chaque élève en lecture, plutôt que de le deviner.",
       "date_ajout": "2026-09-23"
+    },
+    {
+      "id": "curipod",
+      "nom": "Curipod",
+      "categorie": "Activités interactives",
+      "prix": "Freemium — à partir de 10 $/mois",
+      "description_courte": "Une séance interactive complète générée à partir d'un sujet : questions, sondages, nuages de mots et débats, projetables tout de suite.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/curipod",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nCuripod produit en une minute ce qu'on met une heure à préparer : une séance interactive où les élèves répondent depuis leur appareil — question ouverte, sondage, nuage de mots, prise de position à défendre. L'enseignant garde la main sur le déroulé et voit les réponses arriver en direct, ce qui transforme le cours magistral en séance où chacun a dû se prononcer.\n\n## Points forts\n- Séance complète générée à partir d'un simple sujet et d'un niveau\n- Participation de toute la classe, y compris les élèves qui ne lèvent jamais la main\n- Réponses visibles en direct : les malentendus se voient immédiatement\n- Prise en main en dix minutes, sans formation\n\n## Points faibles\n- Suppose un appareil connecté par élève ou par binôme\n- Les contenus générés demandent une relecture disciplinaire\n- La version gratuite limite le nombre de séances enregistrées\n\n## Idéal pour\nLes enseignants du secondaire qui veulent réveiller une classe passive sans y consacrer une heure de préparation par séance.",
+      "date_ajout": "2026-09-25"
     }
   ]
 }

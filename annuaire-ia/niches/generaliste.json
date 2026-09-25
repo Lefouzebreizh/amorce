@@ -270,6 +270,17 @@
       "score_avis": 4.5,
       "description_longue": "## Notre verdict\nFathom a fait un choix rare : la version gratuite est illimitée en durée d’enregistrement et de transcription, avec les résumés. On ne paie que pour les fonctions d’équipe et l’intégration au logiciel commercial. Pour un indépendant ou une petite structure, c’est l’outil de compte rendu qui ne coûte rien et qu’on garde.\n\n## Points forts\n- Version gratuite illimitée en minutes, ce qui n’existe presque nulle part\n- Résumés disponibles en quelques secondes après la fin de la réunion\n- Extraits horodatés partageables, sans envoyer l’enregistrement entier\n- Pousse les comptes rendus dans les logiciels commerciaux courants\n\n## Points faibles\n- L’accord des participants à l’enregistrement reste obligatoire\n- Moins fin que la concurrence sur la distinction des locuteurs en français\n- Les fonctions d’équipe sont réservées aux formules payantes\n\n## Idéal pour\nLes indépendants et petites équipes qui enchaînent les rendez-vous en visioconférence et n’en gardent aucune trace.",
       "date_ajout": "2026-09-23"
+    },
+    {
+      "id": "mistral-le-chat",
+      "nom": "Mistral Le Chat",
+      "categorie": "Rédaction",
+      "prix": "Gratuit, puis abonnement",
+      "description_courte": "L'assistant conversationnel français, hébergé en Europe, à la hauteur des usages professionnels courants.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/mistral-le-chat",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nPour un professionnel français, l'argument n'est pas seulement la qualité des réponses — les grands modèles se tiennent — mais le fait de travailler avec un éditeur européen dont les modèles tournent sur des serveurs européens. Sur des documents clients, des contrats ou des données internes, c'est ce qui rend l'usage défendable devant un client ou un délégué à la protection des données. Le français y est traité comme une langue de premier rang, pas comme une traduction.\n\n## Points forts\n- Éditeur français, traitement des données en Europe\n- Le français traité nativement, sans effet de traduction\n- Palier gratuit largement suffisant pour un usage quotidien\n- Modèles disponibles aussi par interface de programmation, pour aller plus loin\n\n## Points faibles\n- Écosystème d'extensions plus restreint que celui des acteurs américains\n- Moins de fonctions périphériques que les assistants les plus établis\n- Documentation d'usage professionnel encore en construction\n- Avance technique qui se joue à quelques mois près sur ce marché\n\n## Idéal pour\nLes indépendants et petites équipes qui manipulent des données clients et veulent une réponse claire à la question « où partent mes documents ».",
+      "date_ajout": "2026-09-25"
     }
   ]
 }
