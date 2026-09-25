@@ -57,8 +57,10 @@ export default function PageAccueil() {
       const messageErreur = await messageErreurConnexion(erreurFonction, data);
       if (messageErreur) {
         setErreur(messageErreur);
-        setMotDePasse('');
-        champCode.current?.focus();
+        requestAnimationFrame(() => {
+          champCode.current?.focus();
+          champCode.current?.select();
+        });
         return;
       }
       if (!data?.access_token || !data?.refresh_token) {
@@ -112,9 +114,9 @@ export default function PageAccueil() {
             <p className={styles.eyebrow}>Accès personnel</p>
             <h2 id="titre-connexion">Entre quand tu es prêt.</h2>
           </div>
-          <p className={styles.accessIntro}>Entre ton code d&apos;accès. Aucun lien à attendre dans ta boîte mail.</p>
+          <p className={styles.accessIntro}>Entre le mot de passe de ton compte. Aucun lien à attendre dans ta boîte mail.</p>
 
-        <form onSubmit={seConnecter} className={styles.form} aria-busy={enCours} autoComplete="off">
+        <form onSubmit={seConnecter} className={styles.form} aria-busy={enCours} autoComplete="on">
           <input
             type="text"
             name="username"
@@ -125,15 +127,15 @@ export default function PageAccueil() {
             aria-hidden="true"
             className="sr-only"
           />
-          <label htmlFor="mot-de-passe" className="text-sm text-ink-soft">Ton code d&apos;accès</label>
+          <label htmlFor="mot-de-passe" className="text-sm text-ink-soft">Mot de passe du compte</label>
           <div className={styles.inputWrap}>
             <input
               ref={champCode}
               id="mot-de-passe"
-              name="code-acces-tiroir-secret"
+              name="password"
               type={codeVisible ? 'text' : 'password'}
               required
-              autoComplete="off"
+              autoComplete="current-password"
               autoCapitalize="none"
               spellCheck={false}
               value={motDePasse}
@@ -157,7 +159,7 @@ export default function PageAccueil() {
             </button>
           </div>
           <p id="conseil-code" className={styles.codeHint}>
-            Sur ordinateur, vérifie le code si Chrome l&apos;a rempli automatiquement.
+            C&apos;est le mot de passe du compte, pas la phrase secrète qui chiffre tes documents. Chrome peut maintenant l&apos;enregistrer.
           </p>
           {erreur && <p id="erreur-connexion" role="alert" className={styles.error}>{erreur}</p>}
           <button
