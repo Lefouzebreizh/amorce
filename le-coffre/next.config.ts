@@ -3,7 +3,13 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   turbopack: { root: __dirname },
   async headers() {
-    const privees = ['/coffre/:path*', '/compte/:path*', '/auth/:path*', '/api/:path*'];
+    const privees = [
+      '/coffre/:path*',
+      '/compte/:path*',
+      '/auth/:path*',
+      '/reinitialiser-code',
+      '/api/:path*',
+    ];
 
     return privees.map((source) => ({
       source,
