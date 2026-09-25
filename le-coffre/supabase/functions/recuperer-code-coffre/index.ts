@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-const ORIGINES = new Set(["https://coffre-puce.vercel.app", "https://coffre-erwannchevallier-6916s-projects.vercel.app", "https://coffre-git-main-erwannchevallier-6916s-projects.vercel.app", "https://coffre-git-claude-le-cof-73ea7b-erwannchevallier-6916s-projects.vercel.app"]);
+const ORIGINES = new Set(["https://mon-tiroir-secret-erwann.vercel.app", "https://coffre-puce.vercel.app", "https://coffre-erwannchevallier-6916s-projects.vercel.app", "https://coffre-git-main-erwannchevallier-6916s-projects.vercel.app", "https://coffre-git-claude-le-cof-73ea7b-erwannchevallier-6916s-projects.vercel.app"]);
 const REDIRECTION = "https://coffre-puce.vercel.app/reinitialiser-code";
 function headers(origin: string | null) { const h: Record<string, string> = { "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS", "Content-Type": "application/json", Vary: "Origin" }; if (origin && ORIGINES.has(origin)) h["Access-Control-Allow-Origin"] = origin; return h; }
 function neutre(origin: string | null, status = 200) { return new Response(JSON.stringify({ ok: true }), { status, headers: headers(origin) }); }

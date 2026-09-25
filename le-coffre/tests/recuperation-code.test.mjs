@@ -10,6 +10,14 @@ const fonction = fs.readFileSync(
   new URL('../supabase/functions/recuperer-code-coffre/index.ts', import.meta.url),
   'utf8',
 );
+const fonctionConnexion = fs.readFileSync(
+  new URL('../supabase/functions/connexion-coffre/index.ts', import.meta.url),
+  'utf8',
+);
+
+test('la nouvelle adresse stable peut appeler le login Supabase', () => {
+  assert.match(fonctionConnexion, /"https:\/\/mon-tiroir-secret-erwann\.vercel\.app"/);
+});
 
 test('le lien de récupération ouvre toujours la page stable de changement de mot de passe', () => {
   assert.match(
@@ -17,6 +25,10 @@ test('le lien de récupération ouvre toujours la page stable de changement de m
     /const REDIRECTION = "https:\/\/coffre-puce\.vercel\.app\/reinitialiser-code"/,
   );
   assert.match(fonction, /redirect_to: REDIRECTION/);
+});
+
+test('la nouvelle adresse stable peut appeler le flux de récupération', () => {
+  assert.match(fonction, /"https:\/\/mon-tiroir-secret-erwann\.vercel\.app"/);
 });
 
 test('la page attend explicitement la session PASSWORD_RECOVERY', () => {

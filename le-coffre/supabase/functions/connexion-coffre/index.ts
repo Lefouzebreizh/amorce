@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const ORIGINES_AUTORISEES = new Set([
+  "https://mon-tiroir-secret-erwann.vercel.app",
   "https://coffre-puce.vercel.app",
   "https://coffre-erwannchevallier-6916s-projects.vercel.app",
   "https://coffre-git-main-erwannchevallier-6916s-projects.vercel.app",
