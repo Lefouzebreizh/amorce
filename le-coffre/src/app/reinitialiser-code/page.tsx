@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { messageErreurMiseAJourMotDePasse } from '@/lib/recuperation';
 
 type EtatLien = 'chargement' | 'pret' | 'invalide';
 
@@ -94,7 +95,7 @@ export default function ReinitialiserCode() {
     const { error } = await supabase.auth.updateUser({ password: code });
     setEnCours(false);
     if (error) {
-      setErreur('Le lien n’est plus valide. Redemande-en un nouveau.');
+      setErreur(messageErreurMiseAJourMotDePasse(error));
       return;
     }
     routeur.replace('/coffre');
