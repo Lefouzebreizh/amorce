@@ -12,6 +12,7 @@ const MODELE = "gemini-2.5-flash";
 
 const ORIGINES_AUTORISEES = new Set([
   "https://coffre-puce.vercel.app",
+  "https://mon-tiroir-secret-erwann.vercel.app",
   "https://coffre-erwannchevallier-6916s-projects.vercel.app",
   "https://coffre-git-main-erwannchevallier-6916s-projects.vercel.app",
 ]);
