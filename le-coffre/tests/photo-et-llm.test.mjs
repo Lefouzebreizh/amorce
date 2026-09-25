@@ -16,7 +16,7 @@ test('la photo est une action principale visible, jamais une icône seule sur mo
 });
 
 test('les données de démonstration restent fictives et limitées à un aperçu Vercel', () => {
-  assert.match(page, /mon-tiroir-secret-\.\+-erwannchevallier-6916s-projects/);
+  assert.match(page, /mon-tiroir-secret-git-\(\?!main/);
   assert.match(page, /modeDemoAutorise && new URLSearchParams/);
   assert.match(page, /alex\.martin@example\.invalid/);
   assert.doesNotMatch(page, /erwann@demo\.local/);
