@@ -52,6 +52,16 @@ test('un dossier complet peut être choisi et classé par Gemini avec une file d
   assert.match(page, /executerAvecConcurrence\(nouveaux, analyseIntelligente \? 2/);
 });
 
+test('les plages d’un PDF mixte sont contrôlées puis séparées localement', () => {
+  assert.match(classement, /documentsDetectes/);
+  assert.match(classement, /pagesDebut !== prochainePage/);
+  assert.match(classement, /prochainePage !== pagesPdf \+ 1/);
+  assert.match(coffre, /PDFDocument\.load\(await fichier\.arrayBuffer\(\)\)/);
+  assert.match(coffre, /copyPages\(source, indices\)/);
+  assert.match(page, /separerPdfParDocuments\(item\.fichier/);
+  assert.match(page, /categorie: 'À vérifier'/);
+});
+
 test('le copilote appelle Gemini sans envoyer la liste des documents du coffre', () => {
   assert.match(coffre, /invoke\('assistant-coffre'/);
   assert.match(coffre, /body: \{ question, historique, piecesJointes \}/);

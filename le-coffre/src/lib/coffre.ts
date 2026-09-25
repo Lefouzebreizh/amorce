@@ -8,6 +8,7 @@
  */
 
 import { supabase } from './supabase';
+import { PDFDocument } from 'pdf-lib';
 import {
   ITERATIONS, TEXTE_VERIF, b64FromBuf, bufFromB64, chiffrerOctets, dechiffrerOctets,
   chiffrerTexte, dechiffrerTexte, deriverCle, empaqueterVerificateur, nomOpaque,
@@ -86,7 +87,9 @@ export type IndexCoffre = {
   identite?: Identite;
 };
 
-export type PropositionClassement = {
+export type PropositionDocumentPdf = {
+  pagesDebut: number;
+  pagesFin: number;
   lisible: boolean;
   categorie: string;
   nomSuggere: string;
@@ -95,6 +98,11 @@ export type PropositionClassement = {
   montant: string | null;
   texteExtrait: string | null;
   echeance: Echeance;
+};
+
+export type PropositionClassement = PropositionDocumentPdf & {
+  documentsDetectes?: PropositionDocumentPdf[];
+  segmentationIncertaine?: boolean;
   // Historique : utilisé par l'ancien affinage IA. En mode privé par défaut,
   // proposerClassement ne fait plus d'appel réseau et ne renseigne pas ce
   // champ.
@@ -254,6 +262,8 @@ export function composerLettreResiliation(
 // plus cohérent avec la promesse de Mon Tiroir Secret.
 export async function proposerClassement(fichier: File): Promise<PropositionClassement> {
   return {
+    pagesDebut: 1,
+    pagesFin: 1,
     lisible: true,
     categorie: categorieInstantanee(fichier.type || 'application/octet-stream'),
     nomSuggere: fichier.name,
@@ -287,7 +297,7 @@ export async function analyserDocumentPourClassement(
   fichier: File, categoriesExistantes: string[] = [],
 ): Promise<PropositionClassement> {
   const vide: PropositionClassement = {
-    lisible: false, categorie: '', nomSuggere: '', emetteur: null, referenceClient: null, montant: null,
+    pagesDebut: 1, pagesFin: 1, lisible: false, categorie: '', nomSuggere: '', emetteur: null, referenceClient: null, montant: null,
     texteExtrait: null,
     echeance: { presente: false, date: null, libelle: null, confiance: 'basse' },
   };
@@ -298,12 +308,19 @@ export async function analyserDocumentPourClassement(
   if (fichier.size > 12 * 1024 * 1024) return { ...vide, erreurTechnique: true };
   try {
     const buf = await fichier.arrayBuffer();
+    let nombrePages: number | undefined;
+    if (fichier.type === 'application/pdf') {
+      const pdf = await PDFDocument.load(buf);
+      nombrePages = pdf.getPageCount();
+      if (nombrePages < 1 || nombrePages > 500) return { ...vide, erreurTechnique: true };
+    }
     const { data, error } = await supabase.functions.invoke('classer-document', {
       body: {
         donnees: b64FromFichier(buf),
         type: fichier.type || 'application/octet-stream',
         cheminRelatif: fichier.webkitRelativePath || fichier.name,
         categoriesExistantes: categoriesExistantes.filter(Boolean).slice(0, 100),
+        nombrePages,
       },
     });
     if (error || !data || 'erreur' in data) return { ...vide, erreurTechnique: true };
@@ -311,6 +328,58 @@ export async function analyserDocumentPourClassement(
   } catch {
     return { ...vide, erreurTechnique: true };
   }
+}
+
+/** Sépare localement un PDF selon les plages contiguës que Gemini a reconnues.
+ * Une segmentation incomplète ou qui ne couvre pas toutes les pages est
+ * refusée : l'appelant garde alors le PDF entier dans « À vérifier ». */
+export async function separerPdfParDocuments(
+  fichier: File,
+  documents: PropositionDocumentPdf[],
+): Promise<Array<{ fichier: File; proposition: PropositionDocumentPdf }>> {
+  const source = await PDFDocument.load(await fichier.arrayBuffer());
+  const nombrePages = source.getPageCount();
+  if (documents.length < 2 || documents.length > nombrePages) {
+    throw new Error('Gemini n’a pas fourni de séparation fiable.');
+  }
+
+  let prochainePage = 1;
+  for (const document of documents) {
+    if (
+      !Number.isInteger(document.pagesDebut) || !Number.isInteger(document.pagesFin)
+      || document.pagesDebut !== prochainePage || document.pagesFin < document.pagesDebut
+      || document.pagesFin > nombrePages || !document.lisible || !document.categorie
+      || !document.nomSuggere
+    ) {
+      throw new Error('La séparation proposée ne couvre pas les pages dans le bon ordre.');
+    }
+    prochainePage = document.pagesFin + 1;
+  }
+  if (prochainePage !== nombrePages + 1) {
+    throw new Error('La séparation proposée laisse des pages sans classement.');
+  }
+
+  const nomSource = fichier.name.replace(/\.pdf$/i, '');
+  const resultats = await Promise.all(documents.map(async (proposition) => {
+    const extrait = await PDFDocument.create();
+    const indices = Array.from(
+      { length: proposition.pagesFin - proposition.pagesDebut + 1 },
+      (_, index) => proposition.pagesDebut - 1 + index,
+    );
+    const pages = await extrait.copyPages(source, indices);
+    pages.forEach((page) => extrait.addPage(page));
+    const donnees = await extrait.save();
+    const octetsPdf = new ArrayBuffer(donnees.byteLength);
+    new Uint8Array(octetsPdf).set(donnees);
+    const suffixe = proposition.nomSuggere.replace(/[<>:"/\\|?*\x00-\x1f]/g, ' ').trim().slice(0, 90);
+    const fichierSepare = new File(
+      [octetsPdf],
+      `${nomSource} — ${suffixe || `pages ${proposition.pagesDebut}-${proposition.pagesFin}`}.pdf`,
+      { type: 'application/pdf', lastModified: fichier.lastModified },
+    );
+    return { fichier: fichierSepare, proposition };
+  }));
+  return resultats;
 }
 
 // Catégorie générique posée sans appel réseau. C'est elle qui garantit
