@@ -363,14 +363,14 @@ export type ReponseAssistant = {
   formulaireCerfa: { demarche: string; url: string } | null;
 };
 
-// Le résumé envoyé à l'assistant ne porte que le nom AFFICHÉ (`.nom`),
-// jamais la clé opaque (`nomOpaque()`, voir deposerFichier) qui identifie
-// réellement l'entrée dans `index.objets` : les deux ne sont pas le même
-// texte, et le confondre a longtemps laissé un document cité par
-// l'assistant impossible à ouvrir (aucune clé ne portait ce nom-là).
-// Plusieurs documents peuvent partager le même nom affiché — on rend donc
-// toutes les clés qui correspondent, à l'appelant de décider quoi faire
-// d'une ambiguïté plutôt que d'en choisir une au hasard.
+// Le copilote n'envoie que les fichiers explicitement attachés par l'utilisateur.
+// Le nom affiché et le type accompagnent le contenu déchiffré pour cette seule
+// requête. Ni l'index complet, ni l'identité, ni la phrase secrète ne voyagent.
+export type PieceJointeCopilote = { nom: string; type: string; donnees: string };
+
+// Le nom affiché et la clé opaque sont distincts. Une sélection dans l'interface
+// garde la clé côté navigateur, puis ne transmet que le nom si le document est
+// effectivement joint à une demande Gemini.
 export function clesParNomAffiche(index: IndexCoffre, nomAffiche: string): string[] {
   return Object.entries(index.objets)
     .filter(([, o]) => o.nom === nomAffiche)
@@ -394,32 +394,21 @@ export function digestIndex(index: IndexCoffre): DigestDocument[] {
   }));
 }
 
-// L'envoi d'une question depuis le panneau Assistant est une action explicite :
-// seuls un résumé court des fiches et l'historique de CE fil sont transmis,
-// jamais les fichiers ni la phrase secrète. Si le service est indisponible,
-// on retombe sur la recherche locale au lieu de casser le parcours.
+// Une question sans pièce jointe n'envoie que cette question et l'historique du
+// fil. Les fichiers ne sont envoyés qu'après sélection et envoi explicites.
+// Une panne Gemini reste visible : aucune recherche locale ne se fait passer
+// silencieusement pour un grand modèle de langage.
 export async function demanderAuCoffre(
-  question: string, historique: TourConversation[], index: IndexCoffre,
+  question: string, historique: TourConversation[], piecesJointes: PieceJointeCopilote[] = [],
 ): Promise<ReponseAssistant> {
-  const resultatLocal = interpreterQuestion(index, question);
-  const repliLocal: ReponseAssistant = {
-    reponse: resultatLocal.reponse
-      ? `${resultatLocal.reponse} L'assistant enrichi est momentanément indisponible ; cette réponse vient de la recherche privée locale.`
-      : "L'assistant enrichi est momentanément indisponible. Réessaie dans un instant.",
-    documentsCites: resultatLocal.noms.map((nom) => index.objets[nom]?.nom).filter((nom): nom is string => Boolean(nom)),
-    ouvrirFormulaire: resultatLocal.action === 'formulaire',
-    ouvrirImportDossier: false,
-    ouvrirRangement: resultatLocal.action === 'rangement',
-    declencherTriAutomatique: false,
-    rechercheWebEffectuee: false,
-    actions: [],
-    formulaireCerfa: null,
-  };
   try {
     const { data, error } = await supabase.functions.invoke('assistant-coffre', {
-      body: { question, historique, documents: digestIndex(index) },
+      body: { question, historique, piecesJointes },
     });
-    if (error || !data || 'erreur' in data) return repliLocal;
+    if (error) throw new Error(error.message || 'Connexion à Gemini impossible.');
+    if (!data || 'erreur' in data) {
+      throw new Error(data && 'erreur' in data ? String(data.erreur) : 'Gemini n’a pas renvoyé de réponse.');
+    }
     const resultat = data as ReponseAssistant;
     resultat.documentsCites = Array.isArray(resultat.documentsCites) ? resultat.documentsCites : [];
     resultat.actions = Array.isArray(resultat.actions) ? resultat.actions : [];
@@ -430,8 +419,8 @@ export async function demanderAuCoffre(
     resultat.rechercheWebEffectuee = Boolean(resultat.rechercheWebEffectuee);
     if (!resultat.formulaireCerfa || typeof resultat.formulaireCerfa !== 'object') resultat.formulaireCerfa = null;
     return resultat;
-  } catch {
-    return repliLocal;
+  } catch (erreur) {
+    throw new Error(erreur instanceof Error ? erreur.message : 'Connexion à Gemini impossible.');
   }
 }
 
@@ -452,20 +441,21 @@ export async function recupererFormulaireCerfa(url: string): Promise<ArrayBuffer
   return octets.buffer;
 }
 
-// Appel explicite depuis le parcours assistant « prépare ce formulaire ».
-// Gemini ne reçoit que les noms de champs, l'identité enregistrée et le résumé
-// des fiches ; chaque suggestion reste visible et modifiable avant génération.
+// Un clic explicite transmet seulement les noms des champs et les fiches que
+// la personne a choisies dans l'interface. L'identité est remplie localement.
 export async function suggererChampsFormulaire(
-  champs: string[], index: IndexCoffre, demarche?: string, identite?: Identite,
+  champs: string[], documents: DigestDocument[], demarche?: string,
 ): Promise<Record<string, string>> {
   try {
     const { data, error } = await supabase.functions.invoke('suggerer-champs-formulaire', {
-      body: { champs, documents: digestIndex(index), identite, demarche },
+      body: { champs, documents, demarche },
     });
-    if (error || !data || 'erreur' in data || !data.valeurs || typeof data.valeurs !== 'object') return {};
+    if (error) throw new Error(error.message || 'Connexion à Gemini impossible.');
+    if (!data || 'erreur' in data) throw new Error(data && 'erreur' in data ? String(data.erreur) : 'Gemini n’a pas renvoyé de suggestions.');
+    if (!data.valeurs || typeof data.valeurs !== 'object') throw new Error('Gemini n’a pas renvoyé de suggestions lisibles.');
     return data.valeurs as Record<string, string>;
-  } catch {
-    return {};
+  } catch (erreur) {
+    throw new Error(erreur instanceof Error ? erreur.message : 'Connexion à Gemini impossible.');
   }
 }
 

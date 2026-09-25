@@ -1,7 +1,5 @@
-// Propose une valeur pour chaque champ d'un formulaire (CERFA ou autre),
-// à partir du résumé des papiers déjà déposés et de l'identité — jamais du
-// contenu réel des fichiers, qui ne quitte le navigateur qu'au moment du
-// classement (voir classer-document et SECURITY.md, section « L'assistant »).
+// Propose une valeur pour les champs d'un formulaire à partir des seules fiches
+// que l'utilisateur a explicitement choisies. L'identité est remplie localement.
 // Complète, sans le remplacer, le rapprochement par nom de champ que fait
 // déjà src/lib/formulaire.ts pour l'identité (nom, adresse...) : ici, c'est
 // une correspondance sémantique large (« numéro de sécurité sociale »,
@@ -41,8 +39,6 @@ type DigestDocument = {
   echeanceLibelle?: string | null; echeanceDate?: string | null; extrait?: string | null;
 };
 
-type Identite = { nom: string; adresse: string; codePostal: string; ville: string };
-
 function reponseJson(corps: unknown, statut = 200, origin: string | null = null): Response {
   return new Response(JSON.stringify(corps), {
     status: statut,
@@ -79,27 +75,43 @@ Deno.serve(async (requete: Request) => {
     return reponseJson({ erreur: "GEMINI_API_KEY absente côté serveur." }, 500, origin);
   }
 
-  let corps: { champs?: string[]; documents?: DigestDocument[]; identite?: Identite; demarche?: string };
+  let corps: { champs?: string[]; documents?: DigestDocument[]; demarche?: string };
   try {
     corps = await requete.json();
   } catch {
-    return reponseJson({ erreur: "Corps JSON attendu : { champs, documents, identite?, demarche? }." }, 400, origin);
+    return reponseJson({ erreur: "Corps JSON attendu : { champs, documents, demarche? }." }, 400, origin);
   }
-  const { champs, documents, identite, demarche } = corps;
+  const { champs, demarche } = corps;
   if (!Array.isArray(champs) || champs.length === 0) {
     return reponseJson({ erreur: "Champ 'champs' (tableau de noms non vide) requis." }, 400, origin);
   }
+  if (champs.length > 200 || champs.some((champ) => typeof champ !== "string" || champ.length > 300)) {
+    return reponseJson({ erreur: "La liste de champs est invalide." }, 400, origin);
+  }
+  const documents = Array.isArray(corps.documents) ? corps.documents : [];
+  if (documents.length === 0 || documents.length > 5) {
+    return reponseJson({ erreur: "Choisis de un à cinq documents pour proposer des valeurs." }, 400, origin);
+  }
+  const documentsVerifies = documents.filter((document) => document && typeof document.nom === "string")
+    .map((document) => ({
+      nom: document.nom.slice(0, 180),
+      categorie: typeof document.categorie === "string" ? document.categorie.slice(0, 60) : "",
+      type: typeof document.type === "string" ? document.type.slice(0, 80) : "",
+      ...(typeof document.emetteur === "string" ? { emetteur: document.emetteur.slice(0, 120) } : {}),
+      ...(typeof document.montant === "string" ? { montant: document.montant.slice(0, 80) } : {}),
+      ...(typeof document.extrait === "string" ? { extrait: document.extrait.slice(0, 200) } : {}),
+    }));
+  if (documentsVerifies.length !== documents.length) return reponseJson({ erreur: "Une fiche choisie est invalide." }, 400, origin);
 
   const aujourdhui = new Date().toISOString().slice(0, 10);
   const invite =
     `Aujourd'hui : ${aujourdhui}. Voici un formulaire administratif${demarche ? ` pour la démarche « ${demarche} »` : ""} ` +
     `à préparer pour un utilisateur du Tiroir Secret, un coffre-fort de papiers personnels.\n\n` +
-    `Ses papiers déjà déposés, en résumé (jamais leur contenu intégral) :\n${JSON.stringify(documents ?? [])}\n\n` +
-    `Son identité connue : ${JSON.stringify(identite ?? null)}\n\n` +
+    `Voici uniquement les fiches que la personne a explicitement choisies pour cette demande :\n${JSON.stringify(documentsVerifies)}\n\n` +
     `Voici les noms des champs du formulaire, tels qu'ils existent dans le PDF (souvent techniques ou peu ` +
     `lisibles) :\n${JSON.stringify(champs)}\n\n` +
-    `Pour chaque champ, propose une valeur SEULEMENT si tu la déduis avec confiance d'un papier ou de ` +
-    `l'identité ci-dessus — jamais devinée, jamais calculée à partir de suppositions. Un champ qui ` +
+    `Pour chaque champ, propose une valeur SEULEMENT si tu la déduis avec confiance des fiches jointes — ` +
+    `jamais devinée, jamais calculée à partir de suppositions. Un champ qui ` +
     `ressemble à une date de naissance, un numéro de sécurité sociale, une immatriculation, une ` +
     `référence client, etc. ne se remplit que si cette information précise est écrite noir sur blanc ` +
     `dans un des papiers. Dans le doute, ne propose rien pour ce champ plutôt que d'inventer — l'utilisateur ` +
