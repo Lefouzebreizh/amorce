@@ -1248,52 +1248,56 @@ export default function PageCoffre() {
           <p className="coffre-question__title font-affiche text-xl texte-degrade sm:text-2xl">
             Qu&apos;est-ce que je cherche pour toi ?
           </p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (recherche.trim()) demanderAAssistant(recherche.trim());
-            }}
-            className="relative"
-          >
-            {/* Bulle de discussion plutôt qu'une loupe (10/09/2026) : cette
-                barre interroge un assistant en langage naturel, elle ne
-                filtre pas une liste par mots-clés — la loupe suggérait le
-                mauvais geste. */}
-            <MessageCircle size={20} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-soft" />
-            <input
-              type="search"
-              value={recherche}
-              onChange={(e) => setRecherche(e.target.value)}
-              placeholder="Pose une question : « mes photos », « le papier de la mutuelle »…"
-              className="w-full rounded-2xl border border-line bg-paper py-3.5 pr-4 pl-12 text-base outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
-            />
-          </form>
-          {recherche.trim() && (
-            <div className="mx-auto mt-3 flex max-w-xl flex-wrap items-center justify-center gap-2">
-              <p className="text-sm text-accent">{reponseRecherche}</p>
-              {actionRecherche === 'rangement' && (
-                <button
-                  type="button"
-                  onClick={() => { setRecherche(''); setVueDossiers(true); }}
-                  className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
-                >
-                  <Folder size={12} /> Ranger en dossiers
-                </button>
+          {/* Un seul champ est monté à la fois. La saisie initiale disparaît
+              dès que la conversation s'ouvre ; le champ du fil devient alors
+              l'unique point de saisie, jusqu'à la fermeture du fil. */}
+          {!assistantOuvert && (
+            <>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (recherche.trim()) demanderAAssistant(recherche.trim());
+                }}
+                className="relative"
+              >
+                {/* Bulle de discussion plutôt qu'une loupe (10/09/2026) : cette
+                    barre interroge un assistant en langage naturel, elle ne
+                    filtre pas une liste par mots-clés — la loupe suggérait le
+                    mauvais geste. */}
+                <MessageCircle size={20} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-soft" />
+                <input
+                  type="search"
+                  value={recherche}
+                  onChange={(e) => setRecherche(e.target.value)}
+                  placeholder="Pose une question : « mes photos », « le papier de la mutuelle »…"
+                  className="w-full rounded-2xl border border-line bg-paper py-3.5 pr-4 pl-12 text-base outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
+                />
+              </form>
+              {recherche.trim() && (
+                <div className="mx-auto mt-3 flex max-w-xl flex-wrap items-center justify-center gap-2">
+                  <p className="text-sm text-accent">{reponseRecherche}</p>
+                  {actionRecherche === 'rangement' && (
+                    <button
+                      type="button"
+                      onClick={() => { setRecherche(''); setVueDossiers(true); }}
+                      className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
+                    >
+                      <Folder size={12} /> Ranger en dossiers
+                    </button>
+                  )}
+                  {actionRecherche === 'formulaire' && (
+                    <button
+                      type="button"
+                      onClick={() => { setRecherche(''); setFormulaireOuvert(true); }}
+                      className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
+                    >
+                      <FileText size={12} /> Remplir un formulaire
+                    </button>
+                  )}
+                </div>
               )}
-              {actionRecherche === 'formulaire' && (
-                <button
-                  type="button"
-                  onClick={() => { setRecherche(''); setFormulaireOuvert(true); }}
-                  className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
-                >
-                  <FileText size={12} /> Remplir un formulaire
-                </button>
-              )}
-            </div>
+            </>
           )}
-          {/* Une seule barre, un seul bot (10/09/2026) : la conversation
-              s'affiche ici, directement sous la barre qui l'a ouverte — plus
-              de panneau plein écran séparé. */}
           {assistantOuvert && (
             <div className="mx-auto mt-5 max-w-xl">
               <AssistantCoffre
