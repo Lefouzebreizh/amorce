@@ -19,7 +19,7 @@ const ORIGINES_AUTORISEES = new Set([
 // changent de sous-domaine à chaque déploiement. Cette expression conserve
 // une liste fermée au projet/compte sans devoir republier la fonction à
 // chaque nouvelle URL temporaire.
-const ORIGINE_APERCU_VERCEL = /^https:\/\/coffre-[a-z0-9-]+-erwannchevallier-6916s-projects\.vercel\.app$/;
+const ORIGINE_APERCU_VERCEL = /^https:\/\/(?:coffre|mon-tiroir-secret)-[a-z0-9-]+-erwannchevallier-6916s-projects\.vercel\.app$/;
 
 function origineAutorisee(origin: string | null): boolean {
   return !origin || ORIGINES_AUTORISEES.has(origin) || ORIGINE_APERCU_VERCEL.test(origin);
