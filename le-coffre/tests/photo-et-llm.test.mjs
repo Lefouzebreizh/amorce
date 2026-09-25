@@ -15,8 +15,8 @@ test('la photo est une action principale visible, jamais une icône seule sur mo
   assert.doesNotMatch(page, /hidden sm:inline">Photographier/);
 });
 
-test('les données de démonstration restent fictives et limitées à la preview dédiée', () => {
-  assert.match(page, /coffre-git-codex-tiroir-/);
+test('les données de démonstration restent fictives et limitées à un aperçu Vercel', () => {
+  assert.match(page, /mon-tiroir-secret-\.\+-erwannchevallier-6916s-projects/);
   assert.match(page, /modeDemoAutorise && new URLSearchParams/);
   assert.match(page, /alex\.martin@example\.invalid/);
   assert.doesNotMatch(page, /erwann@demo\.local/);
