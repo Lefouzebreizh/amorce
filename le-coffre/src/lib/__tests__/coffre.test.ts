@@ -620,6 +620,14 @@ describe('demander au coffre', () => {
     await assert.rejects(() => coffre.demanderAuCoffre('résume ce courrier', []), /panne/);
   });
 
+  it('affiche le vrai motif renvoyé par la fonction Gemini', async () => {
+    poser(clientFactice({ fonction: { data: null, error: {
+      message: 'Edge Function returned a non-2xx status code',
+      context: new Response(JSON.stringify({ erreur: 'Session utilisateur requise.' }), { status: 401 }),
+    } } }));
+    await assert.rejects(() => coffre.demanderAuCoffre('bonjour', []), /Session utilisateur requise/);
+  });
+
   it('n’envoie aucun document du coffre sans pièce jointe explicitement sélectionnée', async () => {
     const f = poser(clientFactice({ fonction: { data: {
       reponse: 'Je l’ai trouvée.', documentsCites: ['Facture EDF'], ouvrirFormulaire: false,

@@ -474,7 +474,20 @@ export async function demanderAuCoffre(
     const { data, error } = await supabase.functions.invoke('assistant-coffre', {
       body: { question, historique, piecesJointes },
     });
-    if (error) throw new Error(error.message || 'Connexion à Gemini impossible.');
+    if (error) {
+      let message = error.message || 'Connexion à Gemini impossible.';
+      const contexte = 'context' in error ? error.context : null;
+      if (contexte instanceof Response) {
+        try {
+          const corps = await contexte.clone().json() as { erreur?: unknown; error?: unknown };
+          if (typeof corps.erreur === 'string') message = corps.erreur;
+          else if (typeof corps.error === 'string') message = corps.error;
+        } catch {
+          // Si le relais ne renvoie pas de JSON, garder le message Supabase.
+        }
+      }
+      throw new Error(message);
+    }
     if (!data || 'erreur' in data) {
       throw new Error(data && 'erreur' in data ? String(data.erreur) : 'Gemini n’a pas renvoyé de réponse.');
     }
