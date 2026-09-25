@@ -16,6 +16,7 @@
 
 import { strict as assert } from 'node:assert';
 import { describe, it, mock } from 'node:test';
+import { PDFDocument } from 'pdf-lib';
 
 import { clientFactice, toutCeQuiEstSorti, type Factice } from './aides-coffre';
 import {
@@ -504,6 +505,66 @@ describe('la proposition de classement', () => {
     assert.equal(resultat.lisible, false);
     assert.equal(resultat.erreurTechnique, true);
     assert.equal(f.journal.some((entree) => entree.methode === 'invoke'), false);
+  });
+
+  it('sépare un PDF mêlant deux documents et conserve chaque plage de pages', async () => {
+    const pdf = await PDFDocument.create();
+    pdf.addPage([300, 400]);
+    pdf.addPage([300, 400]);
+    pdf.addPage([400, 300]);
+    const donneesPdf = await pdf.save();
+    const octetsPdf = new ArrayBuffer(donneesPdf.byteLength);
+    new Uint8Array(octetsPdf).set(donneesPdf);
+    const fichier = new File([octetsPdf], 'lot-administratif.pdf', { type: 'application/pdf' });
+    const document = (pagesDebut: number, pagesFin: number, nomSuggere: string, categorie: string) => ({
+      pagesDebut, pagesFin, lisible: true, categorie, nomSuggere,
+      emetteur: null, referenceClient: null, montant: null, texteExtrait: null,
+      echeance: { presente: false, date: null, libelle: null, confiance: 'basse' as const },
+    });
+    const reponse = {
+      pagesDebut: 1, pagesFin: 3, lisible: false, categorie: '', nomSuggere: '',
+      emetteur: null, referenceClient: null, montant: null, texteExtrait: null,
+      echeance: { presente: false, date: null, libelle: null, confiance: 'basse' as const },
+      documentsDetectes: [
+        document(1, 2, 'Attestation employeur', 'Emploi'),
+        document(3, 3, 'Justificatif de domicile', 'Logement'),
+      ],
+    };
+    const factice = poser(clientFactice({ fonction: { data: reponse, error: null } }));
+
+    const proposition = await coffre.analyserDocumentPourClassement(fichier);
+    const [nomFonction, options] = factice.premier('invoke') as [string, { body: { nombrePages?: number } }];
+    assert.equal(nomFonction, 'classer-document');
+    assert.equal(options.body.nombrePages, 3);
+
+    const separes = await coffre.separerPdfParDocuments(fichier, proposition.documentsDetectes ?? []);
+    assert.deepEqual(separes.map(({ fichier: piece }) => piece.name), [
+      'lot-administratif — Attestation employeur.pdf',
+      'lot-administratif — Justificatif de domicile.pdf',
+    ]);
+    const pages = await Promise.all(separes.map(async ({ fichier: piece }) =>
+      (await PDFDocument.load(await piece.arrayBuffer())).getPageCount(),
+    ));
+    assert.deepEqual(pages, [2, 1]);
+    assert.deepEqual(separes.map(({ proposition: piece }) => piece.categorie), ['Emploi', 'Logement']);
+  });
+
+  it('refuse une segmentation qui laisse des pages de côté', async () => {
+    const pdf = await PDFDocument.create();
+    pdf.addPage(); pdf.addPage(); pdf.addPage();
+    const donneesPdf = await pdf.save();
+    const octetsPdf = new ArrayBuffer(donneesPdf.byteLength);
+    new Uint8Array(octetsPdf).set(donneesPdf);
+    const fichier = new File([octetsPdf], 'lot.pdf', { type: 'application/pdf' });
+    const valide = (pagesDebut: number, pagesFin: number) => ({
+      pagesDebut, pagesFin, lisible: true, categorie: 'Administratif', nomSuggere: 'Document',
+      emetteur: null, referenceClient: null, montant: null, texteExtrait: null,
+      echeance: { presente: false, date: null, libelle: null, confiance: 'basse' as const },
+    });
+    await assert.rejects(
+      coffre.separerPdfParDocuments(fichier, [valide(1, 1), valide(3, 3)]),
+      /pages/,
+    );
   });
 });
 

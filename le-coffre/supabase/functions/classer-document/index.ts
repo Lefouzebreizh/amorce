@@ -43,7 +43,9 @@ const CATEGORIES_BASE = [
   "Énergie", "Téléphonie et internet", "Emploi", "Véhicule", "Autre",
 ];
 
-type Resultat = {
+type ResultatDocument = {
+  pagesDebut: number;
+  pagesFin: number;
   lisible: boolean;
   categorie: string;
   nomSuggere: string;
@@ -57,6 +59,11 @@ type Resultat = {
     libelle: string | null;
     confiance: "haute" | "moyenne" | "basse";
   };
+};
+
+type Resultat = ResultatDocument & {
+  documentsDetectes?: ResultatDocument[];
+  segmentationIncertaine?: boolean;
 };
 
 function texteCourt(valeur: unknown, longueur: number): string | null {
@@ -75,9 +82,9 @@ function categorieSure(valeur: unknown): string | null {
 // La réponse du modèle est une proposition non fiable tant qu'elle n'a pas
 // passé cette frontière. Aucun champ libre, catégorie inconnue ou date mal
 // formée ne doit atteindre l'index chiffré en étant pris pour une vérité.
-function resultatSur(resultat: unknown): Resultat {
-  const vide: Resultat = {
-    lisible: false, categorie: "", nomSuggere: "", emetteur: null,
+function resultatDocumentSur(resultat: unknown, pagesDebut = 1, pagesFin = pagesDebut): ResultatDocument {
+  const vide: ResultatDocument = {
+    pagesDebut, pagesFin, lisible: false, categorie: "", nomSuggere: "", emetteur: null,
     referenceClient: null, montant: null, texteExtrait: null,
     echeance: { presente: false, date: null, libelle: null, confiance: "basse" },
   };
@@ -95,6 +102,8 @@ function resultatSur(resultat: unknown): Resultat {
     ? echeanceBrute.confiance as Resultat["echeance"]["confiance"] : "basse";
   const presente = echeanceBrute.presente === true && Boolean(date);
   return {
+    pagesDebut,
+    pagesFin,
     lisible: true,
     categorie,
     nomSuggere,
@@ -108,6 +117,64 @@ function resultatSur(resultat: unknown): Resultat {
       libelle: presente ? texteCourt(echeanceBrute.libelle, 180) : null,
       confiance: presente ? confiance : "basse",
     },
+  };
+}
+
+function resultatSur(resultat: unknown, nombrePages?: number): Resultat {
+  const brut = resultat && typeof resultat === "object" ? resultat as Record<string, unknown> : {};
+  const pagesPdf = Number.isInteger(nombrePages) && (nombrePages ?? 0) > 0 ? nombrePages! : undefined;
+  const documentsBruts = Array.isArray(brut.documentsDetectes) ? brut.documentsDetectes : [];
+
+  if (pagesPdf && brut.segmentationIncertaine === true) {
+    return { ...resultatDocumentSur(null, 1, pagesPdf), documentsDetectes: [], segmentationIncertaine: true };
+  }
+
+  if (pagesPdf && documentsBruts.length > 0) {
+    if (documentsBruts.length > pagesPdf || documentsBruts.length > 25) {
+      return { ...resultatDocumentSur(null, 1, pagesPdf), documentsDetectes: [], segmentationIncertaine: true };
+    }
+    const documents: ResultatDocument[] = [];
+    let prochainePage = 1;
+    for (const element of documentsBruts) {
+      if (!element || typeof element !== "object") {
+        return { ...resultatDocumentSur(null, 1, pagesPdf), documentsDetectes: [], segmentationIncertaine: true };
+      }
+      const brutDocument = element as Record<string, unknown>;
+      const pagesDebut = brutDocument.pagesDebut;
+      const pagesFin = brutDocument.pagesFin;
+      if (
+        !Number.isInteger(pagesDebut) || !Number.isInteger(pagesFin)
+        || pagesDebut !== prochainePage || (pagesFin as number) < (pagesDebut as number)
+        || (pagesFin as number) > pagesPdf
+      ) {
+        return { ...resultatDocumentSur(null, 1, pagesPdf), documentsDetectes: [], segmentationIncertaine: true };
+      }
+      const document = resultatDocumentSur(brutDocument, pagesDebut as number, pagesFin as number);
+      if (!document.lisible) {
+        return { ...resultatDocumentSur(null, 1, pagesPdf), documentsDetectes: [], segmentationIncertaine: true };
+      }
+      documents.push(document);
+      prochainePage = document.pagesFin + 1;
+    }
+    if (prochainePage !== pagesPdf + 1) {
+      return { ...resultatDocumentSur(null, 1, pagesPdf), documentsDetectes: [], segmentationIncertaine: true };
+    }
+    if (documents.length > 1) {
+      return {
+        ...resultatDocumentSur(null, 1, pagesPdf),
+        documentsDetectes: documents,
+        segmentationIncertaine: false,
+      };
+    }
+    // Une seule plage qui couvre tout le PDF est un document normal.
+    return { ...documents[0], documentsDetectes: [], segmentationIncertaine: false };
+  }
+
+  const resultatDocument = resultatDocumentSur(brut, 1, pagesPdf ?? 1);
+  return {
+    ...resultatDocument,
+    documentsDetectes: [],
+    segmentationIncertaine: Boolean(pagesPdf && brut.segmentationIncertaine === true),
   };
 }
 
@@ -152,27 +219,32 @@ Deno.serve(async (requete: Request) => {
     type?: string;
     cheminRelatif?: string;
     categoriesExistantes?: string[];
+    nombrePages?: number;
   };
   try {
     corps = await requete.json();
   } catch {
     return reponseJson({ erreur: "Corps JSON attendu : { donnees, type }." }, 400, origin);
   }
-  const { donnees, type, cheminRelatif, categoriesExistantes } = corps;
+  const { donnees, type, cheminRelatif, categoriesExistantes, nombrePages } = corps;
   if (!donnees || !type) {
     return reponseJson({ erreur: "Champs 'donnees' (base64) et 'type' (MIME) requis." }, 400, origin);
   }
 
   const estPdf = type === "application/pdf";
+  const nombrePagesPdf = estPdf && Number.isInteger(nombrePages) && (nombrePages ?? 0) > 0 && (nombrePages ?? 0) <= 500
+    ? nombrePages
+    : undefined;
   const estImage = type.startsWith("image/");
   const estTexte = type.startsWith("text/") || ["application/json", "application/rtf", "application/xml"].includes(type);
   if (!estPdf && !estImage && !estTexte) {
     // Un type que Gemini ne sait pas lire directement ici (ex. .docx, .zip)
     // revient vers « À vérifier » côté client, sans bloquer le reste du lot.
     return reponseJson({
-      lisible: false, categorie: "", nomSuggere: "", emetteur: null, referenceClient: null, montant: null,
+      pagesDebut: 1, pagesFin: 1, lisible: false, categorie: "", nomSuggere: "", emetteur: null, referenceClient: null, montant: null,
       texteExtrait: null,
       echeance: { presente: false, date: null, libelle: null, confiance: "basse" },
+      documentsDetectes: [], segmentationIncertaine: false,
     } satisfies Resultat, 200, origin);
   }
 
@@ -227,7 +299,12 @@ Deno.serve(async (requete: Request) => {
     `une date de préavis, une échéance de paiement ou de renouvellement, ` +
     `"date": la date au format AAAA-MM-JJ si présente sinon null, ` +
     `"libelle": une courte description de ce qui arrive à cette date si présente sinon null (ex. "Fin du préavis assurance habitation"), ` +
-    `"confiance": "haute" seulement si la date est écrite noir sur blanc et que tu l'as lue directement, jamais "haute" si déduite ou incertaine}}\n` +
+    `"confiance": "haute" seulement si la date est écrite noir sur blanc et que tu l'as lue directement, jamais "haute" si déduite ou incertaine}, ` +
+    `"documentsDetectes": tableau vide sauf si le PDF contient plusieurs documents autonomes clairement séparés. ` +
+    `Pour ${nombrePagesPdf ?? "un document non PDF ou un PDF unique"}, si c'est un seul document, laisse ce tableau vide. ` +
+    (nombrePagesPdf
+      ? `Si ce PDF de ${nombrePagesPdf} pages contient plusieurs documents distincts, donne une entrée par document avec les champs pagesDebut et pagesFin (numéros inclusifs), lisible, categorie, nomSuggere, emetteur, referenceClient, montant, texteExtrait et echeance — exactement le même format que le document principal. Les plages doivent commencer à la page 1, être consécutives sans chevauchement ni trou et finir à la page ${nombrePagesPdf}. Si les limites sont incertaines ou si une page ne peut pas être rattachée avec certitude, ne découpe pas : mets segmentationIncertaine à true et laisse documentsDetectes vide. Pour un seul document, mets segmentationIncertaine à false.\n`
+      : `"segmentationIncertaine": false.\n`) +
     `Ne devine jamais une date, un nom, un émetteur, une référence, ou une catégorie : ` +
     `dans le doute sur le document entier, "lisible": false et tout le reste vide/faux ; ` +
     `dans le doute sur un champ précis (émetteur, référence, montant), laisse-le null plutôt que d'inventer.`;
@@ -268,7 +345,7 @@ Deno.serve(async (requete: Request) => {
   try {
     const debut = texte.indexOf("{");
     const fin = texte.lastIndexOf("}");
-    const resultat = resultatSur(JSON.parse(texte.slice(debut, fin + 1)));
+    const resultat = resultatSur(JSON.parse(texte.slice(debut, fin + 1)), nombrePagesPdf);
     return reponseJson(resultat, 200, origin);
   } catch {
     return reponseJson({ erreur: "Réponse de Gemini illisible.", brut: texte.slice(0, 300) }, 502, origin);

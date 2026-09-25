@@ -14,7 +14,7 @@ import {
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
   enregistrerIdentite, composerLettreResiliation, modifierObjet, modifierPlusieursObjets, ecarterEcheance, statutEcheance,
   interpreterQuestion, genererICS, SEUIL_BIENTOT_JOURS, clesParNomAffiche,
-  categorieInstantanee, recupererFormulaireCerfa, suggererChampsFormulaire,
+  categorieInstantanee, recupererFormulaireCerfa, separerPdfParDocuments, suggererChampsFormulaire,
   digestIndex, type DigestDocument, type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex, type ActionAssistant,
 } from '@/lib/coffre';
 import { champsFormulaire } from '@/lib/formulaire';
@@ -630,23 +630,55 @@ export default function PageCoffre() {
       Object.values(index.objets).map((objet) => objet.categorie).filter(Boolean),
     );
     let analysesTerminees = 0;
+    let documentsProduits = nouveaux.length;
     await executerAvecConcurrence(nouveaux, analyseIntelligente ? 2 : nouveaux.length, async (item) => {
-      const proposition = analyseIntelligente
+      let proposition = analyseIntelligente
         ? await analyserDocumentPourClassement(item.fichier, Array.from(categoriesConnues))
         : await proposerClassement(item.fichier);
+
+      if (analyseIntelligente && item.fichier.type === 'application/pdf' && (proposition.documentsDetectes?.length ?? 0) > 1) {
+        try {
+          const documents = await separerPdfParDocuments(item.fichier, proposition.documentsDetectes ?? []);
+          const attentesSeparees: EnAttente[] = documents.map(({ fichier, proposition: detail }) => ({
+            cle: `${fichier.name}-${fichier.size}-${crypto.randomUUID()}`,
+            fichier,
+            enAnalyse: false,
+            categorie: detail.lisible ? detail.categorie : 'À vérifier',
+            nomAffiche: detail.lisible ? detail.nomSuggere : fichier.name,
+            echeance: detail.echeance,
+            emetteur: detail.emetteur || '',
+            referenceClient: detail.referenceClient || '',
+            montant: detail.montant || '',
+            texteExtrait: detail.texteExtrait || '',
+          }));
+          documentsProduits += attentesSeparees.length - 1;
+          for (const attente of attentesSeparees) {
+            if (attente.categorie && attente.categorie !== 'À vérifier') categoriesConnues.add(attente.categorie);
+          }
+          setAValider((precedent) => precedent.flatMap((p) => p.cle === item.cle ? attentesSeparees : [p]));
+        } catch {
+          // Une frontière invalide ou un PDF illisible reste entier et attend
+          // une vérification humaine. Rien n'est classé au hasard.
+          proposition = { ...proposition, lisible: false, documentsDetectes: [], segmentationIncertaine: true };
+          setAValider((precedent) => precedent.map((p) => (p.cle === item.cle ? {
+            ...p, enAnalyse: false, categorie: 'À vérifier', nomAffiche: p.fichier.name,
+          } : p)));
+        }
+      } else {
+        setAValider((precedent) => precedent.map((p) => (p.cle === item.cle ? {
+          ...p, enAnalyse: false,
+          categorie: proposition.lisible ? proposition.categorie : (analyseIntelligente ? 'À vérifier' : ''),
+          nomAffiche: proposition.lisible && proposition.nomSuggere ? proposition.nomSuggere : p.fichier.name,
+          echeance: proposition.echeance,
+          emetteur: proposition.emetteur || '',
+          referenceClient: proposition.referenceClient || '',
+          montant: proposition.montant || '',
+          texteExtrait: proposition.texteExtrait || '',
+        } : p)));
+      }
       if (analyseIntelligente && proposition.lisible && proposition.categorie) {
         categoriesConnues.add(proposition.categorie);
       }
-      setAValider((precedent) => precedent.map((p) => (p.cle === item.cle ? {
-        ...p, enAnalyse: false,
-        categorie: proposition.lisible ? proposition.categorie : (analyseIntelligente ? 'À vérifier' : ''),
-        nomAffiche: proposition.lisible && proposition.nomSuggere ? proposition.nomSuggere : p.fichier.name,
-        echeance: proposition.echeance,
-        emetteur: proposition.emetteur || '',
-        referenceClient: proposition.referenceClient || '',
-        montant: proposition.montant || '',
-        texteExtrait: proposition.texteExtrait || '',
-      } : p)));
       if (analyseIntelligente) {
         analysesTerminees += 1;
         setEtatImportIntelligent({
@@ -654,7 +686,7 @@ export default function PageCoffre() {
           fait: analysesTerminees,
           total: nouveaux.length,
           message: analysesTerminees === nouveaux.length
-            ? `${nouveaux.length} document${nouveaux.length > 1 ? 's sont prêts' : ' est prêt'} : vérifie puis dépose tout en un clic.`
+            ? `${documentsProduits} document${documentsProduits > 1 ? 's distincts sont prêts' : ' distinct est prêt'} : vérifie puis dépose tout en un clic.`
             : `Gemini analyse le dossier… ${analysesTerminees}/${nouveaux.length}`,
         });
       }
