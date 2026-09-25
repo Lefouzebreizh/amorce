@@ -15,6 +15,13 @@ test('la photo est une action principale visible, jamais une icône seule sur mo
   assert.doesNotMatch(page, /hidden sm:inline">Photographier/);
 });
 
+test('les données de démonstration restent fictives et limitées à la preview dédiée', () => {
+  assert.match(page, /coffre-git-codex-tiroir-/);
+  assert.match(page, /modeDemoAutorise && new URLSearchParams/);
+  assert.match(page, /alex\.martin@example\.invalid/);
+  assert.doesNotMatch(page, /erwann@demo\.local/);
+});
+
 test('le choix Gemini gratuit et son compromis de confidentialité sont visibles', () => {
   assert.match(page, /Google peut utiliser les données transmises pour améliorer ses produits/);
   assert.match(page, /Pour ne transmettre aucun document à une IA/);

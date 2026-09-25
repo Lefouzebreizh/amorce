@@ -440,7 +440,9 @@ export default function PageCoffre() {
   const entreeDossier = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== 'production' && new URLSearchParams(window.location.search).get('demo') === '1') {
+    const previewDeBranche = window.location.hostname.startsWith('coffre-git-codex-tiroir-');
+    const modeDemoAutorise = process.env.NODE_ENV !== 'production' || previewDeBranche;
+    if (modeDemoAutorise && new URLSearchParams(window.location.search).get('demo') === '1') {
       void crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']).then((cleDemo) => {
         setUtilisateur({ id: 'demo-local', email: 'alex.martin@example.invalid', user_metadata: {} } as User);
         setCle(cleDemo);
