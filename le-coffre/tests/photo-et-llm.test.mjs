@@ -72,3 +72,12 @@ test('les trois fonctions Gemini exigent une vraie session utilisateur', () => {
     assert.match(fonction, /verification\.ok/);
   }
 });
+
+test('les aperçus Vercel du coffre peuvent appeler les trois fonctions Gemini', () => {
+  for (const fonction of [assistant, classement, formulaire]) {
+    assert.match(fonction, /const ORIGINE_APERCU_VERCEL/);
+    assert.match(fonction, /erwannchevallier-6916s-projects\\\.vercel\\\.app/);
+    assert.match(fonction, /ORIGINE_APERCU_VERCEL\.test\(origin\)/);
+    assert.match(fonction, /origin && origineAutorisee\(origin\)/);
+  }
+});
