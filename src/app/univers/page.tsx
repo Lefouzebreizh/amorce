@@ -125,7 +125,7 @@ export default function UniversPage() {
             <p className="bank-offer-card__price">Du diagnostic à la reprise</p>
             <p>Une gamme progressive qui distingue clairement ce qui fonctionne déjà de ce qui doit encore être éprouvé.</p>
             <ul><li>Déclic : diagnostic gratuit fonctionnel</li><li>Audit Landing : futur rapport payant, commandes fermées jusqu’à preuve complète</li><li>Reprise humaine premium : sur devis après cadrage</li></ul>
-            <a href="mailto:erwannchevallier@gmail.com?subject=Parler%20de%20mon%20application">Parler de mon application <span aria-hidden="true">→</span></a>
+            <a href="#studio-contact">Parler de mon application <span aria-hidden="true">↓</span></a>
           </article>
           <article className="bank-offer-card">
             <p className="bank-offer-card__status">Récurrence envisagée</p>
@@ -250,7 +250,7 @@ export default function UniversPage() {
       <BrandFooter>
         <a href="#offre">Offre</a>
         <a href="#realisations">Réalisations</a>
-        <a href="mailto:erwannchevallier@gmail.com">Contact</a>
+        <a href="#studio-contact">Contact</a>
         <a href="/mentions-legales">Mentions légales</a>
       </BrandFooter>
     </main>
