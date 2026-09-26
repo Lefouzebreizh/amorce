@@ -1,6 +1,6 @@
 'use client';
 
-import type { CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { BrandFooter, BrandNavigation } from '../../../design-system/components/BrandShell';
 import { ImmersiveHero } from '../../../design-system/components/ImmersiveHero';
 import { GlassCard, SectionHeading } from '../../../design-system/components/LefouzebreizhUI';
@@ -18,33 +18,33 @@ type StudioProject = {
 };
 
 const projects: StudioProject[] = [
-  { name: 'Ensemble face aux démarches', family: 'Univers Ensemble', description: 'Des parcours administratifs calmes et guidés pour retrouver une prochaine étape claire.', status: 'Prototype privé', mark: 'ED', accent: '#40e0d0', href: 'https://ensemble-copilote-prive.erwannchevallier.chatgpt.site' },
+  { name: 'Ensemble face aux démarches', family: 'Univers Ensemble', description: 'Des parcours administratifs calmes et guidés pour retrouver une prochaine étape claire.', status: 'En ligne', mark: 'ED', accent: '#40e0d0', href: 'https://ensemble-face-aux-demarches.vercel.app', preview: '/portfolio/ensemble-demarches.png' },
   { name: 'Ensemble face au chômage', family: 'Univers Ensemble', description: 'Des repères concrets pour comprendre ses droits, organiser ses démarches et rebondir.', status: 'En préparation', mark: 'EC', accent: '#58b8ff' },
-  { name: 'Ensemble au quotidien', family: 'Univers Ensemble', description: 'Le copilote des petites décisions, documents et échéances de la vie courante.', status: 'Prototype privé', mark: 'EQ', accent: '#7fd68a', href: 'https://ensemble-copilote-prive.erwannchevallier.chatgpt.site' },
-  { name: 'Ensemble pour rénover', family: 'Univers Ensemble', description: 'Un parcours lisible pour préparer, chiffrer et suivre un projet de rénovation.', status: 'À auditer', mark: 'ER', accent: '#75d8c2' },
-  { name: 'Ensemble pour entreprendre', family: 'Univers Ensemble', description: 'Des décisions structurées pour lancer et piloter une activité sans se perdre.', status: 'En préparation', mark: 'EE', accent: '#a78bfa' },
-  { name: 'Ensemble pour s’orienter', family: 'Univers Ensemble', description: 'Une orientation attentive qui questionne, approfondit et remet les envies au centre.', status: 'À auditer', mark: 'EO', accent: '#72c7ff' },
+  { name: 'Ensemble au quotidien', family: 'Univers Ensemble', description: 'Le copilote des petites décisions, documents et échéances de la vie courante.', status: 'En ligne', mark: 'EQ', accent: '#7fd68a', href: 'https://ensemble-copilote-prive.erwannchevallier.chatgpt.site', preview: '/portfolio/ensemble-quotidien.png' },
+  { name: 'Ensemble pour rénover', family: 'Univers Ensemble', description: 'Un parcours lisible pour préparer, chiffrer et suivre un projet de rénovation.', status: 'En ligne', mark: 'ER', accent: '#75d8c2', href: 'https://renov-facile.vercel.app', preview: '/portfolio/ensemble-renover.png' },
+  { name: 'Ensemble pour entreprendre', family: 'Univers Ensemble', description: 'Des décisions structurées pour lancer et piloter une activité sans se perdre.', status: 'En ligne', mark: 'EE', accent: '#a78bfa', href: 'https://lefouzebreizh.github.io/ensemble-pour-entreprendre/', preview: '/portfolio/ensemble-entreprendre.png' },
+  { name: 'Ensemble pour s’orienter', family: 'Univers Ensemble', description: 'Une orientation attentive qui questionne, approfondit et remet les envies au centre.', status: 'En ligne', mark: 'EO', accent: '#72c7ff', href: 'https://orientation-express.vercel.app', preview: '/portfolio/ensemble-orientation.png' },
   { name: 'Respire', family: 'Univers Ensemble', description: 'Un espace d’accompagnement psychique conçu pour soutenir sans remplacer le soin.', status: 'Cadre à valider', mark: 'R', accent: '#86e8d9' },
-  { name: 'Mon Tiroir Secret', family: 'Vie quotidienne', description: 'Un coffre documentaire personnel pour garder ses papiers importants à portée de main.', status: 'En ligne', mark: 'MT', accent: '#b89cff', href: 'https://coffre-puce.vercel.app', preview: '/portfolio/mon-tiroir-secret.png' },
+  { name: 'Mon Tiroir Secret', family: 'Vie quotidienne', description: 'Un coffre documentaire personnel pour garder ses papiers importants à portée de main.', status: 'Accès à réparer', mark: 'MT', accent: '#b89cff', href: 'https://coffre-puce.vercel.app', preview: '/portfolio/mon-tiroir-secret.png' },
   { name: 'Annuaire IA', family: 'Solutions professionnelles', description: 'Des annuaires spécialisés pensés pour transformer une recherche précise en contact utile.', status: 'À auditer', mark: 'AI', accent: '#7fd68a' },
   { name: 'Bois Chiffrage', family: 'Solutions professionnelles', description: 'Des mesures, des postes et un chiffrage de travaux bois réunis dans une lecture claire.', status: 'En préparation', mark: 'BC', accent: '#e6b86a' },
   { name: 'Artisan Express', family: 'Solutions professionnelles', description: 'Des vitrines métier rapides, rassurantes et conçues pour déclencher un premier contact.', status: 'Offre publique', mark: 'AE', accent: '#67c1a0', href: 'https://artisan-express-ashy.vercel.app', preview: '/portfolio/artisan-express.png' },
   { name: 'Audit Landing', family: 'Solutions professionnelles', description: 'Un audit visuel et fonctionnel qui transforme les défauts d’une page en priorités vérifiables.', status: 'Moteur en cours', mark: 'AL', accent: '#40e0d0' },
   { name: 'Look & Find', family: 'Accessibilité', description: 'La reconnaissance d’objets et de couleurs pour mieux comprendre ce qui se trouve devant soi.', status: 'À auditer', mark: 'LF', accent: '#c0abff' },
   { name: 'Roussy & Zéphy', family: 'Création & transmission', description: 'La maison numérique d’un renard sensible et d’un zèbre ailé, entre récit et émerveillement.', status: 'En ligne', mark: 'RZ', accent: '#ffb680', href: 'https://roussy-et-zephy.erwannchevallier.chatgpt.site', preview: '/portfolio/roussy-zephy.png' },
-  { name: 'L’Éveil des couleurs', family: 'Création & transmission', description: 'Une expérience sensible où la couleur devient matière, émotion et mouvement.', status: 'En préparation', mark: 'EC', accent: '#ff8fab' },
-  { name: 'Accord', family: 'Création & transmission', description: 'Un projet autour du lien, du rythme et de ce qui remet les personnes en harmonie.', status: 'En préparation', mark: 'A', accent: '#8cc8ff' },
-  { name: 'Amorce', family: 'Création assistée', description: 'Le studio qui transforme des rushes en montage vertical, directement dans le navigateur.', status: 'Prototype en développement', mark: 'AM', accent: '#40e0d0', href: '/studio' },
+  { name: 'Accord — L’Éveil des couleurs', family: 'Application · Accessibilité', description: 'Une même application Android qui associe reconnaissance visuelle, couleurs, émotion et harmonie.', status: 'Application à publier', mark: 'A·EC', accent: '#ff8fab' },
+  { name: 'TPChiffrage UTP', family: 'Solutions professionnelles · TP & VRD', description: 'Un outil de chiffrage pensé pour les travaux publics et les réseaux, distinct du chiffrage bois.', status: 'En ligne', mark: 'TP', accent: '#e6b86a', href: 'https://tpchiffrage-utp.erwannchevallier.chatgpt.site/', preview: '/portfolio/tpchiffrage.png' },
+  { name: 'Amorce', family: 'Création assistée', description: 'Le studio qui transforme des rushes en montage vertical, directement dans le navigateur.', status: 'Prototype en développement', mark: 'AM', accent: '#40e0d0', href: '/studio', preview: '/portfolio/amorce-studio.png' },
   { name: 'Conseiller Patrimoine & Financier', family: 'Patrimoine', description: 'Une vue structurée du patrimoine pour préparer les bonnes questions et éclairer les décisions.', status: 'Prévu', mark: 'PF', accent: '#d9e34a' },
 ];
 
 const publicProofs = [
-  { name: 'AvisLocal', description: 'Génère localement une réponse personnalisée à partir de l’enseigne, de la note et du ton choisi.', href: 'https://avislocal.erwannchevallier.chatgpt.site', mark: 'AL' },
-  { name: 'RecruteClair', description: 'Analyse localement la clarté d’une annonce et met à jour un score indicatif selon l’intitulé, les missions et l’information salariale.', href: 'https://recrute-clair.erwannchevallier.chatgpt.site', mark: 'RC' },
-  { name: 'ImmoDéclic', description: 'Propose un diagnostic interactif d’annonce avec score, verdict et conseil, sans inventer les caractéristiques du bien.', href: 'https://immo-declic.erwannchevallier.chatgpt.site', mark: 'ID' },
-  { name: 'Mémoire en voix', description: 'Oriente une demande de récit ou de transmission vers une formule selon la durée et le type de création choisi.', href: 'https://memoire-en-voix.erwannchevallier.chatgpt.site', mark: 'MV' },
-  { name: 'Les Mots Justes', description: 'Guide l’utilisateur en quatre étapes et génère un premier brouillon à partir de ses réponses, avec sauvegarde locale et estimation du temps de lecture.', href: 'https://les-mots-justes.erwannchevallier.chatgpt.site', mark: 'MJ' },
-  { name: 'Mots & Merveilles', description: 'Permet de choisir une ambiance, préparer une demande personnalisée et la télécharger si la messagerie ne s’ouvre pas.', href: 'https://mots-et-merveilles.erwannchevallier.chatgpt.site', mark: 'MM' },
+  { name: 'AvisLocal', description: 'Génère localement une réponse personnalisée à partir de l’enseigne, de la note et du ton choisi.', href: 'https://avislocal.erwannchevallier.chatgpt.site', mark: 'AL', preview: '/portfolio/avislocal.png' },
+  { name: 'RecruteClair', description: 'Analyse localement la clarté d’une annonce et met à jour un score indicatif selon l’intitulé, les missions et l’information salariale.', href: 'https://recrute-clair.erwannchevallier.chatgpt.site', mark: 'RC', preview: '/portfolio/recruteclair.png' },
+  { name: 'ImmoDéclic', description: 'Propose un diagnostic interactif d’annonce avec score, verdict et conseil, sans inventer les caractéristiques du bien.', href: 'https://immo-declic.erwannchevallier.chatgpt.site', mark: 'ID', preview: '/portfolio/immodeclic.png' },
+  { name: 'Mémoire en voix', description: 'Oriente une demande de récit ou de transmission vers une formule selon la durée et le type de création choisi.', href: 'https://memoire-en-voix.erwannchevallier.chatgpt.site', mark: 'MV', preview: '/portfolio/memoire-en-voix.png' },
+  { name: 'Les Mots Justes', description: 'Guide l’utilisateur en quatre étapes et génère un premier brouillon à partir de ses réponses, avec sauvegarde locale et estimation du temps de lecture.', href: 'https://les-mots-justes.erwannchevallier.chatgpt.site', mark: 'MJ', preview: '/portfolio/mots-justes.png' },
+  { name: 'Mots & Merveilles', description: 'Permet de choisir une ambiance, préparer une demande personnalisée et la télécharger si la messagerie ne s’ouvre pas.', href: 'https://mots-et-merveilles.erwannchevallier.chatgpt.site', mark: 'MM', preview: '/portfolio/mots-merveilles.png' },
 ];
 
 function scrollTo(id: string) {
@@ -52,6 +52,29 @@ function scrollTo(id: string) {
 }
 
 export default function UniversPage() {
+  const [copiedEmail, setCopiedEmail] = useState(false);
+
+  async function copyStudioEmail() {
+    const email = 'erwannchevallier@gmail.com';
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopiedEmail(true);
+      window.setTimeout(() => setCopiedEmail(false), 2400);
+    } catch {
+      const field = document.createElement('textarea');
+      field.value = email;
+      field.setAttribute('readonly', '');
+      field.style.position = 'fixed';
+      field.style.opacity = '0';
+      document.body.appendChild(field);
+      field.select();
+      const copied = document.execCommand('copy');
+      field.remove();
+      setCopiedEmail(copied);
+      window.setTimeout(() => setCopiedEmail(false), 2400);
+    }
+  }
+
   return (
     <main className="univers-page">
       <BrandNavigation items={[
@@ -129,6 +152,7 @@ export default function UniversPage() {
           {publicProofs.map((proof, index) => (
             <article className="bank-proof-card" key={proof.name}>
               <div><span>{String(index + 1).padStart(2, '0')}</span><b aria-hidden="true">{proof.mark}</b></div>
+              <div className="bank-proof-card__preview"><img src={proof.preview} alt={`Capture de la page d’accueil de ${proof.name}`} loading="lazy" decoding="async" /></div>
               <h3>{proof.name}</h3>
               <p>{proof.description}</p>
               <a href={proof.href} target="_blank" rel="noreferrer">Ouvrir le démonstrateur <span aria-hidden="true">↗</span></a>
@@ -148,8 +172,13 @@ export default function UniversPage() {
           <p>Après vingt ans dans les travaux publics et sur la route, Erwann transforme aujourd’hui sa connaissance des professionnels de terrain et sa maîtrise des outils d’intelligence artificielle en une activité numérique structurée.</p>
           <p>Le cap est volontairement resserré : commercialiser Artisan Express, consolider une offre d’audit vérifiable, puis construire un revenu récurrent de maintenance.</p>
           <div className="bank-founder__actions">
-            <a href="mailto:erwannchevallier@gmail.com?subject=Échange%20avec%20Lefouzèbreizh%20Studio">Contacter le Studio <span aria-hidden="true">→</span></a>
+            <a href="#studio-contact">Contacter le Studio <span aria-hidden="true">↓</span></a>
             <a href="#univers">Voir les 18 projets recensés</a>
+          </div>
+          <div id="studio-contact" className="bank-founder__contact">
+            <div><span>Un projet en tête ?</span><a href="mailto:erwannchevallier@gmail.com?subject=Échange%20avec%20Lefouzèbreizh%20Studio">erwannchevallier@gmail.com</a></div>
+            <button type="button" onClick={copyStudioEmail}>{copiedEmail ? 'Adresse copiée ✓' : 'Copier l’adresse'}</button>
+            <p role="status" aria-live="polite">{copiedEmail ? 'L’adresse e-mail est copiée dans le presse-papiers.' : 'Le bouton Contacter le Studio ouvre ces coordonnées ; copie l’adresse si ta messagerie ne s’ouvre pas.'}</p>
           </div>
         </div>
       </section>
@@ -185,9 +214,13 @@ export default function UniversPage() {
                 <span className="studio-project-card__mark" aria-hidden="true">{project.mark}</span>
                 <span className="studio-project-card__status">{project.status}</span>
               </div>
-              {project.preview && (
+              {project.preview ? (
                 <div className="studio-project-card__preview">
                   <img src={project.preview} alt={`Capture de la page d’accueil de ${project.name}`} loading="lazy" decoding="async" />
+                </div>
+              ) : (
+                <div className="studio-project-card__art" aria-hidden="true">
+                  <span>{project.mark}</span><i /><small>{project.family}</small>
                 </div>
               )}
               <p className="studio-project-card__family">{project.family}</p>
