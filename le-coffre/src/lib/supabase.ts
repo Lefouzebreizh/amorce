@@ -1,12 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import { verifierEnv } from './env-check';
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const cle = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// Harnais de validation : vérifie l'environnement avant tout
+const env = verifierEnv();
 
-if (!url || !cle) {
-  throw new Error(
-    'NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY sont requis — voir .env.example.',
-  );
-}
-
-export const supabase = createClient(url, cle);
+export const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
