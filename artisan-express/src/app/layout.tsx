@@ -44,9 +44,9 @@ export const metadata: Metadata = {
      d'URL relatives, là où une base inventée ferait pointer chaque partage vers
      un domaine que personne ne sert. */
   metadataBase: adresseDuSite ? new URL(adresseDuSite) : undefined,
-  title: 'Site vitrine artisan express — 300 €, sans abonnement',
+  title: 'Site internet pour artisan — 3 formules, sans abonnement',
   description:
-    'Tes réalisations et tes services sur un site clair. Création : 300 €, sans abonnement à Artisan Express. Domaine en supplément. Un créneau est confirmé après étude de tes éléments.',
+    'Une présence web claire pour les artisans : Express à 300 €, Métier à 690 € ou Signature à 1 290 €. Sans abonnement. Domaine en supplément.'
   keywords: [
     'site internet artisan',
     'site vitrine maçon',
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
-    title: 'Ton site artisan clair — 300 €',
+    title: 'Artisan Express — Ton site artisan à la bonne échelle',
     description:
       'Un site pour présenter ton activité. Création : 300 €, domaine en supplément et sans abonnement à Artisan Express. Un créneau est confirmé après étude de tes éléments.',
     ...(adresseDuSite ? { url: adresseDuSite } : {}),
