@@ -19,7 +19,7 @@ type StudioProject = {
 
 const projects: StudioProject[] = [
   { name: 'Ensemble face aux démarches', family: 'Univers Ensemble', description: 'Des parcours administratifs calmes et guidés pour retrouver une prochaine étape claire.', status: 'En ligne', mark: 'ED', accent: '#40e0d0', href: 'https://ensemble-face-aux-demarches.vercel.app', preview: '/portfolio/ensemble-demarches.png' },
-  { name: 'Ensemble face au chômage', family: 'Univers Ensemble', description: 'Des repères concrets pour comprendre ses droits, organiser ses démarches et rebondir.', status: 'En préparation', mark: 'EC', accent: '#58b8ff' },
+  { name: 'Ensemble face au chômage', family: 'Univers Ensemble', description: 'Des repères concrets pour comprendre ses droits, organiser ses démarches et rebondir.', status: 'En ligne', mark: 'EC', accent: '#58b8ff', href: '/ensemble-face-au-chomage/index.html', preview: '/portfolio/ensemble-chomage.png' },
   { name: 'Ensemble au quotidien', family: 'Univers Ensemble', description: 'Le copilote des petites décisions, documents et échéances de la vie courante.', status: 'En ligne', mark: 'EQ', accent: '#7fd68a', href: 'https://ensemble-copilote-prive.erwannchevallier.chatgpt.site', preview: '/portfolio/ensemble-quotidien.png' },
   { name: 'Ensemble pour rénover', family: 'Univers Ensemble', description: 'Un parcours lisible pour préparer, chiffrer et suivre un projet de rénovation.', status: 'En ligne', mark: 'ER', accent: '#75d8c2', href: 'https://renov-facile.vercel.app', preview: '/portfolio/ensemble-renover.png' },
   { name: 'Ensemble pour entreprendre', family: 'Univers Ensemble', description: 'Des décisions structurées pour lancer et piloter une activité sans se perdre.', status: 'En ligne', mark: 'EE', accent: '#a78bfa', href: 'https://lefouzebreizh.github.io/ensemble-pour-entreprendre/', preview: '/portfolio/ensemble-entreprendre.png' },
@@ -37,6 +37,11 @@ const projects: StudioProject[] = [
   { name: 'Amorce', family: 'Création assistée', description: 'Le studio qui transforme des rushes en montage vertical, directement dans le navigateur.', status: 'Prototype en développement', mark: 'AM', accent: '#40e0d0', href: '/studio', preview: '/portfolio/amorce-studio.png' },
   { name: 'Conseiller Patrimoine & Financier', family: 'Patrimoine', description: 'Une vue structurée du patrimoine pour préparer les bonnes questions et éclairer les décisions.', status: 'Prévu', mark: 'PF', accent: '#d9e34a' },
 ];
+
+const orderedProjects = [...projects].sort((a, b) => {
+  const isAccessible = (project: StudioProject) => Boolean(project.href) && project.status !== 'Accès à réparer';
+  return Number(isAccessible(b)) - Number(isAccessible(a));
+});
 
 const publicProofs = [
   { name: 'AvisLocal', description: 'Génère localement une réponse personnalisée à partir de l’enseigne, de la note et du ton choisi.', href: 'https://avislocal.erwannchevallier.chatgpt.site', mark: 'AL', preview: '/portfolio/avislocal.png' },
@@ -91,8 +96,8 @@ export default function UniversPage() {
         description="Lefouzèbreizh Studio imagine des expériences numériques utiles, sensibles et ambitieuses. Dix-huit projets, une même exigence : éclairer le chemin sans prendre la place de l’humain."
         primaryLabel="Découvrir l’offre"
         secondaryLabel="Voir les réalisations"
-        sceneImage="/brand/studio-phare-hero.webp"
-        sceneAlt="Un phare breton numérique éclaire une côte rocheuse dans une nuit turquoise et violette."
+        sceneImage="/brand/le-phare-double-exposure-v2.jpg"
+        sceneAlt="Un zèbre breton face à l’océan, un phare allumé et des lumières turquoise et violettes."
         onPrimary={() => scrollTo('offre')}
         onSecondary={() => scrollTo('realisations')}
       />
@@ -207,7 +212,7 @@ export default function UniversPage() {
         </div>
 
         <div className="univers-project-grid">
-          {projects.map((project, index) => (
+          {orderedProjects.map((project, index) => (
             <article className="studio-project-card" key={project.name} style={{ '--project-accent': project.accent } as CSSProperties}>
               <div className="studio-project-card__top">
                 <span className="studio-project-card__index">{String(index + 1).padStart(2, '0')}</span>
