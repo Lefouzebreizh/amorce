@@ -8,4 +8,6 @@ next-env.d.ts
 
 # Le dépôt ignore tout `.env*` à sa racine (règle globale) ; le gabarit se
 # versionne — seule liste des variables à renseigner avant la mise en ligne.
+.vercel
+.env*
 !.env.example

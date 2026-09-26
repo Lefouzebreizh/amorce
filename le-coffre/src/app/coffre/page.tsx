@@ -420,7 +420,7 @@ export default function PageCoffre() {
   // défiler longtemps avant d'atteindre ce qui vit en dessous (rendez-vous,
   // identité). `dossiersOuverts` démarre vide juste en dessous : les dossiers
   // eux-mêmes restent repliés tant qu'on n'a pas cliqué dessus.
-  const [vueDossiers, setVueDossiers] = useState(false);
+  const [vueDossiers, setVueDossiers] = useState(true);
   const [correction, setCorrection] = useState<Correction | null>(null);
   const [triAutoEnCours, setTriAutoEnCours] = useState(false);
   const [triAutoProgres, setTriAutoProgres] = useState<{ fait: number; total: number } | null>(null);
@@ -1813,7 +1813,7 @@ export default function PageCoffre() {
                 <Folder size={14} /> {vueDossiers ? 'Revenir à la liste' : 'Ranger en dossiers'}
               </button>
             </div>
-            {categoriesConnues.length > 0 && (
+            {!vueDossiers && categoriesConnues.length > 0 && (
               <div className="mb-4 flex flex-wrap gap-2">
                 <button type="button" onClick={() => setFiltreCategorie(null)}
                   className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
