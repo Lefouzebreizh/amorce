@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   metadataBase: adresseDuSite ? new URL(adresseDuSite) : undefined,
   title: 'Site internet pour artisan — 3 formules, sans abonnement',
   description:
-    'Une présence web claire pour les artisans : Express à 300 €, Métier à 690 € ou Signature à 1 290 €. Sans abonnement. Domaine en supplément.'
+    'Une présence web claire pour les artisans : Express à 300 €, Métier à 690 € ou Signature à 1 290 €. Sans abonnement. Domaine en supplément.',
   keywords: [
     'site internet artisan',
     'site vitrine maçon',
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     locale: 'fr_FR',
     title: 'Artisan Express — Ton site artisan à la bonne échelle',
     description:
-      'Un site pour présenter ton activité. Création : 300 €, domaine en supplément et sans abonnement à Artisan Express. Un créneau est confirmé après étude de tes éléments.',
+      'Choisis entre Express à 300 €, Métier à 690 € et Signature à 1 290 €. Sans abonnement ; domaine en supplément.',
     ...(adresseDuSite ? { url: adresseDuSite } : {}),
   },
   robots: { index: true, follow: true },
