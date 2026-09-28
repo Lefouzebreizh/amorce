@@ -14,7 +14,7 @@ import {
   analyserDocumentPourClassement, coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
   enregistrerIdentite, composerLettreResiliation, modifierObjet, modifierPlusieursObjets, ecarterEcheance, statutEcheance,
-  interpreterQuestion, genererICS, SEUIL_BIENTOT_JOURS, clesParNomAffiche,
+  genererICS, SEUIL_BIENTOT_JOURS, clesParNomAffiche,
   categorieInstantanee, recupererFormulaireCerfa, separerPdfParDocuments, suggererChampsFormulaire,
   digestIndex, type DigestDocument, type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex, type ActionAssistant,
 } from '@/lib/coffre';
@@ -410,7 +410,6 @@ export default function PageCoffre() {
   // périmé au prochain « Remplir un formulaire ».
   const [formulairePrerempli, setFormulairePrerempli] = useState<FormulairePreRempli | undefined>(undefined);
   const [filtreCategorie, setFiltreCategorie] = useState<string | null>(null);
-  const [recherche, setRecherche] = useState('');
   // Vue par défaut demandée le 10/09/2026 : des dossiers repliés, jamais la
   // liste plate — avec des centaines de papiers, une liste continue oblige à
   // défiler longtemps avant d'atteindre ce qui vit en dessous (rendez-vous,
@@ -1250,19 +1249,13 @@ export default function PageCoffre() {
   const categoriesSuggerees = Array.from(
     new Set([...Object.keys(STYLE_CATEGORIE), ...categoriesConnues]),
   ).sort((a, b) => a.localeCompare(b, 'fr'));
-  // interpreterQuestion comprend « mes photos », « un pdf », un mot isolé, ou
-  // une phrase complète (« le papier de la mutuelle ») — rechercheCorrespond
-  // reste utilisée telle quelle à l'intérieur, pour chaque mot-clé retenu.
-  const { reponse: reponseRecherche, noms: nomsTrouves, action: actionRecherche } = interpreterQuestion(index, recherche);
   // Dérivé plutôt que synchronisé par effet : un filtre qui ne correspond
   // plus à aucun papier (tri automatique, correction, suppression — tout ce
   // qui a fait migrer les papiers d'une catégorie devenue vide) s'efface de
   // lui-même au rendu suivant, sans laisser un « 0 sur N » sur un choix que
   // l'utilisateur n'a pas refait lui-même.
   const filtreCategorieEffectif = filtreCategorie && categoriesConnues.includes(filtreCategorie) ? filtreCategorie : null;
-  const noms = tousLesNoms
-    .filter((n) => !filtreCategorieEffectif || index.objets[n]?.categorie === filtreCategorieEffectif)
-    .filter((n) => nomsTrouves.includes(n));
+  const noms = tousLesNoms.filter((n) => !filtreCategorieEffectif || index.objets[n]?.categorie === filtreCategorieEffectif);
   // Un dossier par catégorie déjà utilisée sur ces papiers, « À trier »
   // toujours en dernier — jamais une liste fermée, juste ce qui existe dans
   // les papiers affichés (mêmes filtres que la vue liste).
@@ -1749,11 +1742,9 @@ export default function PageCoffre() {
               </p>
             ) : noms.length === 0 ? (
               <p className="rounded-2xl border border-line bg-paper-raised p-6 text-ink-soft">
-                {filtreCategorieEffectif && recherche.trim()
-                  ? `Aucun papier dans « ${filtreCategorieEffectif} » pour « ${recherche.trim()} ».`
-                  : filtreCategorieEffectif
-                    ? `Aucun papier dans « ${filtreCategorieEffectif} ».`
-                    : `Aucun papier pour « ${recherche.trim()} ».`}
+                {filtreCategorieEffectif
+                  ? `Aucun papier dans « ${filtreCategorieEffectif} ».`
+                  : 'Aucun papier correspondant pour le moment.'}
               </p>
             ) : vueDossiers ? (
               // Repliés par défaut (dossiersOuverts démarre vide) : avec des
