@@ -109,7 +109,11 @@ export function AssistantCoffre({
   }
 
   async function envoyerTexte(texte: string) {
-    if (!texte || enCours) return;\n    if (modeDemo) {\n      window.location.assign('/#connexion');\n      return;\n    }
+    if (!texte || enCours) return;
+    if (modeDemo) {
+      window.location.assign('/#connexion');
+      return;
+    }
     const historique = messages.map(({ role, texte: t }) => ({ role, texte: t }));
     setErreurGemini('');
     setMessages((precedent) => [...precedent, { role: 'user', texte }]);
