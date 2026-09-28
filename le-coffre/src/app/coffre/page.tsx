@@ -2004,7 +2004,8 @@ export default function PageCoffre() {
                   </div>
                 )}
 
-                {!modeDemo && (\n                <div className="flex flex-col gap-2 rounded-2xl border border-line p-4">
+                {!modeDemo && (
+                <div className="flex flex-col gap-2 rounded-2xl border border-line p-4">
                   <p className="text-sm font-medium text-ink-soft">Corriger le classement</p>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <div className="flex-1">
@@ -2027,7 +2028,10 @@ export default function PageCoffre() {
                     className="self-start rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
                     Enregistrer
                   </button>
-                </div>\n                )}\n\n                {!modeDemo && (
+                </div>
+                )}
+                
+                {!modeDemo && (
                   <div className="flex gap-4 text-sm">
                     <button onClick={() => telecharger(detailOuvert)} className="text-accent hover:underline">
                       Télécharger
