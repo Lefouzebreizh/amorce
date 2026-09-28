@@ -42,9 +42,36 @@ export default function PageAccueil() {
   const champCode = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) routeur.replace('/coffre');
+    let actif = true;
+    const transmettreLeLien = () => {
+      const url = `${window.location.search}${window.location.hash}`;
+      routeur.replace(`/reinitialiser-code${url}`);
+    };
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') transmettreLeLien();
     });
+
+    const recherche = new URLSearchParams(window.location.search);
+    const fragment = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const estUnLienDeRecuperation =
+      recherche.has('code') ||
+      recherche.get('flux') === 'reinitialisation' ||
+      fragment.get('type') === 'recovery';
+
+    if (estUnLienDeRecuperation) {
+      transmettreLeLien();
+    } else {
+      void supabase.auth.getSession().then(({ data }) => {
+        if (actif && data.session) routeur.replace('/coffre');
+      });
+    }
+
+    return () => {
+      actif = false;
+      subscription.unsubscribe();
+    };
   }, [routeur]);
 
   async function seConnecter(e: React.FormEvent) {

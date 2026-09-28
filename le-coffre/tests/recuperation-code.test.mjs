@@ -6,6 +6,8 @@ const page = fs.readFileSync(
   new URL('../src/app/reinitialiser-code/page.tsx', import.meta.url),
   'utf8',
 );
+const accueil = fs.readFileSync(new URL('../src/app/page.tsx', import.meta.url), 'utf8');
+const styles = fs.readFileSync(new URL('../src/app/globals.css', import.meta.url), 'utf8');
 const fonction = fs.readFileSync(
   new URL('../supabase/functions/recuperer-code-coffre/index.ts', import.meta.url),
   'utf8',
@@ -36,6 +38,19 @@ test('la page attend explicitement la session PASSWORD_RECOVERY', () => {
   assert.match(page, /event === 'PASSWORD_RECOVERY'/);
   assert.match(page, /subscription\.unsubscribe\(\)/);
   assert.doesNotMatch(page, /getSession\(\)\.then\(\(\{ data \}\) => setPret/);
+});
+
+test('un lien de récupération ne redirige pas vers le coffre sans afficher le formulaire', () => {
+  assert.match(accueil, /event === 'PASSWORD_RECOVERY'\) transmettreLeLien\(\)/);
+  assert.match(accueil, /recherche\.has\('code'\)/);
+  assert.match(accueil, /recherche\.get\('flux'\) === 'reinitialisation'/);
+  assert.match(accueil, /fragment\.get\('type'\) === 'recovery'/);
+  assert.match(accueil, /routeur\.replace\(`\/reinitialiser-code\$\{url\}`\)/);
+});
+
+test('sur mobile, la vidéo garde une zone visuelle distincte du texte', () => {
+  assert.match(styles, /@media \(max-width: 700px\) \{[\s\S]*?\.coffre-mer__image \{ height: 66%;[^}]*object-position: 52% 43%/);
+  assert.match(styles, /\.coffre-mer \{ min-height: 44rem/);
 });
 
 test('le flux PKCE est échangé avant de proposer le nouveau mot de passe', () => {

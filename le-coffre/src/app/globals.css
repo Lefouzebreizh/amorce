@@ -232,9 +232,9 @@ input.border-line.bg-paper-raised {
 @media (max-width: 980px) { .coffre-hero--scene { grid-template-columns: 1fr; grid-template-areas: "content" "scene" "actions"; } .coffre-hero__actions { align-items: stretch; flex-direction: column; } .coffre-hero__actions .coffre-reperes { width: 100%; } }
 @media (max-width: 700px) { .coffre-hero { min-height: auto; padding: 1.25rem !important; } .coffre-reperes { width: 100%; } .coffre-question { grid-template-columns: 1fr; padding: 1.25rem !important; } }
 @media (max-width: 700px) {
-  .coffre-mer { min-height: 42rem; border-radius: 1.45rem; }
-  .coffre-mer::before { background: linear-gradient(0deg, rgb(2 7 17 / .94), rgb(2 7 17 / .55) 44%, rgb(2 7 17 / .16)), linear-gradient(90deg, rgb(2 7 17 / .72), rgb(2 7 17 / .16) 66%); }
-  .coffre-mer__image { object-position: 63% 40%; transform: scale(1.02); }
+  .coffre-mer { min-height: 44rem; border-radius: 1.45rem; }
+  .coffre-mer::before { background: linear-gradient(180deg, rgb(2 7 17 / .06) 0%, rgb(2 7 17 / .12) 34%, rgb(2 7 17 / .68) 57%, rgb(2 7 17 / .96) 75%), linear-gradient(90deg, rgb(2 7 17 / .18), transparent 72%); }
+  .coffre-mer__image { height: 66%; object-fit: cover; object-position: 52% 43%; transform: scale(1); }
   .coffre-mer__vagues { left: 23%; right: -12%; bottom: 30%; height: 15%; }
   .coffre-mer__reflet { right: -10%; bottom: 24%; width: 92vw; opacity: .52; }
   .coffre-mer--compact { min-height: 38rem; }
