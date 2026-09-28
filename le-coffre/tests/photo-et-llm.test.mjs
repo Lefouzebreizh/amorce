@@ -34,6 +34,22 @@ test('le champ caméra déclenche le parcours intelligent direct', () => {
   assert.match(capture, /photographierEtRanger\(fichiers\)/);
 });
 
+test('si Gemini échoue, la photo de la caméra reste dans la file à vérifier', () => {
+  const parcoursPhoto = page.slice(page.indexOf('async function photographierEtRanger('), page.indexOf('function modifierAttente('));
+  assert.match(parcoursPhoto, /proposition\.erreurTechnique/);
+  assert.match(parcoursPhoto, /setEtatCapture\(\{\s*etat: 'a-verifier'/);
+  assert.match(parcoursPhoto, /await surDepot\(\[fichier\]\)/);
+  assert.match(parcoursPhoto, /La photo reste dans la file de dépôt/);
+  assert.match(parcoursPhoto, /appuie sur « Déposer » pour l'enregistrer chiffrée/);
+});
+
+test('le classement photo utilise le modèle Gemini actuel avec un raisonnement léger', () => {
+  assert.match(classement, /const MODELE = "gemini-3\.8-flash"/);
+  assert.match(classement, /thinkingConfig: \{ thinkingLevel: "low" \}/);
+  assert.match(classement, /responseMimeType: "application\/json"/);
+  assert.doesNotMatch(classement, /thinkingBudget|temperature:/);
+});
+
 test('l import classique reste séparé de l analyse intelligente', () => {
   const debutDepot = page.indexOf('async function surDepot(');
   const finDepot = page.indexOf('async function photographierEtRanger(', debutDepot);

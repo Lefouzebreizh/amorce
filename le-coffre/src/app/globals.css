@@ -724,3 +724,26 @@ input.border-line.bg-paper-raised {
   -webkit-text-fill-color: #536b7d !important;
 }
 .coffre-page .assistant-panel__messages li > div { color: #233d51; }
+
+/* Rendez-vous, identité et réglages suivent aussi le thème clair du coffre :
+   ces panneaux avaient conservé leur ancienne surface sombre et leurs champs
+   foncés, ce qui rendait le texte saisi presque invisible. */
+.coffre-page .studio-module {
+  border-color: #d8e4e9 !important;
+  color: #183247;
+  background: linear-gradient(145deg, #ffffff, #f5f9fa) !important;
+  box-shadow: 0 1.2rem 3rem -2.2rem rgb(39 73 92 / .32), 0 1px 0 #fff inset;
+}
+.coffre-page .studio-module h2 { color: #183247; text-shadow: none; }
+.coffre-page .studio-module input,
+.coffre-page .studio-module textarea,
+.coffre-page .studio-module select {
+  border-color: #c5d8e0 !important;
+  background: #ffffff !important;
+  color: #183247 !important;
+  -webkit-text-fill-color: #183247 !important;
+}
+.coffre-page .studio-module input::placeholder,
+.coffre-page .studio-module textarea::placeholder { color: #657c8a !important; opacity: 1; }
+.coffre-page .studio-module input[type='date'],
+.coffre-page .studio-module input[type='time'] { color-scheme: light; }
