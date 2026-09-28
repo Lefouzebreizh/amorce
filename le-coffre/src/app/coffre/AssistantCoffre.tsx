@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { Bot, FileText, Folder, Globe, Paperclip, Send, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
 import { b64FromBuf } from '@/lib/crypto';
 import { demanderAuCoffre, type ActionAssistant, type IndexCoffre, type TourConversation } from '@/lib/coffre';
@@ -208,7 +209,7 @@ export function AssistantCoffre({
         <div role="status" className="assistant-panel__demo mx-4 mt-4 flex items-start gap-3 rounded-2xl border p-4">
           <ShieldCheck size={19} className="mt-0.5 shrink-0" />
           <p className="text-sm">
-            Cet aperçu utilise un compte et des papiers fictifs. Tu peux écrire dans le champ pour préparer ta question, mais l’envoi est réservé à ta session réelle. Aucun message ni document ne partira depuis cette démo.{' '}<a href="/#connexion">Ouvrir la vraie session</a>
+            Cet aperçu utilise un compte et des papiers fictifs. Tu peux écrire dans le champ pour préparer ta question, mais l’envoi est réservé à ta session réelle. Aucun message ni document ne partira depuis cette démo.{' '}<Link href="/#connexion">Ouvrir la vraie session</Link>
           </p>
         </div>
       )}
