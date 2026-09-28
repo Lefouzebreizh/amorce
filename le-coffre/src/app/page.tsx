@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import {
+  MESSAGE_CODE_INCORRECT,
   MESSAGE_CONNEXION_INDISPONIBLE,
   messageErreurConnexion,
 } from '@/lib/connexion';
@@ -67,10 +68,11 @@ export default function PageAccueil() {
       );
       if (messageErreur) {
         setErreur(messageErreur);
-        requestAnimationFrame(() => {
-          champCode.current?.focus();
-          champCode.current?.select();
-        });
+        // Sur mobile, remettre le focus sur le champ rouvre le clavier et
+        // masque le lien de récupération juste après le refus du mot de passe.
+        // On garde la valeur pour que la personne puisse la vérifier avec
+        // « Afficher », mais on libère l'écran pour lui permettre de continuer.
+        champCode.current?.blur();
         return;
       }
       if (!data?.access_token || !data?.refresh_token) {
@@ -172,6 +174,11 @@ export default function PageAccueil() {
             C&apos;est le mot de passe du compte, pas la phrase secrète qui chiffre tes documents. Chrome peut maintenant l&apos;enregistrer.
           </p>
           {erreur && <p id="erreur-connexion" role="alert" className={styles.error}>{erreur}</p>}
+          {erreur === MESSAGE_CODE_INCORRECT && !recuperationEnvoyee && (
+            <button type="button" onClick={recupererCode} disabled={enCours} className={styles.recovery}>
+              {enCours ? 'Envoi du lien…' : 'Recevoir un lien pour réinitialiser le mot de passe'}
+            </button>
+          )}
           <button
             type="submit"
             disabled={enCours}
@@ -180,13 +187,16 @@ export default function PageAccueil() {
             {enCours ? 'Connexion…' : 'Entrer dans mon espace'}
           </button>
         </form>
-        <button type="button" onClick={recupererCode} disabled={enCours} className={styles.recovery}>
-          {recuperationEnvoyee ? 'Renvoyer le lien de récupération' : 'J’ai oublié mon code'}
-        </button>
+        {erreur !== MESSAGE_CODE_INCORRECT && !recuperationEnvoyee && (
+          <button type="button" onClick={recupererCode} disabled={enCours} className={styles.recovery}>
+            J’ai oublié mon code
+          </button>
+        )}
         {recuperationEnvoyee && (
-          <p role="status" className={styles.recoveryStatus}>
-            Le lien de récupération vient d&apos;être envoyé.
-          </p>
+          <div role="status" className={styles.recoveryStatus}>
+            <p>Le lien de récupération vient d&apos;être envoyé à l&apos;adresse associée au compte.</p>
+            <p>Après le changement, ta phrase secrète séparée restera nécessaire pour déchiffrer tes documents.</p>
+          </div>
         )}
 
           <div className={styles.privacy}>

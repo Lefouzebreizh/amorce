@@ -17,9 +17,16 @@ test('la connexion lit le champ saisi et évite le prévol CORS du navigateur', 
   assert.doesNotMatch(page, /functions\.invoke\('connexion-coffre'/);
 });
 
-test('un refus conserve la valeur pour permettre sa vérification', () => {
+test('un refus conserve la valeur sans rouvrir le clavier du téléphone', () => {
   const brancheRefus = page.match(/if \(messageErreur\) \{([\s\S]*?)\n\s*return;/)?.[1] ?? '';
   assert.ok(brancheRefus, 'la branche de refus doit exister');
   assert.doesNotMatch(brancheRefus, /setMotDePasse\(''\)/);
-  assert.match(brancheRefus, /\.select\(\)/);
+  assert.match(brancheRefus, /champCode\.current\?\.blur\(\)/);
+  assert.doesNotMatch(brancheRefus, /\.focus\(\)|\.select\(\)/);
+});
+
+test('le lien de récupération apparaît juste sous le refus du mot de passe', () => {
+  assert.match(page, /erreur === MESSAGE_CODE_INCORRECT && !recuperationEnvoyee/);
+  assert.match(page, /Recevoir un lien pour réinitialiser le mot de passe/);
+  assert.match(page, /Après le changement, ta phrase secrète séparée restera nécessaire/);
 });
