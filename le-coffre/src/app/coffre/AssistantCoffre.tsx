@@ -109,7 +109,7 @@ export function AssistantCoffre({
   }
 
   async function envoyerTexte(texte: string) {
-    if (!texte || enCours || modeDemo) return;
+    if (!texte || enCours) return;\n    if (modeDemo) {\n      window.location.assign('/#connexion');\n      return;\n    }
     const historique = messages.map(({ role, texte: t }) => ({ role, texte: t }));
     setErreurGemini('');
     setMessages((precedent) => [...precedent, { role: 'user', texte }]);
@@ -470,12 +470,12 @@ export function AssistantCoffre({
           />
           <button
             type="submit"
-            disabled={modeDemo || enCours || !question.trim()}
+            disabled={enCours || !question.trim()}
             className="assistant-panel__send flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-bleu px-5 py-3 font-semibold text-paper transition hover:bg-bleu-strong disabled:cursor-not-allowed disabled:opacity-45"
-            aria-label={documentsSelectionnes.size || fichiersLocaux.length ? `Envoyer à Gemini avec ${documentsSelectionnes.size + fichiersLocaux.length} document(s)` : 'Envoyer à Gemini'}
+            aria-label={modeDemo ? 'Se connecter pour envoyer la question' : documentsSelectionnes.size || fichiersLocaux.length ? `Envoyer à Gemini avec ${documentsSelectionnes.size + fichiersLocaux.length} document(s)` : 'Envoyer à Gemini'}
           >
             <Send size={18} aria-hidden="true" />
-            <span>Envoyer</span>
+            <span>{modeDemo ? 'Se connecter pour envoyer' : 'Envoyer'}</span>
           </button>
         </form>
     </div>
