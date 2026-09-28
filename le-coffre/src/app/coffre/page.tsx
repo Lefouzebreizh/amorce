@@ -997,7 +997,6 @@ export default function PageCoffre() {
       sourcesTransmises: clesSelectionnees.map((cleDocument) => index.objets[cleDocument]?.nom).filter((nom): nom is string => Boolean(nom)),
     });
     setFormulaireOuvert(true);
-    fermerAssistant();
   }
 
   async function enregistrerCorrection() {
