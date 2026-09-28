@@ -6,8 +6,8 @@ const page = fs.readFileSync(new URL('../src/app/coffre/page.tsx', import.meta.u
 const assistant = fs.readFileSync(new URL('../src/app/coffre/AssistantCoffre.tsx', import.meta.url), 'utf8');
 
 test('le tableau de bord conserve un seul copilote dans le flux', () => {
-  assert.equal((page.match(/<AssistantCoffre\\b/g) || []).length, 1, 'le tableau de bord doit monter un seul chat');
-  assert.doesNotMatch(page, /assistantOuvert|questionAssistant|demanderAAssistant/, 'aucun second formulaire de chat ne doit subsister');
+  assert.equal(page.split('<AssistantCoffre').length - 1, 1, 'le tableau de bord doit monter un seul chat');
+  assert.equal(page.includes('assistantOuvert') || page.includes('questionAssistant') || page.includes('demanderAAssistant'), false, 'aucun second formulaire de chat ne doit subsister');
 });
 
 test('le champ du chat reste sélectionnable dans l’aperçu, sans envoyer à Gemini', () => {
@@ -16,8 +16,8 @@ test('le champ du chat reste sélectionnable dans l’aperçu, sans envoyer à G
   assert.ok(debutComposer >= 0 && finComposer > debutComposer, 'champ et bouton d’envoi introuvables');
 
   const composer = assistant.slice(debutComposer, finComposer);
-  assert.match(composer, /disabled={enCours}/, 'seul un envoi en cours doit désactiver le champ');
-  assert.match(composer, /disabled={modeDemo \\|\\| enCours \\|\\| !question\\.trim\\(\\)}/, 'l’envoi doit rester désactivé en démo');
+  assert.equal(composer.includes('disabled={enCours}'), true, 'seul un envoi en cours doit désactiver le champ');
+  assert.equal(composer.includes('disabled={modeDemo || enCours || !question.trim()}'), true, 'l’envoi doit rester désactivé en démo');
 
-  assert.match(assistant, /if \\(!texte \\|\\| enCours \\|\\| modeDemo\\) return/, 'la démo ne doit jamais appeler Gemini');
+  assert.equal(assistant.includes('if (!texte || enCours || modeDemo) return;'), true, 'la démo ne doit jamais appeler Gemini');
 });
