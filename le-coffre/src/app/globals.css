@@ -18,14 +18,14 @@
  * cinquième rôle sémantique, pas une des quatre teintes ci-dessus.
  */
 @theme {
-  --color-paper: #030913;
-  --color-paper-raised: #0c1728;
-  --color-ink: #f5f7ff;
-  --color-ink-soft: #aab6cb;
-  --color-line: #263750;
+  --color-paper: #0a1420;
+  --color-paper-raised: #142337;
+  --color-ink: #f5f7fa;
+  --color-ink-soft: #c1ccda;
+  --color-line: #34485f;
   --color-accent: #40e0d0;
-  --color-accent-strong: #71eee0;
-  --color-violet: #b79bff;
+  --color-accent-strong: #7de9df;
+  --color-violet: #c0abff;
   --color-vert: #50d9a5;
   --color-bleu: #62a7ff;
   --color-bleu-strong: #8cc2ff;
@@ -48,10 +48,9 @@ body {
   --font-affiche: var(--font-instrument-serif), Georgia, serif;
   --font-corps: var(--font-plus-jakarta-sans), system-ui, sans-serif;
   background:
-    radial-gradient(900px circle at 8% -16%, rgb(64 224 208 / .19), transparent 58%),
-    radial-gradient(850px circle at 102% 18%, rgb(124 58 237 / .26), transparent 60%),
-    radial-gradient(700px circle at 26% 112%, rgb(64 224 208 / .1), transparent 62%),
-    var(--color-paper);
+    radial-gradient(780px circle at 84% -12%, rgb(64 224 208 / .11), transparent 54%),
+    radial-gradient(760px circle at 4% 44%, rgb(124 58 237 / .1), transparent 56%),
+    linear-gradient(145deg, #0a1420 0%, #0c1724 55%, #101827 100%);
   background-attachment: fixed;
   color: var(--color-ink);
   font-family: var(--font-corps);
@@ -120,10 +119,10 @@ input.border-line.bg-paper-raised {
    propriété standard une seule fois. */
 .border-line.bg-paper-raised:not(input) {
   background:
-    linear-gradient(135deg, rgb(64 224 208 / .08), rgb(124 58 237 / .14)),
-    rgb(12 23 40 / .78);
-  backdrop-filter: blur(20px) saturate(125%);
-  border-color: rgb(164 185 218 / .22);
+    linear-gradient(145deg, rgb(24 42 62 / .96), rgb(16 30 46 / .98));
+  backdrop-filter: blur(8px) saturate(108%);
+  border-color: rgb(177 201 223 / .16);
+  box-shadow: 0 1px 0 rgb(255 255 255 / .045) inset;
 }
 /* Lift + glow au survol de chaque carte/bloc principal — cible la même
    paire de classes déjà posée sur l'en-tête, la bannière d'alerte, le bloc
@@ -132,11 +131,10 @@ input.border-line.bg-paper-raised {
   transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
 .border-line.bg-paper-raised:hover {
-  border-color: rgb(64 224 208 / .62);
+  border-color: rgb(64 224 208 / .38);
   box-shadow:
-    0 0 0 1px rgb(64 224 208 / .12),
-    0 25px 54px -30px rgb(0 0 0 / .88),
-    0 0 36px -16px rgb(124 58 237 / .7);
+    0 0 0 1px rgb(64 224 208 / .08),
+    0 20px 44px -30px rgb(0 0 0 / .58);
 }
 @media (prefers-reduced-motion: no-preference) {
   .border-line.bg-paper-raised:hover {
@@ -177,8 +175,8 @@ input.border-line.bg-paper-raised {
    utiles, sans modifier le comportement du coffre. */
 .coffre-page { position: relative; isolation: isolate; overflow: hidden; background: transparent; }
 .coffre-page::before, .coffre-page::after { content: ''; position: fixed; z-index: -1; border-radius: 50%; pointer-events: none; filter: blur(18px); }
-.coffre-page::before { top: 12vh; right: -18vw; width: 52vw; height: 52vw; background: radial-gradient(circle, rgb(124 58 237 / .23), transparent 64%); }
-.coffre-page::after { bottom: -18vh; left: -16vw; width: 46vw; height: 46vw; background: radial-gradient(circle, rgb(64 224 208 / .16), transparent 64%); }
+.coffre-page::before { top: 8vh; right: -18vw; width: 48vw; height: 48vw; background: radial-gradient(circle, rgb(124 58 237 / .13), transparent 66%); }
+.coffre-page::after { bottom: -18vh; left: -16vw; width: 42vw; height: 42vw; background: radial-gradient(circle, rgb(64 224 208 / .09), transparent 66%); }
 .coffre-shell { position: relative; }
 /* Accueil prive : le tiroir est une piece ouverte sur la mer, pas un coffre
    generique. La profondeur CSS garde une scene premium sans charge 3D lourde. */
@@ -215,8 +213,8 @@ input.border-line.bg-paper-raised {
 .coffre-mer--compact .coffre-mer__contenu > p:not(.coffre-mer__eyebrow) { max-width: 24rem; font-size: 1rem; }
 .coffre-mer--compact .coffre-mer__commande { min-height: 3rem; margin-top: 1.15rem; padding: .72rem 1rem; }
 .coffre-mer--compact .coffre-mer__vagues { left: 36%; right: -2%; bottom: 12%; }
-.coffre-hero { position: relative; min-height: 270px; overflow: hidden; background: linear-gradient(116deg, rgb(6 24 38 / .96), rgb(18 26 63 / .95) 57%, rgb(52 28 90 / .92)); box-shadow: 0 36px 80px -44px #000, 0 0 70px -34px rgb(64 224 208 / .68); }
-.coffre-hero::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 84% 50%, rgb(64 224 208 / .17), transparent 22%), linear-gradient(100deg, transparent 40%, rgb(124 58 237 / .17), transparent 76%); }
+.coffre-hero { position: relative; min-height: 270px; overflow: hidden; background: linear-gradient(120deg, #142b3d 0%, #142337 53%, #201e36 100%); box-shadow: 0 30px 68px -46px rgb(0 0 0 / .88), 0 1px 0 rgb(255 255 255 / .07) inset; }
+.coffre-hero::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 84% 50%, rgb(64 224 208 / .12), transparent 25%), linear-gradient(100deg, transparent 42%, rgb(124 58 237 / .09), transparent 78%); }
 .coffre-hero__content { position: relative; z-index: 1; }
 .coffre-hero--scene { display: grid; grid-template-columns: minmax(18rem, .86fr) minmax(24rem, 1.24fr); grid-template-areas: "content scene" "actions scene"; gap: clamp(1.3rem, 3vw, 2.4rem); align-items: stretch; }
 .coffre-hero--scene .coffre-hero__content { grid-area: content; align-self: center; }
@@ -250,7 +248,7 @@ input.border-line.bg-paper-raised {
 /* Les cartes fonctionnelles s'allument au survol et au focus, comme les
    surfaces Studio. Le contenu reste parfaitement utilisable sans effet. */
 .coffre-page button:not(.coffre-mer__commande), .coffre-page a, .coffre-page input { transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background-color .22s ease, filter .22s ease; }
-.coffre-page button:not(.coffre-mer__commande):hover, .coffre-page a:hover { box-shadow: 0 0 0 1px rgb(64 224 208 / .16), 0 .8rem 2rem -1rem rgb(64 224 208 / .7); }
+.coffre-page button:not(.coffre-mer__commande):hover, .coffre-page a:hover { box-shadow: 0 0 0 1px rgb(64 224 208 / .12), 0 .7rem 1.7rem -1rem rgb(0 0 0 / .62); }
 .coffre-page input:focus { box-shadow: 0 0 0 3px rgb(64 224 208 / .15), 0 0 2rem -1rem rgb(64 224 208 / .55); }
 @media (prefers-reduced-motion: reduce) { .coffre-mer__vagues, .coffre-mer__reflet { animation: none; }.coffre-mer__image, .coffre-mer__commande, .coffre-page button, .coffre-page a, .coffre-page input { transition: none; } }
 
@@ -332,7 +330,7 @@ input.border-line.bg-paper-raised {
   .coffre-vital > p:last-child { font-size: .65rem; line-height: 1.35; }
   .studio-side { display: flex; }
   .assistant-panel__composer { padding: .8rem; }
-  .assistant-panel__composer input { font-size: 16px; }
+  .assistant-panel__composer input { font-size: 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .coffre-question::before, .coffre-vault, .coffre-mer__vagues, .coffre-mer__reflet { animation: none !important; }
@@ -392,25 +390,35 @@ input.border-line.bg-paper-raised {
 
 /* Le copilote n'est plus une petite recherche posée dans une colonne : il
    devient une vraie zone de dialogue, toujours avec une seule saisie. */
-.coffre-question { display: block; padding: clamp(1.3rem, 3vw, 2.2rem) !important; border-radius: 2rem !important; }
+.coffre-question { display: block; padding: clamp(1.3rem, 3vw, 2.2rem) !important; border-radius: 2rem !important; border-color: rgb(128 201 213 / .2) !important; background: linear-gradient(145deg, #172b40, #101f30 72%) !important; box-shadow: 0 30px 68px -48px rgb(0 0 0 / .8), 0 1px 0 rgb(255 255 255 / .055) inset; }
 .coffre-question__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .coffre-question__title { margin: 0; }
-.coffre-question__badge { display: inline-flex; flex: none; padding: .45rem .7rem; border: 1px solid rgb(183 155 255 / .3); border-radius: 999px; color: #e2d6ff; background: rgb(124 58 237 / .12); font-size: .7rem; font-weight: 800; letter-spacing: .04em; }
-.coffre-question__lead { max-width: 52rem; margin: .75rem 0 1.2rem; color: var(--color-ink-soft); font-size: .9rem; line-height: 1.55; }
-.coffre-question form { width: 100%; margin-top: 0; }
-.coffre-question input { min-height: 3.65rem; padding-right: 1.2rem; border-radius: 1.15rem; }
-.coffre-prompts { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; }
-.coffre-prompts button { padding: .52rem .72rem; border: 1px solid rgb(153 190 226 / .22); border-radius: 999px; color: #cad7e9; background: rgb(4 15 31 / .64); font-size: .73rem; cursor: pointer; }
-.coffre-prompts button:hover { border-color: rgb(64 224 208 / .45); color: #fff; }
-.coffre-question__privacy { display: flex; align-items: center; gap: .4rem; margin: .75rem 0 0; color: #93b9bd; font-size: .69rem; }
-.assistant-panel { overflow: hidden; border-color: rgb(150 215 246 / .24) !important; background: linear-gradient(150deg, rgb(4 17 33 / .96), rgb(17 15 48 / .94)) !important; box-shadow: 0 1.7rem 4rem -2.8rem #000, 0 0 3rem -2rem rgb(124 58 237 / .7); }
-.assistant-panel__header { background: linear-gradient(90deg, rgb(64 224 208 / .06), rgb(124 58 237 / .08)); }
-.assistant-panel__avatar { display: grid; width: 2.55rem; height: 2.55rem; place-items: center; border: 1px solid rgb(64 224 208 / .3); border-radius: .85rem; color: var(--color-accent); background: linear-gradient(135deg, rgb(64 224 208 / .12), rgb(124 58 237 / .17)); box-shadow: 0 0 1.5rem rgb(64 224 208 / .13); }
-.assistant-panel__empty { line-height: 1.55; }
-.assistant-panel__composer { background: rgb(2 10 23 / .74); }
-.assistant-panel__composer input { min-height: 3rem; }
+.coffre-question__badge { display: inline-flex; align-items: center; gap: .45rem; flex: none; padding: .6rem .85rem; border: 1px solid rgb(64 224 208 / .23); border-radius: 999px; color: #c8f8f1; background: rgb(64 224 208 / .075); font-size: .78rem; font-weight: 700; letter-spacing: .02em; }
+.coffre-question__lead { max-width: 68rem; margin: .8rem 0 1.25rem; color: var(--color-ink-soft); font-size: 1.125rem; line-height: 1.7; }
+.coffre-question__chat { width: 100%; max-width: 74rem; margin-inline: auto; }
+.coffre-question__heading .coffre-kicker { font-size: .82rem; }
+.coffre-question__title { max-width: 24ch; font-size: clamp(2rem, 3.2vw, 3.4rem); line-height: 1.02; letter-spacing: -.035em; }
 
-.coffre-page button:focus-visible, .coffre-page a:focus-visible, .coffre-page input:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
+.assistant-panel { overflow: hidden; border-color: rgb(165 196 219 / .18) !important; border-radius: 1.5rem !important; background: linear-gradient(150deg, #101f30, #0d1928) !important; box-shadow: 0 22px 48px -34px rgb(0 0 0 / .72), 0 1px 0 rgb(255 255 255 / .04) inset; }
+.assistant-panel__header { min-height: 5.25rem; padding: 1.1rem 1.25rem; background: linear-gradient(95deg, rgb(64 224 208 / .075), transparent 55%, rgb(192 171 255 / .055)); }
+.assistant-panel__header .text-sm { font-size: 1.125rem; }
+.assistant-panel__avatar { display: grid; width: 3rem; height: 3rem; flex: none; place-items: center; border: 1px solid rgb(64 224 208 / .3); border-radius: 1rem; color: var(--color-accent); background: linear-gradient(145deg, rgb(64 224 208 / .14), rgb(192 171 255 / .09)); box-shadow: 0 8px 22px -16px rgb(64 224 208 / .6); }
+.assistant-panel__status { font-size: 1rem !important; }
+.assistant-panel__demo { border-color: rgb(64 224 208 / .22); color: #d7f4f0; background: linear-gradient(115deg, rgb(64 224 208 / .08), rgb(192 171 255 / .055)); font-size: 1.125rem; line-height: 1.55; }
+.assistant-panel__demo p { margin: 0; font-size: 1.125rem; }
+.assistant-panel__messages { max-height: min(48vh, 34rem); }
+.assistant-panel__empty { border-color: rgb(167 193 218 / .2) !important; background: linear-gradient(140deg, #17283a, #132235) !important; font-size: 1.125rem !important; line-height: 1.65; }
+.assistant-panel__empty p { font-size: 1.125rem !important; }
+.assistant-panel__empty p:last-child { padding-top: .2rem; }
+.assistant-panel__messages li > div { font-size: 1.125rem; line-height: 1.65; }
+.assistant-panel__composer { align-items: center; gap: .7rem; padding: 1rem 1.1rem; border-top-color: rgb(165 196 219 / .14); background: #0c1826; }
+.assistant-panel__composer input { min-height: 3.25rem; border-color: rgb(176 199 219 / .25); border-radius: 1rem; background: #101f30; color: var(--color-ink); font-size: 1.125rem; }
+.assistant-panel__send { min-width: 7.25rem; min-height: 3.25rem; border: 1px solid rgb(125 233 223 / .5); background: linear-gradient(130deg, #40e0d0, #7de9df); color: #06191d; font-size: 1rem; box-shadow: 0 9px 22px -16px rgb(64 224 208 / .75); }
+.assistant-panel__send:hover:not(:disabled) { filter: brightness(1.06); transform: translateY(-1px); }
+.assistant-panel__send:disabled { border-color: rgb(176 199 219 / .12); background: #263446; color: #92a2b6; box-shadow: none; }
+.assistant-panel__sources { border-color: rgb(165 196 219 / .17); background: #101f30; }
+
+.coffre-page button:focus-visible, .coffre-page a:focus-visible, .coffre-page input:focus-visible, .coffre-page summary:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 3px; }
 
 @media (max-width: 900px) {
   .coffre-command { grid-template-columns: 1fr; }
