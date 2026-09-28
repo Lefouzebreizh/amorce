@@ -52,6 +52,14 @@ export default function ReinitialiserCode() {
         const { data, error } = await supabase.auth.exchangeCodeForSession(codePkce);
         if (!actif) return;
         if (error || !data.session) {
+          // Le client Supabase peut avoir consommé le code avant que React
+          // ne monte cette page. Dans ce cas la session de récupération est
+          // déjà disponible et le formulaire reste accessible.
+          const { data: sessionExistante } = await supabase.auth.getSession();
+          if (sessionExistante.session) {
+            rendrePret(sessionExistante.session);
+            return;
+          }
           setEtatLien('invalide');
           return;
         }

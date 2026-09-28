@@ -713,7 +713,7 @@ export default function PageCoffre() {
       setEtatCapture({
         etat: 'a-verifier',
         message: proposition.erreurTechnique
-          ? "L'analyse intelligente est indisponible. La photo est prête à être vérifiée, rien n'est perdu."
+          ? "L'analyse Gemini n'a pas répondu. La photo reste dans la file de dépôt : vérifie sa fiche, puis appuie sur « Déposer » pour l'enregistrer chiffrée."
           : "Je ne peux pas lire ce document avec assez de certitude. Vérifie son nom et son dossier avant dépôt.",
       });
       await surDepot([fichier]);
