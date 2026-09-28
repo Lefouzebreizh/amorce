@@ -96,10 +96,15 @@ export function AssistantCoffre({
   // d'exécution — désactive son bouton le temps de l'appel, sans bloquer
   // le reste du chat.
   const [actionEnCours, setActionEnCours] = useState<string | null>(null);
-  const finDesMessages = useRef<HTMLDivElement>(null);
+  const zoneMessages = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    finDesMessages.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    // Ne pas utiliser scrollIntoView ici : il peut faire défiler toute la page
+    // pour atteindre le repère, au lieu de ne déplacer que le fil de discussion.
+    // Le chat garde ainsi sa place dans le tableau de bord et montre le dernier
+    // message à l'intérieur de sa propre zone.
+    const zone = zoneMessages.current;
+    if (zone) zone.scrollTop = zone.scrollHeight;
+  }, [messages, enCours]);
 
   // Retrouve le nom réel d'un document cité par son nom exact — jamais
   // deviné : si Gemini a mal recopié un nom, on ne montre pas de lien plutôt
@@ -217,7 +222,7 @@ export function AssistantCoffre({
           </p>
         </div>
       )}
-      <div className="assistant-panel__messages max-h-[50vh] overflow-y-auto p-4">
+      <div ref={zoneMessages} className="assistant-panel__messages max-h-[50vh] overflow-y-auto p-4">
         {messages.length === 0 && (
           <div className="assistant-panel__empty rounded-2xl border border-dashed border-line bg-paper p-4 text-base text-ink-soft">
             <p className="font-medium text-ink">Je peux réfléchir avec toi et agir dans le tiroir.</p>
@@ -426,7 +431,6 @@ export function AssistantCoffre({
               </li>
             )}
           </ul>
-          <div ref={finDesMessages} />
         </div>
 
         <details className="assistant-panel__sources mx-4 border-t border-line pt-3">
