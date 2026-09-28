@@ -3,10 +3,8 @@
 // jamais l'index complet, l'identité ni la phrase secrète et ne conserve rien.
 
 const CLE_GEMINI = Deno.env.get("GEMINI_API_KEY") ?? Deno.env.get("GOOGLE_API_KEY");
-// Flash 2.5 reste multimodal, prend en charge l'ancrage Google et dispose d'un
-// niveau gratuit. Le nom est explicite pour qu'un changement de modèle ne
-// puisse pas introduire un coût en silence.
-const MODELE = "gemini-2.5-flash";
+// Gemini 3.8 Flash est appelé via l'Interactions API, requise par les nouveaux comptes.
+const MODELE = "gemini-3.8-flash";
 const ORIGINES_AUTORISEES = new Set([
   "https://coffre-puce.vercel.app",
   "https://mon-tiroir-secret.vercel.app",
@@ -217,67 +215,74 @@ Deno.serve(async (requete: Request) => {
     `"rechercheWebEffectuee": vrai seulement si tu as réellement utilisé l'outil de recherche ` +
     `web pour cette réponse précise}.`;
 
-  const partiesUtilisateur: Array<Record<string, unknown>> = [
-    ...piecesJointes.map((piece) => ({ text: `Document joint à cette demande : ${piece.nom} (${piece.type})` })),
-    ...piecesJointes.map((piece) => ({ inlineData: { mimeType: piece.type, data: piece.donnees } })),
-    { text: question.trim() },
-  ];
-  const contenus = [
-    ...(Array.isArray(historique) ? historique : []).map((tour) => ({
-      role: tour.role === "assistant" ? "model" : "user",
-      parts: [{ text: tour.texte }],
-    })),
-    { role: "user", parts: partiesUtilisateur },
-  ];
+  const historiqueTexte = (Array.isArray(historique) ? historique : [])
+    .map((tour) => `${tour.role === "assistant" ? "Assistant" : "Utilisateur"} : ${tour.texte}`)
+    .join("\n");
+  const entree: Array<Record<string, unknown>> = [];
+  if (historiqueTexte) {
+    entree.push({
+      type: "text",
+      text: `Historique de la conversation à prendre en compte comme contexte :\n${historiqueTexte}`,
+    });
+  }
+  for (const piece of piecesJointes) {
+    entree.push({ type: "text", text: `Document joint à cette demande : ${piece.nom} (${piece.type})` });
+    if (piece.type.startsWith("image/")) {
+      entree.push({ type: "image", mime_type: piece.type, data: piece.donnees });
+    } else if (piece.type === "application/pdf") {
+      entree.push({ type: "document", mime_type: piece.type, data: piece.donnees });
+    } else {
+      const octets = Uint8Array.from(atob(piece.donnees), (caractere) => caractere.charCodeAt(0));
+      entree.push({ type: "text", text: `Contenu du fichier ${piece.nom} :\n${new TextDecoder().decode(octets)}` });
+    }
+  }
+  entree.push({ type: "text", text: question.trim() });
 
   let reponse: Response;
   const debutAppel = Date.now();
   try {
-    reponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODELE}:generateContent`,
-      {
+    reponse = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
       method: "POST",
       headers: {
         "x-goog-api-key": CLE_GEMINI,
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systeme }] },
-        contents: contenus,
-        tools: [{ googleSearch: {} }],
-        generationConfig: {
-          maxOutputTokens: 4096,
-          temperature: 0.2,
-          thinkingConfig: { thinkingBudget: 512 },
-        },
+        model: MODELE,
+        input: entree,
+        system_instruction: systeme,
+        tools: [{ type: "google_search" }],
+        // Les demandes et pièces jointes personnelles ne sont pas conservées chez Google.
+        store: false,
       }),
     });
   } catch {
     console.warn("[assistant-coffre] Gemini indisponible", JSON.stringify({ modele: MODELE }));
     return reponseJson({ erreur: "Gemini est momentanément injoignable. Réessaie dans un instant." }, 502, origin);
   }
-  // Journal minimal sans texte de la demande, noms, contenus, identifiants ni clé.
+  if (!reponse.ok) {
+    const detail = await reponse.text();
+    console.warn("[assistant-coffre] erreur Gemini", JSON.stringify({ modele: MODELE, statut: reponse.status }));
+    return reponseJson({ erreur: `Appel Gemini en échec (${reponse.status}) : ${detail.slice(0, 300)}` }, 502, origin);
+  }
+
+  const donneesReponse = await reponse.json();
+  const etapes = Array.isArray(donneesReponse?.steps) ? donneesReponse.steps : [];
+  const sorties = etapes.filter((etape: { type?: string }) => etape.type === "model_output");
+  const parties: Array<{ type?: string; text?: string }> = sorties.flatMap(
+    (etape: { content?: Array<{ type?: string; text?: string }> }) =>
+      Array.isArray(etape.content) ? etape.content : [],
+  );
+  const rechercheWebEffectuee = etapes.some(
+    (etape: { type?: string }) => etape.type === "google_search_call" || etape.type === "google_search_result",
+  );
+  const texte = parties.filter((partie) => partie.type === "text").map((partie) => partie.text ?? "").join("\n");
   console.info("[assistant-coffre] réponse Gemini", JSON.stringify({
     modele: MODELE,
     statut: reponse.status,
     dureeMs: Date.now() - debutAppel,
     nombrePiecesJointes: piecesJointes.length,
   }));
-
-  if (!reponse.ok) {
-    const detail = await reponse.text();
-    return reponseJson({ erreur: `Appel Gemini en échec (${reponse.status}) : ${detail.slice(0, 300)}` }, 502, origin);
-  }
-
-  const donneesReponse = await reponse.json();
-  const candidat = donneesReponse?.candidates?.[0];
-  const parties: Array<{ text?: string }> = candidat?.content?.parts ?? [];
-  const rechercheWebEffectuee = Boolean(
-    candidat?.groundingMetadata?.webSearchQueries?.length
-    || candidat?.groundingMetadata?.groundingChunks?.length,
-  );
-  const texte = parties.map((partie) => partie.text ?? "").join("\n");
-
   try {
     const debut = texte.indexOf("{");
     const fin = texte.lastIndexOf("}");
