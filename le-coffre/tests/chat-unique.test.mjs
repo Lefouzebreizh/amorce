@@ -3,15 +3,21 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
 const page = fs.readFileSync(new URL('../src/app/coffre/page.tsx', import.meta.url), 'utf8');
+const assistant = fs.readFileSync(new URL('../src/app/coffre/AssistantCoffre.tsx', import.meta.url), 'utf8');
 
-test('la saisie initiale est démontée lorsque la conversation est ouverte', () => {
-  const debutSaisieInitiale = page.indexOf('{!assistantOuvert && (');
-  const debutConversation = page.indexOf('{assistantOuvert && (', debutSaisieInitiale);
+test('le tableau de bord conserve un seul copilote dans le flux', () => {
+  assert.equal((page.match(/<AssistantCoffre\\b/g) || []).length, 1, 'le tableau de bord doit monter un seul chat');
+  assert.doesNotMatch(page, /assistantOuvert|questionAssistant|demanderAAssistant/, 'aucun second formulaire de chat ne doit subsister');
+});
 
-  assert.ok(debutSaisieInitiale >= 0, 'condition de la saisie initiale introuvable');
-  assert.ok(debutConversation > debutSaisieInitiale, 'condition de la conversation introuvable');
+test('le champ du chat reste sélectionnable dans l’aperçu, sans envoyer à Gemini', () => {
+  const debutComposer = assistant.indexOf('<form onSubmit={envoyer}');
+  const finComposer = assistant.indexOf('</form>', debutComposer);
+  assert.ok(debutComposer >= 0 && finComposer > debutComposer, 'champ et bouton d’envoi introuvables');
 
-  const saisieInitiale = page.slice(debutSaisieInitiale, debutConversation);
-  assert.match(saisieInitiale, /<form[\s\S]*type="search"/);
-  assert.match(saisieInitiale, /demanderAAssistant\(recherche\.trim\(\)\)/);
+  const composer = assistant.slice(debutComposer, finComposer);
+  assert.match(composer, /disabled={enCours}/, 'seul un envoi en cours doit désactiver le champ');
+  assert.match(composer, /disabled={modeDemo \\|\\| enCours \\|\\| !question\\.trim\\(\\)}/, 'l’envoi doit rester désactivé en démo');
+
+  assert.match(assistant, /if \\(!texte \\|\\| enCours \\|\\| modeDemo\\) return/, 'la démo ne doit jamais appeler Gemini');
 });
