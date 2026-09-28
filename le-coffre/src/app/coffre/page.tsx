@@ -1909,11 +1909,11 @@ export default function PageCoffre() {
           ? joursRestants(info.echeance.date) : null;
         return (
           <div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-ink/60 p-0 sm:items-center sm:p-6"
+            className="coffre-detail fixed inset-0 z-50 flex items-end justify-center bg-ink/60 p-0 sm:items-center sm:p-6"
             onClick={fermerDetail}
           >
             <div
-              className="max-h-[85vh] w-full overflow-y-auto rounded-t-3xl border border-line bg-paper-raised p-6 sm:max-w-lg sm:rounded-3xl"
+              className="coffre-detail__panel max-h-[85vh] w-full overflow-y-auto rounded-t-3xl border border-line bg-paper-raised p-6 sm:max-w-lg sm:rounded-3xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex flex-col gap-5">
@@ -1934,9 +1934,17 @@ export default function PageCoffre() {
                   </button>
                 </div>
 
-                {utilisateur && cle && (
+                {utilisateur && cle && (modeDemo ? (
+                  <div className="coffre-demo-document flex items-start gap-3 rounded-2xl border p-4" role="status">
+                    <FileText size={20} className="mt-0.5 shrink-0" aria-hidden="true" />
+                    <div>
+                      <p className="font-semibold">Document d’exemple</p>
+                      <p className="mt-1 text-sm">Cette facture est fictive : aucun fichier n’est stocké dans la démo. Le rappel ci-dessous illustre une échéance et ne peut pas ouvrir de véritable aperçu.</p>
+                    </div>
+                  </div>
+                ) : (
                   <FichePreview key={detailOuvert} nom={detailOuvert} info={info} userId={utilisateur.id} cle={cle} />
-                )}
+                ))}
 
                 {jours !== null && info.echeance && (
                   <div className="flex flex-col gap-2">
@@ -1995,7 +2003,7 @@ export default function PageCoffre() {
                   </div>
                 )}
 
-                <div className="flex flex-col gap-2 rounded-2xl border border-line p-4">
+                {!modeDemo && (\n                <div className="flex flex-col gap-2 rounded-2xl border border-line p-4">
                   <p className="text-sm font-medium text-ink-soft">Corriger le classement</p>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <div className="flex-1">
@@ -2018,16 +2026,16 @@ export default function PageCoffre() {
                     className="self-start rounded-lg bg-bleu px-4 py-2 text-sm font-semibold text-paper transition hover:bg-bleu-strong disabled:opacity-60">
                     Enregistrer
                   </button>
-                </div>
-
-                <div className="flex gap-4 text-sm">
-                  <button onClick={() => telecharger(detailOuvert)} className="text-accent hover:underline">
-                    Télécharger
-                  </button>
-                  <button onClick={() => supprimer(detailOuvert)} className="text-wine hover:underline">
-                    Supprimer
-                  </button>
-                </div>
+                </div>\n                )}\n\n                {!modeDemo && (
+                  <div className="flex gap-4 text-sm">
+                    <button onClick={() => telecharger(detailOuvert)} className="text-accent hover:underline">
+                      Télécharger
+                    </button>
+                    <button onClick={() => supprimer(detailOuvert)} className="text-wine hover:underline">
+                      Supprimer
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
