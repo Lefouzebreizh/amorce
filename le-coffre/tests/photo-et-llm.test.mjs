@@ -67,7 +67,7 @@ test('le copilote appelle Gemini sans envoyer la liste des documents du coffre',
   assert.match(coffre, /body: \{ question, historique, piecesJointes \}/);
   assert.doesNotMatch(coffre, /documents: digestIndex\(index\)/);
   assert.doesNotMatch(coffre, /return repliLocal/);
-  assert.match(assistant, /const MODELE = "gemini-2\.5-flash"/);
+  assert.match(assistant, /const MODELE = "gemini-3\.8-flash"/);
   assert.match(assistantUi, /documentsDisponibles/);
 });
 
@@ -75,13 +75,16 @@ test('Gemini ne reçoit que les pièces jointes choisies, sous des types et une 
   assert.match(assistant, /piecesJointes\?: PieceJointe\[\]/);
   assert.match(assistant, /TYPES_JOINTS/);
   assert.match(assistant, /MAX_TAILLE_JOINTES/);
-  assert.match(assistant, /inlineData: \{ mimeType: piece.type, data: piece.donnees \}/);
+  assert.match(assistant, /type: "image", mime_type: piece.type, data: piece.donnees/);
+  assert.match(assistant, /type: "document", mime_type: piece.type, data: piece.donnees/);
   assert.match(assistant, /nomsSelectionnes/);
 });
 
 test('la fonction LLM utilise le modèle généraliste actuel et ses outils', () => {
-  assert.match(assistant, /const MODELE = "gemini-2\.5-flash"/);
-  assert.match(assistant, /googleSearch/);
+  assert.match(assistant, /const MODELE = "gemini-3\.8-flash"/);
+  assert.match(assistant, /v1beta\/interactions/);
+  assert.match(assistant, /type: "google_search"/);
+  assert.match(assistant, /store: false/);
   assert.match(assistant, /GEMINI_API_KEY/);
   assert.match(assistant, /vrai copilote généraliste/);
   assert.match(assistant, /\[assistant-coffre\] réponse Gemini/);
@@ -92,7 +95,6 @@ test('la fonction LLM utilise le modèle généraliste actuel et ses outils', ()
 
 test('aucune fonction IA du coffre ne dépend encore de Claude', () => {
   for (const fonction of [assistant, classement, formulaire]) {
-    assert.match(fonction, /const MODELE = "gemini-2\.5-flash"/);
     assert.match(fonction, /GEMINI_API_KEY/);
     assert.doesNotMatch(fonction, /ANTHROPIC_API_KEY|api\.anthropic\.com|claude-sonnet/);
   }
