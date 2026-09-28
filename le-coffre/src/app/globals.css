@@ -440,3 +440,241 @@ input.border-line.bg-paper-raised {
   .coffre-question__badge { align-self: flex-start; }
   .coffre-question__privacy { align-items: flex-start; }
 }
+
+
+/* Direction « cocon clair » — le tiroir reste ouvert sur sa scène marine,
+   tandis que l’espace de travail devient lumineux, doux et facile à lire. */
+.coffre-page {
+  color-scheme: light;
+  --color-paper: #f3f7f8;
+  --color-paper-raised: #ffffff;
+  --color-ink: #183247;
+  --color-ink-soft: #536b7d;
+  --color-line: #d9e5eb;
+  --color-accent: #087d78;
+  --color-accent-strong: #2fc4b2;
+  --color-violet: #6743a8;
+  --color-vert: #117a5d;
+  --color-bleu: #176b8b;
+  --color-bleu-strong: #2794a3;
+  --color-wine: #b43e60;
+  overflow: clip;
+  color: var(--color-ink);
+  background:
+    radial-gradient(ellipse at 8% 12%, rgb(125 223 214 / .20), transparent 32rem),
+    radial-gradient(ellipse at 94% 36%, rgb(196 178 239 / .18), transparent 34rem),
+    linear-gradient(180deg, #f6fafb 0%, #f2f6f8 48%, #f8f7fb 100%) !important;
+}
+.coffre-page::before { background: radial-gradient(circle, rgb(124 58 237 / .10), transparent 68%); }
+.coffre-page::after { background: radial-gradient(circle, rgb(64 190 178 / .12), transparent 68%); }
+.coffre-shell { gap: clamp(1.5rem, 2.6vw, 2.2rem) !important; }
+.coffre-topbar { padding-inline: .35rem; }
+.coffre-wordmark { color: #183247; }
+.coffre-wordmark span { color: #087d78; }
+.coffre-private {
+  border-color: #cfe4e2;
+  color: #236965;
+  background: rgb(255 255 255 / .78);
+  box-shadow: 0 5px 18px -14px #426b78;
+}
+.coffre-hero--scene {
+  border-color: rgb(168 203 215 / .65) !important;
+  background: linear-gradient(125deg, #16334a 0%, #214e60 48%, #4e4779 100%) !important;
+  box-shadow: 0 1.7rem 3.8rem -3rem rgb(24 50 71 / .52), 0 1px 0 rgb(255 255 255 / .15) inset;
+}
+.coffre-hero--scene::before {
+  background:
+    radial-gradient(circle at 84% 50%, rgb(111 242 220 / .22), transparent 28%),
+    linear-gradient(100deg, transparent 42%, rgb(176 153 255 / .13), transparent 78%);
+}
+.coffre-hero__content > p.text-accent { color: #83eee0; }
+.coffre-hero__content > p.text-vert { color: #b8f1d8; }
+.coffre-repere {
+  border-color: rgb(226 242 250 / .28);
+  background: rgb(11 31 48 / .58);
+}
+.coffre-hero__actions > button {
+  border-color: rgb(223 241 248 / .42);
+  color: #effaff;
+  background: rgb(13 36 53 / .54);
+}
+.coffre-hero__actions > button:hover { border-color: #8cebdd; background: rgb(18 55 72 / .78); }
+
+.coffre-question {
+  padding: clamp(1.2rem, 2.5vw, 2rem) !important;
+  border-color: #d6e5e9 !important;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgb(209 196 246 / .23), transparent 31rem),
+    linear-gradient(135deg, #ffffff 0%, #f7fbfc 66%, #f1f8f8 100%) !important;
+  box-shadow: 0 1.25rem 3rem -2.2rem rgb(39 73 92 / .36), 0 1px 0 #fff inset;
+}
+.coffre-kicker { color: #087d78; }
+.coffre-question__lead { color: #536b7d; }
+.coffre-question__badge {
+  border-color: #d9d0ef;
+  color: #5d448f;
+  background: #f4f0fb;
+}
+.assistant-panel {
+  border-color: #d8e4e9 !important;
+  background: linear-gradient(155deg, #ffffff 0%, #fbfdfe 100%) !important;
+  box-shadow: 0 1.4rem 3rem -2.2rem rgb(44 75 91 / .34), 0 1px 0 #fff inset;
+}
+.assistant-panel__header {
+  border-bottom-color: #e3ecef;
+  background: linear-gradient(100deg, #eaf8f6 0%, #f7f5fc 58%, #ffffff 100%);
+}
+.assistant-panel__avatar {
+  border-color: #c5e6e2;
+  color: #087d78;
+  background: linear-gradient(145deg, #e2f7f4, #f0eafa);
+  box-shadow: 0 8px 22px -16px rgb(8 125 120 / .48);
+}
+.assistant-panel__status { color: #526b7d !important; }
+.assistant-panel__demo {
+  border-color: #d8d1ef;
+  color: #443b5a;
+  background: linear-gradient(110deg, #f0faf8, #f4f0fb);
+}
+.assistant-panel__demo a {
+  color: #5d3c9d;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: .18rem;
+}
+.assistant-panel__demo a:hover { color: #087d78; }
+.assistant-panel__messages {
+  background: linear-gradient(180deg, #f8fbfc 0%, #ffffff 100%);
+}
+.assistant-panel__empty {
+  border-color: #dce7eb !important;
+  background: linear-gradient(135deg, #f1f9f8, #f7f4fc) !important;
+  color: #536b7d !important;
+}
+.assistant-panel__empty p:first-child { color: #183247 !important; }
+.assistant-panel__messages li > div.bg-bleu {
+  color: #082c32;
+  box-shadow: 0 8px 22px -18px rgb(8 125 120 / .6);
+}
+.assistant-panel__messages li > div.border-line.bg-paper {
+  border-color: #dce7eb;
+  color: #233d51;
+  background: #ffffff;
+}
+.assistant-panel__composer {
+  border-top-color: #e0e9ed;
+  background: #ffffff;
+}
+.assistant-panel__composer input {
+  border-color: #cddde4;
+  color: #183247;
+  background: #f8fbfc;
+  box-shadow: 0 1px 2px rgb(26 59 77 / .04) inset;
+}
+.assistant-panel__composer input::placeholder { color: #718594; opacity: 1; }
+.assistant-panel__composer input:focus-visible {
+  border-color: #168c83;
+  outline: 3px solid rgb(22 140 131 / .16);
+  outline-offset: 1px;
+  box-shadow: 0 0 0 1px #168c83;
+}
+.assistant-panel__send {
+  border-color: #52bfb4;
+  background: linear-gradient(130deg, #a3eee3, #bce7f2);
+  color: #123541;
+  box-shadow: 0 9px 22px -16px rgb(8 125 120 / .65);
+}
+.assistant-panel__send:hover:not(:disabled) {
+  border-color: #168c83;
+  background: linear-gradient(130deg, #8de4d8, #a9ddec);
+  box-shadow: 0 10px 24px -15px rgb(8 125 120 / .48);
+}
+.assistant-panel__send:disabled {
+  border-color: #d6e0e5;
+  background: #e8eef1;
+  color: #687d8a;
+}
+.assistant-panel__sources {
+  border-color: #dce7eb;
+  color: #334f62;
+  background: #f7fafb;
+}
+.assistant-panel__sources summary { color: #31536a; }
+.assistant-panel__sources input[type='checkbox'] { accent-color: #168c83; }
+
+.coffre-command {
+  border-color: #d9e5eb;
+  background:
+    radial-gradient(ellipse at 92% 0%, rgb(215 204 246 / .26), transparent 25rem),
+    linear-gradient(135deg, #ffffff 0%, #f6fafb 75%);
+  box-shadow: 0 1.3rem 3rem -2.2rem rgb(39 73 92 / .32), 0 1px 0 #fff inset;
+}
+.coffre-command::before { background: radial-gradient(circle, rgb(81 201 188 / .16), transparent 65%); }
+.coffre-command::after { background: linear-gradient(105deg, transparent 46%, rgb(38 89 110 / .04) 46.2%, transparent 46.7%); }
+.coffre-command__intro h2 { color: #183247; }
+.coffre-command__intro > p:last-child,
+.coffre-command__privacy { color: #5b7282; }
+.coffre-action {
+  border-color: #d7e4e9;
+  color: #203c50;
+  background: linear-gradient(120deg, #ffffff, #f4f9fa);
+  box-shadow: 0 10px 24px -20px rgb(31 74 96 / .45), 0 1px 0 #fff inset;
+  transition: border-color .22s ease, background .22s ease, box-shadow .22s ease;
+}
+.coffre-action:hover {
+  border-color: #70c9bf;
+  color: #183247;
+  background: linear-gradient(120deg, #f0fbf9, #f5f1fc);
+  box-shadow: 0 14px 26px -21px rgb(27 109 111 / .55), 0 0 0 3px rgb(64 224 208 / .09);
+  transform: none;
+}
+.coffre-action--primary {
+  border-color: #a8dad4;
+  background: linear-gradient(120deg, #e8f8f5, #f2f0fa);
+  box-shadow: 0 13px 27px -21px rgb(27 109 111 / .42), 0 1px 0 #fff inset;
+}
+.coffre-action__icon {
+  border-color: #c9e9e4;
+  color: #087d78;
+  background: linear-gradient(135deg, #e4f8f4, #f1eafb);
+  box-shadow: 0 1rem 2rem -1.25rem rgb(8 125 120 / .42);
+}
+.coffre-action__copy small { color: #5b7282; }
+.coffre-action__arrow { color: #668092; }
+
+.coffre-vitals { border-color: #d8e4e9; }
+.coffre-vital::after { opacity: .45; }
+.studio-documents {
+  border: 1px solid #dce7eb;
+  background: linear-gradient(145deg, #ffffff, #f7fafb);
+  box-shadow: 0 1.2rem 3rem -2.2rem rgb(39 73 92 / .32);
+}
+.studio-folder {
+  border-color: #dce7eb !important;
+  background: rgb(248 251 252 / .92) !important;
+  box-shadow: 0 7px 18px -17px rgb(39 73 92 / .35) !important;
+}
+.studio-folder::before { opacity: .2; }
+.coffre-page .rounded-2xl.border-line.bg-paper-raised:not(.coffre-vital) {
+  border-color: #dce7eb;
+  background: linear-gradient(145deg, #ffffff, #f7fafb);
+}
+.coffre-page button:focus-visible,
+.coffre-page a:focus-visible,
+.coffre-page input:focus-visible,
+.coffre-page summary:focus-visible {
+  outline: 3px solid #168c83;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 2px #fff;
+}
+.coffre-page button:not(:disabled),
+.coffre-page a { -webkit-tap-highlight-color: rgb(8 125 120 / .12); }
+@media (max-width: 700px) {
+  .coffre-shell { padding-inline: 1rem !important; }
+  .coffre-question { border-radius: 1.35rem !important; }
+  .assistant-panel { border-radius: 1.25rem !important; }
+  .assistant-panel__composer { padding: .8rem; }
+  .assistant-panel__composer input { min-height: 3.15rem; }
+  .assistant-panel__send { min-width: 3.25rem; padding-inline: .9rem; }
+  .assistant-panel__send span { display: none; }
+}
