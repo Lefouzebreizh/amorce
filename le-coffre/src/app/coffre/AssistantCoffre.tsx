@@ -208,7 +208,7 @@ export function AssistantCoffre({
         <div role="status" className="assistant-panel__demo mx-4 mt-4 flex items-start gap-3 rounded-2xl border p-4">
           <ShieldCheck size={19} className="mt-0.5 shrink-0" />
           <p className="text-sm">
-            Cet aperçu utilise un compte et des papiers fictifs. Connecte-toi à ton vrai coffre pour envoyer une demande à Gemini ; aucun message ni document ne partira depuis cette démo.
+            Cet aperçu utilise un compte et des papiers fictifs. Tu peux écrire dans le champ pour préparer ta question, mais l’envoi est réservé à ta session réelle. Aucun message ni document ne partira depuis cette démo.
           </p>
         </div>
       )}
@@ -463,8 +463,8 @@ export function AssistantCoffre({
             type="text"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder={modeDemo ? 'Connecte-toi à ton vrai coffre pour écrire à Gemini' : "Écris comme tu parlerais à quelqu'un…"}
-            disabled={modeDemo || enCours}
+            placeholder={modeDemo ? 'Brouillon uniquement · ouvre ta session pour envoyer' : "Écris comme tu parlerais à quelqu'un…"}
+            disabled={enCours}
             className="min-w-0 flex-1 rounded-xl border border-line bg-paper px-4 py-3 text-base outline-none transition focus:border-accent focus:ring-1 focus:ring-accent disabled:opacity-60"
           />
           <button
