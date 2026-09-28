@@ -203,7 +203,7 @@ export function AssistantCoffre({
             <p className="text-sm font-semibold text-ink">Copilote du tiroir</p>
             <p className="assistant-panel__status flex items-center gap-2 text-sm text-ink-soft">
               <Sparkles size={15} />
-              {modeDemo ? 'Aperçu de démonstration · envoi désactivé' : `Gemini 2.5 Flash · ${geminiConfirme ? 'connexion vérifiée' : 'à la demande'}`}
+              {modeDemo ? 'Aperçu de démonstration · envoi désactivé' : `Gemini 3.8 Flash · ${geminiConfirme ? 'connexion vérifiée' : 'à la demande'}`}
             </p>
           </div>
         </div>
