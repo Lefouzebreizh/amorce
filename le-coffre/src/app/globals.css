@@ -678,3 +678,49 @@ input.border-line.bg-paper-raised {
   .assistant-panel__send { min-width: 3.25rem; padding-inline: .9rem; }
   .assistant-panel__send span { display: none; }
 }
+
+
+/* Lisibilité des zones qui s'ouvrent au-dessus du tableau de bord clair. */
+.coffre-detail__panel {
+  border-color: #d8e4e9 !important;
+  background: #fff !important;
+  color: #183247 !important;
+  box-shadow: 0 1.5rem 5rem rgb(19 42 58 / .22);
+}
+.coffre-detail__panel .text-ink-soft { color: #536b7d !important; }
+.coffre-detail__panel .text-ink { color: #183247 !important; }
+.coffre-detail__panel .bg-paper { background: #f7fafb !important; color: #183247 !important; }
+.coffre-detail__panel input,
+.coffre-detail__panel textarea,
+.coffre-detail__panel select {
+  border-color: #cddde4 !important;
+  background: #fff !important;
+  color: #183247 !important;
+  -webkit-text-fill-color: #183247 !important;
+}
+.coffre-demo-document {
+  border-color: #cfe4e2;
+  color: #254c55;
+  background: linear-gradient(125deg, #eef9f7, #f5f2fb);
+}
+.coffre-demo-document > svg { color: #087d78; }
+
+.coffre-page .assistant-panel__composer input[type='text'] {
+  border-color: #c6d8e0 !important;
+  background: #fff !important;
+  color: #183247 !important;
+  -webkit-text-fill-color: #183247 !important;
+  opacity: 1 !important;
+  color-scheme: light;
+}
+.coffre-page .assistant-panel__composer input[type='text']::placeholder {
+  color: #657c8a !important;
+  -webkit-text-fill-color: #657c8a !important;
+  opacity: 1 !important;
+}
+.coffre-page .assistant-panel__composer input[type='text']:disabled {
+  background: #f1f5f6 !important;
+  color: #536b7d !important;
+  -webkit-text-fill-color: #536b7d !important;
+}
+.coffre-page .assistant-panel__messages li > div { color: #233d51; }
