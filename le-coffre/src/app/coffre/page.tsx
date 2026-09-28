@@ -1940,7 +1940,7 @@ export default function PageCoffre() {
                     <FileText size={20} className="mt-0.5 shrink-0" aria-hidden="true" />
                     <div>
                       <p className="font-semibold">Document d’exemple</p>
-                      <p className="mt-1 text-sm">Cette facture est fictive : aucun fichier n’est stocké dans la démo. Le rappel ci-dessous illustre une échéance et ne peut pas ouvrir de véritable aperçu.</p>
+                      <p className="mt-1 text-sm">Ce document est fictif : aucun fichier n’est stocké dans la démo. Le rappel ci-dessous illustre une échéance et ne peut pas ouvrir de véritable aperçu.</p>
                     </div>
                   </div>
                 ) : (
@@ -1956,14 +1956,16 @@ export default function PageCoffre() {
                           {info.echeance.libelle} — {formatJours(jours)} ({info.echeance.date})
                         </span>
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => ecarter(detailOuvert)}
-                        disabled={enCours}
-                        className="text-xs text-ink-soft underline decoration-dotted transition hover:text-wine disabled:opacity-60"
-                      >
-                        Ce n&apos;est pas une échéance
-                      </button>
+                      {!modeDemo && (
+                        <button
+                          type="button"
+                          onClick={() => ecarter(detailOuvert)}
+                          disabled={enCours}
+                          className="text-xs text-ink-soft underline decoration-dotted transition hover:text-wine disabled:opacity-60"
+                        >
+                          Ce n&apos;est pas une échéance
+                        </button>
+                      )}
                     </div>
                     <JaugeEcheance jours={jours} />
                   </div>
