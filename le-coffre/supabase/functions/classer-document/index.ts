@@ -11,7 +11,7 @@
 // caractères) — voir SECURITY.md, section « L'assistant conversationnel ».
 
 const CLE_GEMINI = Deno.env.get("GEMINI_API_KEY") ?? Deno.env.get("GOOGLE_API_KEY");
-const MODELE = "gemini-3.8-flash";
+const MODELE = "gemini-3.5-flash";
 
 const ORIGINES_AUTORISEES = new Set([
   "https://coffre-puce.vercel.app",

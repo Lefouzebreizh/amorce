@@ -44,7 +44,7 @@ test('si Gemini échoue, la photo de la caméra reste dans la file à vérifier'
 });
 
 test('le classement photo utilise le modèle Gemini actuel avec un raisonnement léger', () => {
-  assert.match(classement, /const MODELE = "gemini-3\.8-flash"/);
+  assert.match(classement, /const MODELE = "gemini-3\.5-flash"/);
   assert.match(classement, /thinkingConfig: \{ thinkingLevel: "low" \}/);
   assert.match(classement, /responseMimeType: "application\/json"/);
   assert.doesNotMatch(classement, /thinkingBudget|temperature:/);
