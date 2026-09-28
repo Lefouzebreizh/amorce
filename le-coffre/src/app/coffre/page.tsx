@@ -388,7 +388,8 @@ export default function PageCoffre() {
   const [etape, setEtape] = useState<Etape>('chargement');
   const [animationActive, setAnimationActive] = useState(true);
   const [cle, setCle] = useState<CryptoKey | null>(null);
-  const [index, setIndex] = useState<IndexCoffre>({ objets: {}, rendezVous: {} });\n  const modeDemo = utilisateur?.id === 'demo-local';
+  const [index, setIndex] = useState<IndexCoffre>({ objets: {}, rendezVous: {} });
+  const modeDemo = utilisateur?.id === 'demo-local';
   const [erreur, setErreur] = useState('');
   const [enCours, setEnCours] = useState(false);
   const [aValider, setAValider] = useState<EnAttente[]>([]);
