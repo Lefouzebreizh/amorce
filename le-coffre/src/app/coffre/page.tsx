@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import {
   ArrowUpRight, Bell, Bot, Briefcase, Camera, Car, CheckCircle2, ChevronRight, File, FileText, Folder,
-  FolderUp, Heart, Home, Landmark, LoaderCircle, LogOut, MessageCircle, ScanLine, Shield, ShieldCheck,
+  FolderUp, Heart, Home, Landmark, LoaderCircle, LogOut, ScanLine, Shield, ShieldCheck,
   Sparkles, Upload, Wallet, Wifi, X, Zap, type LucideIcon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -14,7 +14,7 @@ import {
   analyserDocumentPourClassement, coffreExiste, deposerFichier, deverrouillerCoffre, initialiserCoffre, recupererFichier,
   supprimerFichier, chargerIndex, proposerClassement, ajouterRendezVous, supprimerRendezVous,
   enregistrerIdentite, composerLettreResiliation, modifierObjet, modifierPlusieursObjets, ecarterEcheance, statutEcheance,
-  interpreterQuestion, genererICS, SEUIL_BIENTOT_JOURS, clesParNomAffiche,
+  genererICS, SEUIL_BIENTOT_JOURS, clesParNomAffiche,
   categorieInstantanee, recupererFormulaireCerfa, separerPdfParDocuments, suggererChampsFormulaire,
   digestIndex, type DigestDocument, type IndexCoffre, type Echeance, type Identite, type StatutEcheance, type ObjetIndex, type ActionAssistant,
 } from '@/lib/coffre';
@@ -389,6 +389,7 @@ export default function PageCoffre() {
   const [animationActive, setAnimationActive] = useState(true);
   const [cle, setCle] = useState<CryptoKey | null>(null);
   const [index, setIndex] = useState<IndexCoffre>({ objets: {}, rendezVous: {} });
+  const modeDemo = utilisateur?.id === 'demo-local';
   const [erreur, setErreur] = useState('');
   const [enCours, setEnCours] = useState(false);
   const [aValider, setAValider] = useState<EnAttente[]>([]);
@@ -409,12 +410,7 @@ export default function PageCoffre() {
   // remis à undefined à la fermeture pour ne pas réutiliser un formulaire
   // périmé au prochain « Remplir un formulaire ».
   const [formulairePrerempli, setFormulairePrerempli] = useState<FormulairePreRempli | undefined>(undefined);
-  const [assistantOuvert, setAssistantOuvert] = useState(false);
-  // Posée par la barre de recherche du haut quand elle n'a rien trouvé
-  // localement, ou vide pour une question ouverte — voir demanderAAssistant.
-  const [questionAssistant, setQuestionAssistant] = useState('');
   const [filtreCategorie, setFiltreCategorie] = useState<string | null>(null);
-  const [recherche, setRecherche] = useState('');
   // Vue par défaut demandée le 10/09/2026 : des dossiers repliés, jamais la
   // liste plate — avec des centaines de papiers, une liste continue oblige à
   // défiler longtemps avant d'atteindre ce qui vit en dessous (rendez-vous,
@@ -937,23 +933,6 @@ export default function PageCoffre() {
     }
   }
 
-  // Point d'entrée unique vers l'assistant, depuis la barre de recherche :
-  // avec une question, elle vient d'une recherche locale restée sans
-  // résultat (ou sans rapport avec un document précis) et part directement
-  // en premier message ; vide, le chat s'ouvre à blanc comme avant. Vide la
-  // recherche locale pour ne pas laisser un texte de recherche périmé une
-  // fois le chat refermé.
-  function demanderAAssistant(question: string) {
-    setQuestionAssistant(question);
-    setAssistantOuvert(true);
-    setRecherche('');
-  }
-
-  function fermerAssistant() {
-    setAssistantOuvert(false);
-    setQuestionAssistant('');
-  }
-
   // Exécute une action que l'assistant a proposée (classer, supprimer) —
   // jamais depuis le serveur, qui n'a ni la clé de chiffrement ni le
   // fichier : le nom affiché envoyé à l'assistant se résout d'abord vers sa
@@ -1018,7 +997,6 @@ export default function PageCoffre() {
       sourcesTransmises: clesSelectionnees.map((cleDocument) => index.objets[cleDocument]?.nom).filter((nom): nom is string => Boolean(nom)),
     });
     setFormulaireOuvert(true);
-    fermerAssistant();
   }
 
   async function enregistrerCorrection() {
@@ -1272,19 +1250,13 @@ export default function PageCoffre() {
   const categoriesSuggerees = Array.from(
     new Set([...Object.keys(STYLE_CATEGORIE), ...categoriesConnues]),
   ).sort((a, b) => a.localeCompare(b, 'fr'));
-  // interpreterQuestion comprend « mes photos », « un pdf », un mot isolé, ou
-  // une phrase complète (« le papier de la mutuelle ») — rechercheCorrespond
-  // reste utilisée telle quelle à l'intérieur, pour chaque mot-clé retenu.
-  const { reponse: reponseRecherche, noms: nomsTrouves, action: actionRecherche } = interpreterQuestion(index, recherche);
   // Dérivé plutôt que synchronisé par effet : un filtre qui ne correspond
   // plus à aucun papier (tri automatique, correction, suppression — tout ce
   // qui a fait migrer les papiers d'une catégorie devenue vide) s'efface de
   // lui-même au rendu suivant, sans laisser un « 0 sur N » sur un choix que
   // l'utilisateur n'a pas refait lui-même.
   const filtreCategorieEffectif = filtreCategorie && categoriesConnues.includes(filtreCategorie) ? filtreCategorie : null;
-  const noms = tousLesNoms
-    .filter((n) => !filtreCategorieEffectif || index.objets[n]?.categorie === filtreCategorieEffectif)
-    .filter((n) => nomsTrouves.includes(n));
+  const noms = tousLesNoms.filter((n) => !filtreCategorieEffectif || index.objets[n]?.categorie === filtreCategorieEffectif);
   // Un dossier par catégorie déjà utilisée sur ces papiers, « À trier »
   // toujours en dernier — jamais une liste fermée, juste ce qui existe dans
   // les papiers affichés (mêmes filtres que la vue liste).
@@ -1417,123 +1389,55 @@ export default function PageCoffre() {
             moment où avoir un point d'entrée pour demander de l'aide compte
             le plus. Elle est désormais toujours affichée, centrée dans son
             propre bloc plutôt que collée au bord supérieur de l'écran. */}
-        <div id="assistant-du-tiroir" className="coffre-question rounded-3xl border border-line bg-paper-raised p-6 sm:p-7">
+        <section id="assistant-du-tiroir" className="coffre-question rounded-3xl border border-line bg-paper-raised p-6 sm:p-7" aria-labelledby="titre-copilote">
           <div className="coffre-question__heading">
             <div>
-              <p className="coffre-kicker"><Bot size={15} /> Copilote LLM</p>
-              <p className="coffre-question__title font-affiche text-xl texte-degrade sm:text-2xl">
-                Un vrai copilote Gemini, pour tout ce que tu as en tête.
-              </p>
+              <p className="coffre-kicker"><Bot size={18} /> Copilote du tiroir</p>
+              <h2 id="titre-copilote" className="coffre-question__title font-affiche text-2xl texte-degrade sm:text-3xl">
+                Tes démarches et tes papiers, au même endroit.
+              </h2>
             </div>
-            <span className="coffre-question__badge">Comprend · raisonne · agit</span>
+            <span className="coffre-question__badge"><Sparkles size={15} /> Une conversation, un seul fil</span>
           </div>
           <p className="coffre-question__lead">
-            Rédige, résume, compare, comprends une démarche, prépare un courrier ou explore une question récente. Ajoute seulement les documents que tu veux lui faire lire.
+            Pose ta question, demande de l’aide pour une démarche ou joins les papiers que tu veux faire analyser. C’est ici que la conversation commence et continue.
           </p>
-          {/* Un seul champ est monté à la fois. La saisie initiale disparaît
-              dès que la conversation s'ouvre ; le champ du fil devient alors
-              l'unique point de saisie, jusqu'à la fermeture du fil. */}
-          {!assistantOuvert && (
-            <>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (recherche.trim()) demanderAAssistant(recherche.trim());
-                }}
-                className="relative"
-              >
-                {/* Bulle de discussion plutôt qu'une loupe (10/09/2026) : cette
-                    barre interroge un assistant en langage naturel, elle ne
-                    filtre pas une liste par mots-clés — la loupe suggérait le
-                    mauvais geste. */}
-                <MessageCircle size={20} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-soft" />
-                <input
-                  type="search"
-                  value={recherche}
-                  onChange={(e) => setRecherche(e.target.value)}
-                  placeholder="Ex. « Retrouve ma dernière facture EDF et dis-moi quand elle arrive à échéance »"
-                  className="w-full rounded-2xl border border-line bg-paper py-3.5 pr-4 pl-12 text-base outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
-                />
-              </form>
-              <div className="coffre-prompts" aria-label="Exemples de demandes">
-                {[
-                  'Retrouve ma dernière facture',
-                  'Aide-moi pour une démarche',
-                  'Range mes papiers',
-                ].map((invite) => (
-                  <button key={invite} type="button" onClick={() => demanderAAssistant(invite)}>{invite}</button>
-                ))}
-              </div>
-              <button type="button" className="coffre-question__open" onClick={() => setAssistantOuvert(true)}>
-                Ouvrir le copilote et choisir des documents
-              </button>
-              <p className="coffre-question__privacy">
-                <ShieldCheck size={14} /> Ta phrase secrète ne quitte jamais ton appareil. Aucun document n&apos;est partagé sans sélection explicite.
-              </p>
-              {recherche.trim() && (
-                <div className="mx-auto mt-3 flex max-w-xl flex-wrap items-center justify-center gap-2">
-                  <p className="text-sm text-accent">{reponseRecherche}</p>
-                  {actionRecherche === 'rangement' && (
-                    <button
-                      type="button"
-                      onClick={() => { setRecherche(''); setVueDossiers(true); }}
-                      className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
-                    >
-                      <Folder size={12} /> Ranger en dossiers
-                    </button>
-                  )}
-                  {actionRecherche === 'formulaire' && (
-                    <button
-                      type="button"
-                      onClick={() => { setRecherche(''); setFormulaireOuvert(true); }}
-                      className="flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
-                    >
-                      <FileText size={12} /> Remplir un formulaire
-                    </button>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-          {assistantOuvert && (
-            <div className="mx-auto mt-5 max-w-4xl">
-              <AssistantCoffre
-                index={index}
-                questionInitiale={questionAssistant}
-                onFermer={fermerAssistant}
-                // `documentsCites` porte le nom AFFICHÉ (voir digestIndex
-                // côté serveur), jamais la clé opaque qu'attend
-                // ouvrirDetail — sans cette résolution, cliquer un document
-                // cité n'ouvrait rien.
-                onOuvrirDocument={(nomAffiche) => {
-                  const cleStockage = clesParNomAffiche(index, nomAffiche)[0];
-                  if (cleStockage) ouvrirDetail(cleStockage);
-                }}
-                onOuvrirFormulaire={() => setFormulaireOuvert(true)}
-                onOuvrirRangement={() => setVueDossiers(true)}
-                onOuvrirImportDossier={() => entreeDossier.current?.click()}
-                onExecuterAction={executerActionAssistant}
-                onPreparerFormulaireCerfa={preparerFormulaireCerfa}
-                triAuto={{
-                  enCours: triAutoEnCours,
-                  progres: triAutoProgres,
-                  bilan: triAutoBilan,
-                  detailOuvert: triAutoDetailOuvert,
-                }}
-                onLancerTriAutomatique={trierAutomatiquement}
-                onBasculerDetailTriAutomatique={() => setTriAutoDetailOuvert((v) => !v)}
-                documentsDisponibles={Object.entries(index.objets).map(([cle, document]) => ({ cle, nom: document.nom, type: document.type }))}
-                lireDocument={async (document) => {
-                  if (!utilisateur || !cle) throw new Error('Déverrouille ton tiroir avant de joindre un papier.');
-                  const info = index.objets[document.cle];
-                  if (!info) throw new Error('Ce papier n’est plus disponible dans le tiroir.');
-                  const contenu = await recupererFichier(utilisateur.id, cle, document.cle, info);
-                  return new globalThis.File([contenu], info.nom, { type: info.type });
-                }}
-              />
-            </div>
-          )}
-        </div>
+          <div className="coffre-question__chat">
+            <AssistantCoffre
+              index={index}
+              modeDemo={utilisateur?.id === 'demo-local'}
+              // `documentsCites` porte le nom AFFICHÉ (voir digestIndex
+              // côté serveur), jamais la clé opaque qu'attend
+              // ouvrirDetail — sans cette résolution, cliquer un document
+              // cité n'ouvrait rien.
+              onOuvrirDocument={(nomAffiche) => {
+                const cleStockage = clesParNomAffiche(index, nomAffiche)[0];
+                if (cleStockage) ouvrirDetail(cleStockage);
+              }}
+              onOuvrirFormulaire={() => setFormulaireOuvert(true)}
+              onOuvrirRangement={() => setVueDossiers(true)}
+              onOuvrirImportDossier={() => entreeDossier.current?.click()}
+              onExecuterAction={executerActionAssistant}
+              onPreparerFormulaireCerfa={preparerFormulaireCerfa}
+              triAuto={{
+                enCours: triAutoEnCours,
+                progres: triAutoProgres,
+                bilan: triAutoBilan,
+                detailOuvert: triAutoDetailOuvert,
+              }}
+              onLancerTriAutomatique={trierAutomatiquement}
+              onBasculerDetailTriAutomatique={() => setTriAutoDetailOuvert((v) => !v)}
+              documentsDisponibles={Object.entries(index.objets).map(([cle, document]) => ({ cle, nom: document.nom, type: document.type }))}
+              lireDocument={async (document) => {
+                if (!utilisateur || !cle) throw new Error('Déverrouille ton tiroir avant de joindre un papier.');
+                const info = index.objets[document.cle];
+                if (!info) throw new Error('Ce papier n’est plus disponible dans le tiroir.');
+                const contenu = await recupererFichier(utilisateur.id, cle, document.cle, info);
+                return new globalThis.File([contenu], info.nom, { type: info.type });
+              }}
+            />
+          </div>
+        </section>
 
         <section className="coffre-command" aria-labelledby="titre-actions-rapides">
           <div className="coffre-command__intro">
@@ -1839,11 +1743,9 @@ export default function PageCoffre() {
               </p>
             ) : noms.length === 0 ? (
               <p className="rounded-2xl border border-line bg-paper-raised p-6 text-ink-soft">
-                {filtreCategorieEffectif && recherche.trim()
-                  ? `Aucun papier dans « ${filtreCategorieEffectif} » pour « ${recherche.trim()} ».`
-                  : filtreCategorieEffectif
-                    ? `Aucun papier dans « ${filtreCategorieEffectif} ».`
-                    : `Aucun papier pour « ${recherche.trim()} ».`}
+                {filtreCategorieEffectif
+                  ? `Aucun papier dans « ${filtreCategorieEffectif} ».`
+                  : 'Aucun papier correspondant pour le moment.'}
               </p>
             ) : vueDossiers ? (
               // Repliés par défaut (dossiersOuverts démarre vide) : avec des
@@ -2008,11 +1910,11 @@ export default function PageCoffre() {
           ? joursRestants(info.echeance.date) : null;
         return (
           <div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-ink/60 p-0 sm:items-center sm:p-6"
+            className="coffre-detail fixed inset-0 z-50 flex items-end justify-center bg-ink/60 p-0 sm:items-center sm:p-6"
             onClick={fermerDetail}
           >
             <div
-              className="max-h-[85vh] w-full overflow-y-auto rounded-t-3xl border border-line bg-paper-raised p-6 sm:max-w-lg sm:rounded-3xl"
+              className="coffre-detail__panel max-h-[85vh] w-full overflow-y-auto rounded-t-3xl border border-line bg-paper-raised p-6 sm:max-w-lg sm:rounded-3xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex flex-col gap-5">
@@ -2033,9 +1935,17 @@ export default function PageCoffre() {
                   </button>
                 </div>
 
-                {utilisateur && cle && (
+                {utilisateur && cle && (modeDemo ? (
+                  <div className="coffre-demo-document flex items-start gap-3 rounded-2xl border p-4" role="status">
+                    <FileText size={20} className="mt-0.5 shrink-0" aria-hidden="true" />
+                    <div>
+                      <p className="font-semibold">Document d’exemple</p>
+                      <p className="mt-1 text-sm">Ce document est fictif : aucun fichier n’est stocké dans la démo. Le rappel ci-dessous illustre une échéance et ne peut pas ouvrir de véritable aperçu.</p>
+                    </div>
+                  </div>
+                ) : (
                   <FichePreview key={detailOuvert} nom={detailOuvert} info={info} userId={utilisateur.id} cle={cle} />
-                )}
+                ))}
 
                 {jours !== null && info.echeance && (
                   <div className="flex flex-col gap-2">
@@ -2046,14 +1956,16 @@ export default function PageCoffre() {
                           {info.echeance.libelle} — {formatJours(jours)} ({info.echeance.date})
                         </span>
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => ecarter(detailOuvert)}
-                        disabled={enCours}
-                        className="text-xs text-ink-soft underline decoration-dotted transition hover:text-wine disabled:opacity-60"
-                      >
-                        Ce n&apos;est pas une échéance
-                      </button>
+                      {!modeDemo && (
+                        <button
+                          type="button"
+                          onClick={() => ecarter(detailOuvert)}
+                          disabled={enCours}
+                          className="text-xs text-ink-soft underline decoration-dotted transition hover:text-wine disabled:opacity-60"
+                        >
+                          Ce n&apos;est pas une échéance
+                        </button>
+                      )}
                     </div>
                     <JaugeEcheance jours={jours} />
                   </div>
@@ -2094,6 +2006,7 @@ export default function PageCoffre() {
                   </div>
                 )}
 
+                {!modeDemo && (
                 <div className="flex flex-col gap-2 rounded-2xl border border-line p-4">
                   <p className="text-sm font-medium text-ink-soft">Corriger le classement</p>
                   <div className="flex flex-col gap-2 sm:flex-row">
@@ -2118,15 +2031,18 @@ export default function PageCoffre() {
                     Enregistrer
                   </button>
                 </div>
-
-                <div className="flex gap-4 text-sm">
-                  <button onClick={() => telecharger(detailOuvert)} className="text-accent hover:underline">
-                    Télécharger
-                  </button>
-                  <button onClick={() => supprimer(detailOuvert)} className="text-wine hover:underline">
-                    Supprimer
-                  </button>
-                </div>
+                )}
+                
+                {!modeDemo && (
+                  <div className="flex gap-4 text-sm">
+                    <button onClick={() => telecharger(detailOuvert)} className="text-accent hover:underline">
+                      Télécharger
+                    </button>
+                    <button onClick={() => supprimer(detailOuvert)} className="text-wine hover:underline">
+                      Supprimer
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

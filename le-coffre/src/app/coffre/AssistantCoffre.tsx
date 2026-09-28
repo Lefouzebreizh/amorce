@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Bot, FileText, Folder, Globe, Paperclip, ShieldCheck, Sparkles, Trash2, Triangle, X } from 'lucide-react';
+import Link from 'next/link';
+import { Bot, FileText, Folder, Globe, Paperclip, Send, ShieldCheck, Sparkles, Trash2, X } from 'lucide-react';
 import { b64FromBuf } from '@/lib/crypto';
 import { demanderAuCoffre, type ActionAssistant, type IndexCoffre, type TourConversation } from '@/lib/coffre';
 
@@ -52,16 +53,12 @@ function libelleAction(a: ActionAssistant): string {
 }
 
 export function AssistantCoffre({
-  index, questionInitiale, onFermer, onOuvrirDocument, onOuvrirFormulaire, onOuvrirRangement,
+  index, modeDemo, onOuvrirDocument, onOuvrirFormulaire, onOuvrirRangement,
   onOuvrirImportDossier, onExecuterAction, onPreparerFormulaireCerfa, triAuto,
   onLancerTriAutomatique, onBasculerDetailTriAutomatique, documentsDisponibles, lireDocument,
 }: {
   index: IndexCoffre;
-  // Posée par la recherche locale restée sans résultat, envoyée une seule
-  // fois à l'ouverture — voir l'effet ci-dessous. Absente ou vide : le chat
-  // s'ouvre à blanc, comme avant.
-  questionInitiale?: string;
-  onFermer: () => void;
+  modeDemo: boolean;
   onOuvrirDocument: (nom: string) => void;
   onOuvrirFormulaire: () => void;
   onOuvrirRangement: () => void;
@@ -100,16 +97,6 @@ export function AssistantCoffre({
   // le reste du chat.
   const [actionEnCours, setActionEnCours] = useState<string | null>(null);
   const finDesMessages = useRef<HTMLDivElement>(null);
-  // Dernière question envoyée depuis la barre de recherche — jamais un
-  // simple booléen : le panneau reste monté d'une commande à l'autre (un
-  // seul bot, jamais fermé entre deux questions), donc un booléen à « déjà
-  // envoyée » aurait bloqué tout ce qui suit la première. C'est la valeur
-  // elle-même qu'on compare : une NOUVELLE question posée dans la barre
-  // pendant que la conversation est déjà ouverte doit repartir vers le bot
-  // — sans ça, la barre avait l'air d'un simple filtre de recherche après
-  // le premier message, chaque commande suivante disparaissant en silence.
-  const derniereQuestionEnvoyee = useRef<string | null>(null);
-
   useEffect(() => {
     finDesMessages.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -123,6 +110,10 @@ export function AssistantCoffre({
 
   async function envoyerTexte(texte: string) {
     if (!texte || enCours) return;
+    if (modeDemo) {
+      window.location.assign('/#connexion');
+      return;
+    }
     const historique = messages.map(({ role, texte: t }) => ({ role, texte: t }));
     setErreurGemini('');
     setMessages((precedent) => [...precedent, { role: 'user', texte }]);
@@ -192,19 +183,6 @@ export function AssistantCoffre({
     }
   }
 
-  // Envoi automatique de chaque question posée dans la barre de recherche —
-  // au premier message comme aux suivants, tant que le texte change. La
-  // conversation restant ouverte d'une commande à l'autre, ce n'est PAS
-  // seulement l'ouverture du panneau qui doit déclencher l'envoi : c'est
-  // chaque nouvelle valeur de `questionInitiale`.
-  useEffect(() => {
-    if (questionInitiale && questionInitiale !== derniereQuestionEnvoyee.current) {
-      derniereQuestionEnvoyee.current = questionInitiale;
-      envoyerTexte(questionInitiale);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionInitiale]);
-
   async function envoyer(e: React.FormEvent) {
     e.preventDefault();
     const texte = question.trim();
@@ -213,54 +191,39 @@ export function AssistantCoffre({
     await envoyerTexte(texte);
   }
 
-  function ouvrirDocumentEtFermer(nom: string) {
-    onFermer();
-    onOuvrirDocument(nom);
-  }
-
-  function ouvrirFormulaireEtFermer() {
-    onFermer();
-    onOuvrirFormulaire();
-  }
-
-  function ouvrirRangementEtFermer() {
-    onFermer();
-    onOuvrirRangement();
-  }
-
-  function ouvrirImportDossierEtFermer() {
-    onFermer();
-    onOuvrirImportDossier();
-  }
-
   return (
-    // Une seule barre, un seul bot (10/09/2026) : plus de panneau plein
-    // écran par-dessus la page — la conversation vit directement sous la
-    // barre de recherche, comme un bloc de plus dans le tableau de bord.
-    // Une hauteur bornée (pas `100dvh`) évite qu'un long échange n'avale
-    // tout l'écran ; `onFermer` referme le bloc sans jamais recouvrir quoi
-    // que ce soit d'autre à fermer par-dessus.
+    // Le fil reste monté dans le tableau de bord : la saisie initiale et les
+    // messages suivants passent par le même composant et le même champ.
+    // Une hauteur bornée garde les outils du coffre accessibles sous le fil.
     <div className="assistant-panel rounded-2xl border border-line bg-paper-raised">
       <div className="assistant-panel__header flex items-center justify-between border-b border-line p-4">
         <div className="flex items-center gap-3">
           <span className="assistant-panel__avatar"><Bot size={18} /></span>
           <div>
             <p className="text-sm font-semibold text-ink">Copilote du tiroir</p>
-            <p className="flex items-center gap-1 text-xs text-ink-soft"><Sparkles size={11} /> Gemini 2.5 Flash · {geminiConfirme ? 'connexion vérifiée' : 'connexion au moment de ta demande'}</p>
+            <p className="assistant-panel__status flex items-center gap-2 text-sm text-ink-soft">
+              <Sparkles size={15} />
+              {modeDemo ? 'Aperçu de démonstration · envoi désactivé' : `Gemini 2.5 Flash · ${geminiConfirme ? 'connexion vérifiée' : 'à la demande'}`}
+            </p>
           </div>
         </div>
-        <button onClick={onFermer} className="rounded-lg p-1.5 text-ink-soft transition hover:bg-line/40" aria-label="Fermer la conversation">
-          <X size={18} />
-        </button>
       </div>
 
-      <div className="max-h-[50vh] overflow-y-auto p-4">
+      {modeDemo && (
+        <div role="status" className="assistant-panel__demo mx-4 mt-4 flex items-start gap-3 rounded-2xl border p-4">
+          <ShieldCheck size={19} className="mt-0.5 shrink-0" />
+          <p className="text-sm">
+            Cet aperçu utilise un compte et des papiers fictifs. Tu peux écrire dans le champ pour préparer ta question, mais l’envoi est réservé à ta session réelle. Aucun message ni document ne partira depuis cette démo.{' '}<Link href="/#connexion">Ouvrir la vraie session</Link>
+          </p>
+        </div>
+      )}
+      <div className="assistant-panel__messages max-h-[50vh] overflow-y-auto p-4">
         {messages.length === 0 && (
-          <div className="assistant-panel__empty rounded-2xl border border-dashed border-line bg-paper p-4 text-sm text-ink-soft">
+          <div className="assistant-panel__empty rounded-2xl border border-dashed border-line bg-paper p-4 text-base text-ink-soft">
             <p className="font-medium text-ink">Je peux réfléchir avec toi et agir dans le tiroir.</p>
-            <p className="mt-1">Pose une question libre, demande une explication, un résumé, une comparaison, un courrier, de l’aide sur un formulaire ou une recherche à jour.</p>
-            <p className="mt-3 flex items-start gap-1.5 text-xs text-ink-soft">
-              <ShieldCheck size={13} className="mt-0.5 shrink-0 text-accent" />
+            <p className="mt-2">Pose une question libre, demande une explication, un résumé, une comparaison, un courrier, de l’aide sur un formulaire ou une recherche à jour.</p>
+            <p className="mt-3 flex items-start gap-2 text-sm text-ink-soft">
+              <ShieldCheck size={16} className="mt-0.5 shrink-0 text-accent" />
               Sans document choisi, Gemini ne reçoit que ta demande et le fil de cette conversation. Pour interroger un papier, sélectionne-le ci-dessous : il est déchiffré dans ce navigateur et envoyé avec ton message. Ta phrase secrète ne quitte jamais l’appareil. Selon le palier de ta clé Google, les règles de confidentialité de Google s’appliquent aux données envoyées.
             </p>
           </div>
@@ -285,7 +248,7 @@ export function AssistantCoffre({
                         <button
                           key={nom}
                           type="button"
-                          onClick={() => ouvrirDocumentEtFermer(nom)}
+                          onClick={() => onOuvrirDocument(nom)}
                           className="rounded-full bg-accent/15 px-3 py-1 text-xs font-medium text-accent transition hover:bg-accent/25"
                         >
                           {nom}
@@ -296,7 +259,7 @@ export function AssistantCoffre({
                   {m.ouvrirFormulaire && (
                     <button
                       type="button"
-                      onClick={ouvrirFormulaireEtFermer}
+                      onClick={onOuvrirFormulaire}
                       className="mt-2 flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
                     >
                       <FileText size={12} /> Remplir un formulaire
@@ -305,7 +268,7 @@ export function AssistantCoffre({
                   {m.ouvrirRangement && (
                     <button
                       type="button"
-                      onClick={ouvrirRangementEtFermer}
+                      onClick={onOuvrirRangement}
                       className="mt-2 flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
                     >
                       <Folder size={12} /> Ranger en dossiers
@@ -314,7 +277,7 @@ export function AssistantCoffre({
                   {m.ouvrirImportDossier && (
                     <button
                       type="button"
-                      onClick={ouvrirImportDossierEtFermer}
+                      onClick={onOuvrirImportDossier}
                       className="mt-2 flex items-center gap-1.5 rounded-lg bg-bleu px-3 py-1.5 text-xs font-semibold text-paper transition hover:bg-bleu-strong"
                     >
                       <Folder size={12} /> Choisir le dossier à analyser
@@ -505,18 +468,18 @@ export function AssistantCoffre({
             type="text"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Écris comme tu parlerais à quelqu'un…"
+            placeholder={modeDemo ? 'Brouillon uniquement · ouvre ta session pour envoyer' : "Écris comme tu parlerais à quelqu'un…"}
             disabled={enCours}
-            autoFocus
-            className="min-w-0 flex-1 rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition focus:border-accent focus:ring-1 focus:ring-accent disabled:opacity-60"
+            className="min-w-0 flex-1 rounded-xl border border-line bg-paper px-4 py-3 text-base outline-none transition focus:border-accent focus:ring-1 focus:ring-accent disabled:opacity-60"
           />
           <button
             type="submit"
             disabled={enCours || !question.trim()}
-            className="flex shrink-0 items-center justify-center rounded-lg bg-bleu px-4 py-2.5 text-paper transition hover:bg-bleu-strong disabled:opacity-60"
-            aria-label={documentsSelectionnes.size || fichiersLocaux.length ? `Envoyer à Gemini avec ${documentsSelectionnes.size + fichiersLocaux.length} document(s)` : 'Envoyer à Gemini'}
+            className="assistant-panel__send flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-bleu px-5 py-3 font-semibold text-paper transition hover:bg-bleu-strong disabled:cursor-not-allowed disabled:opacity-45"
+            aria-label={modeDemo ? 'Se connecter pour envoyer la question' : documentsSelectionnes.size || fichiersLocaux.length ? `Envoyer à Gemini avec ${documentsSelectionnes.size + fichiersLocaux.length} document(s)` : 'Envoyer à Gemini'}
           >
-            <Triangle size={16} fill="currentColor" />
+            <Send size={18} aria-hidden="true" />
+            <span>{modeDemo ? 'Se connecter pour envoyer' : 'Envoyer'}</span>
           </button>
         </form>
     </div>
