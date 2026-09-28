@@ -10,14 +10,14 @@ test('le tableau de bord conserve un seul copilote dans le flux', () => {
   assert.equal(page.includes('assistantOuvert') || page.includes('questionAssistant') || page.includes('demanderAAssistant'), false, 'aucun second formulaire de chat ne doit subsister');
 });
 
-test('le champ du chat reste sélectionnable dans l’aperçu, sans envoyer à Gemini', () => {
+test('le chat démo propose la connexion au lieu de bloquer Envoyer', () => {
   const debutComposer = assistant.indexOf('<form onSubmit={envoyer}');
   const finComposer = assistant.indexOf('</form>', debutComposer);
   assert.ok(debutComposer >= 0 && finComposer > debutComposer, 'champ et bouton d’envoi introuvables');
 
   const composer = assistant.slice(debutComposer, finComposer);
   assert.equal(composer.includes('disabled={enCours}'), true, 'seul un envoi en cours doit désactiver le champ');
-  assert.equal(composer.includes('disabled={modeDemo || enCours || !question.trim()}'), true, 'l’envoi doit rester désactivé en démo');
-
-  assert.equal(assistant.includes('if (!texte || enCours || modeDemo) return;'), true, 'la démo ne doit jamais appeler Gemini');
+  assert.equal(composer.includes('disabled={enCours || !question.trim()}'), true, 'une question saisie active le bouton');
+  assert.equal(composer.includes('Se connecter pour envoyer'), true, 'le bouton explique l’action en démo');
+  assert.equal(assistant.includes("window.location.assign('/#connexion')"), true, 'le clic conduit à la vraie connexion');
 });
