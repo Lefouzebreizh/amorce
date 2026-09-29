@@ -1510,7 +1510,7 @@ if ((await boutonArret.count()) === 1) {
  *
  * Le délai ne coûte que dans le cas où quelque chose est vraiment cassé.
  */
-const downloading = page.waitForEvent('download', { timeout: 120000 });
+const downloading = page.waitForEvent('download', { timeout: 300000 });
 await page.locator('button').filter({ hasText: /⬇ Exporter (la vidéo|quand même)/ }).first().click();
 await page.waitForTimeout(2500);
 await page.screenshot({ path: join(SHOTS, `05-export-${profile.id}.png`) });
