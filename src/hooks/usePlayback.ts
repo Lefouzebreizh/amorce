@@ -181,42 +181,72 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
   if (video.readyState < 2) await attendreVideo(video, 'loadeddata');
 }
 
-/** Attend qu'un nouveau cadre soit réellement décodé pour le rush demandé. */
+/** Attend qu'un cadre postérieur au seek soit réellement présenté par le navigateur. */
 function attendreImageApresLecture(
   video: HTMLVideoElement,
   tempsDemande: number,
   finSource: number,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    let image = 0;
-    const cadresAvant = video.getVideoPlaybackQuality().totalVideoFrames;
-    const terminer = () => {
+    let callback = 0;
+    let animation = 0;
+    let terminee = false;
+    const avanceMinima = Math.min(1 / OUTPUT_FPS, Math.max(0.01, finSource - tempsDemande)) * 0.6;
+    const seuil = tempsDemande + avanceMinima;
+
+    const nettoyer = () => {
       clearTimeout(timer);
-      if (image) cancelAnimationFrame(image);
+      if (callback && 'cancelVideoFrameCallback' in video) {
+        video.cancelVideoFrameCallback(callback);
+      }
+      if (animation) cancelAnimationFrame(animation);
+    };
+    const terminer = () => {
+      if (terminee) return;
+      terminee = true;
+      nettoyer();
       resolve();
     };
+    const echouer = (cause: Error) => {
+      if (terminee) return;
+      terminee = true;
+      nettoyer();
+      reject(cause);
+    };
     const timer = setTimeout(() => {
-      if (image) cancelAnimationFrame(image);
-      reject(new Error('Le cadre du rush n’a pas avancé à temps. Réessaie l’export.'));
+      echouer(new Error('Le décodeur n’a pas présenté de nouvelle image à temps. Réessaie l’export.'));
     }, ATTENTE_MAX_MS);
 
-    const avanceMinima = Math.min(1 / OUTPUT_FPS, Math.max(0.01, finSource - tempsDemande)) * 0.6;
-    const verifier = () => {
-      const avance = video.currentTime >= tempsDemande + avanceMinima;
-      const nouveauCadre = video.getVideoPlaybackQuality().totalVideoFrames > cadresAvant;
-      if (avance && nouveauCadre) {
-        terminer();
-        return;
-      }
-      image = requestAnimationFrame(verifier);
-    };
+    /*
+     * Le nombre total de frames de getVideoPlaybackQuality est agrégé par
+     * moteur et n’est pas fiable après un seek sur Chromium. Le callback vidéo
+     * donne directement l’horodatage de l’image présentée. On exige qu’il soit
+     * postérieur au point demandé : un callback ancien ne peut donc pas valider
+     * le mauvais cadre.
+     */
+    if ('requestVideoFrameCallback' in video) {
+      const verifier = (_now: number, metadata: VideoFrameCallbackMetadata) => {
+        if (metadata.mediaTime >= seuil) {
+          terminer();
+          return;
+        }
+        callback = video.requestVideoFrameCallback(verifier);
+      };
+      callback = video.requestVideoFrameCallback(verifier);
+    } else {
+      // Repli pour les navigateurs sans VideoFrameCallback.
+      const verifier = () => {
+        if (video.currentTime >= seuil && video.readyState >= 2) {
+          terminer();
+          return;
+        }
+        animation = requestAnimationFrame(verifier);
+      };
+      animation = requestAnimationFrame(verifier);
+    }
 
-    void video.play().then(() => {
-      image = requestAnimationFrame(verifier);
-    }).catch((cause: unknown) => {
-      clearTimeout(timer);
-      if (image) cancelAnimationFrame(image);
-      reject(cause instanceof Error ? cause : new Error(String(cause)));
+    void video.play().catch((cause: unknown) => {
+      echouer(cause instanceof Error ? cause : new Error(String(cause)));
     });
   });
 }
