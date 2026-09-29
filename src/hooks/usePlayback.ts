@@ -171,9 +171,22 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
    * plan demandé. Les navigateurs sans cette API gardent l'attente `seeked`.
    */
   const pret = attendreVideo(video, 'seeked');
-  const imagePresentee = attendreImagePresentee(video, borne);
   video.currentTime = borne;
-  await Promise.all([pret, imagePresentee]);
+  await pret;
+  if (typeof video.requestVideoFrameCallback === 'function') {
+    /*
+     * Chromium ne garantit pas de nouveau rappel tant qu'un élément vidéo
+     * reste en pause après son `seeked`. Les rushes sont muets : on les relance
+     * juste le temps que le compositeur confirme l'horodatage demandé, puis on
+     * les remet aussitôt en pause avant de dessiner.
+     */
+    const imagePresentee = attendreImagePresentee(video, borne);
+    try {
+      await Promise.all([video.play(), imagePresentee]);
+    } finally {
+      video.pause();
+    }
+  }
   if (video.readyState < 2) await attendreVideo(video, 'loadeddata');
 }
 
