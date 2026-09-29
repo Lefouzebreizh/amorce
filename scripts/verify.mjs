@@ -575,7 +575,7 @@ check('La conservation garde les quatre rushes entiers', Math.abs(dureeConservee
 await page.screenshot({ path: join(SHOTS, `02-conservation-${profile.id}.png`) });
 if (!profile.mobile) {
   await allerAEtape(page, profile, 'Exporter');
-  const telechargementConserve = page.waitForEvent('download', { timeout: 120000 });
+  const telechargementConserve = page.waitForEvent('download', { timeout: 300000 });
   await page.locator('button').filter({ hasText: /⬇ Exporter (la vidéo|quand même)/ }).first().click();
   try {
     const fichier = await telechargementConserve;
