@@ -161,10 +161,36 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
   const borne = Math.max(0, Math.min(vise, fin - 0.02));
   if (video.seeking) await attendreVideo(video, 'seeked');
   if (Math.abs(video.currentTime - borne) <= TOLERANCE_HORS_LIGNE) return;
+
+  /*
+   * `seeked` confirme que le déplacement est fini, pas que le décodeur a déjà
+   * présenté l'image correspondante. Sur Chromium, l'export image par image
+   * pouvait donc dessiner l'image précédente plusieurs fois, puis rattraper
+   * d'un coup — le MP4 restait à la bonne durée mais contenait un gel réel.
+   * Demander aussi le prochain cadre présenté garantit que `drawImage` lit le
+   * plan demandé. Les navigateurs sans cette API gardent l'attente `seeked`.
+   */
+  const imagePresentee = attendreImagePresentee(video);
   const pret = attendreVideo(video, 'seeked');
   video.currentTime = borne;
-  await pret;
+  await Promise.all([pret, imagePresentee]);
   if (video.readyState < 2) await attendreVideo(video, 'loadeddata');
+}
+
+/** Attend le cadre réellement présenté après un déplacement de la tête. */
+function attendreImagePresentee(video: HTMLVideoElement): Promise<void> {
+  if (typeof video.requestVideoFrameCallback !== 'function') return Promise.resolve();
+
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error('Le cadre du rush n’a pas été présenté à temps. Réessaie l’export.'));
+    }, ATTENTE_MAX_MS);
+
+    video.requestVideoFrameCallback(() => {
+      clearTimeout(timer);
+      resolve();
+    });
+  });
 }
 
 export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {

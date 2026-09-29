@@ -9,12 +9,12 @@ import type { PlaybackEngine } from '@/hooks/usePlayback';
 import { Preview } from './Preview';
 import { Timeline } from './Timeline';
 import { NextStep } from './NextStep';
-import { StepPanel } from './steps';
-import { STEPS, type StepId } from '@/lib/steps';
+import { PhaseDisclosure } from './steps';
+import { PHASES, type StepId } from '@/lib/steps';
 import { ScoreBadge, UndoControls } from './ui';
 
 /**
- * Disposition téléphone : une seule page qui défile.
+ * Disposition téléphone : trois phases repliables, une seule ouverte à la fois.
  *
  * Les sept étapes vivaient derrière une barre d'onglets. Le raisonnement était
  * défendable — un panneau à la fois, toute la hauteur pour lui — mais il avait
@@ -204,23 +204,15 @@ export function StudioMobile({
         <div className="space-y-3 px-2 pt-2 pb-8">
           <NextStep onStep={onStep} />
 
-          {STEPS.map((item) => (
+          {PHASES.map((phase) => (
             <section
-              key={item.id}
-              id={ancre(item.id)}
-              aria-label={item.label}
-              // `scroll-mt` compense la hauteur de l'aperçu collé : sans lui,
-              // un saut vers une étape la place derrière l'image. Il la suit
-              // donc : quand l'aperçu n'est pas rendu, la même marge laisserait
-              // 40 % d'écran vide au-dessus du panneau qu'on vient d'atteindre.
-              // Pas d'en-tête ici : chaque panneau porte déjà son titre
-              // numéroté. En ajouter un le faisait paraître deux fois, et une
-              // répétition se lit comme un bug avant de se lire comme un plan.
+              key={phase.id}
+              aria-label={phase.label}
               className={
                 clipCount === 0 ? 'scroll-mt-2' : agrandi ? 'scroll-mt-[82dvh]' : 'scroll-mt-[40dvh]'
               }
             >
-              <StepPanel step={item.id} engine={engine} onStep={onStep} />
+              <PhaseDisclosure phase={phase} step={step ?? 'import'} engine={engine} onStep={(next) => onStep(next)} />
             </section>
           ))}
         </div>
@@ -231,7 +223,8 @@ export function StudioMobile({
 
 /** L'ancre d'une étape, pour que le guide puisse y faire défiler la page. */
 export function ancre(id: StepId) {
-  return `etape-${id}`;
+  const phase = PHASES.find((candidate) => candidate.steps.includes(id)) ?? PHASES[0];
+  return `phase-${phase.id}`;
 }
 
 function MobileHeader() {

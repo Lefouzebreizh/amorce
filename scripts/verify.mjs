@@ -116,24 +116,22 @@ const PROFILES = [
 /**
  * Aller à une étape, quelle que soit la coque.
  *
- * L'ordinateur garde une barre d'étapes à cliquer ; le téléphone est passé à
- * une page unique qui défile, où les sept panneaux sont **déjà** dans le
- * document et portent chacun une ancre. Le parcours cliquait la barre sur les
- * deux profils : sur téléphone il attendait trente secondes un bouton qui
- * n'existe plus, et tombait avant d'avoir rien mesuré.
+ * Les deux profils exposent maintenant trois phases. Les étapes restent
+ * choisies dans un sélecteur compact à l'intérieur des phases qui en ont
+ * plusieurs ; le téléphone ouvre la phase puis descend jusqu'à son panneau.
  *
- * Les intitulés sont ceux de `src/lib/steps.ts`, les ancres celles que pose
- * `ancre()` dans `StudioMobile.tsx`. Une étape inconnue lève ici plutôt que de
- * laisser le parcours dériver sur un défilement silencieux.
+ * Les étapes historiques sont conservées comme cas de test, mais leurs phases
+ * et leurs ancres reflètent le parcours visible. Une étape inconnue lève ici
+ * plutôt que de laisser le parcours dériver sur un défilement silencieux.
  */
-const ANCRE_ETAPE = {
-  Importer: 'import',
-  Monter: 'montage',
-  Accroche: 'texte',
-  Son: 'son',
-  Cinéma: 'cinema',
-  Analyser: 'analyse',
-  Exporter: 'export',
+const PHASE_ETAPE = {
+  Importer: { id: 'creer', phase: 'Créer' },
+  Monter: { id: 'composer', phase: 'Composer', outil: 'Monter' },
+  Accroche: { id: 'composer', phase: 'Composer', outil: 'Accroche' },
+  Son: { id: 'composer', phase: 'Composer', outil: 'Son' },
+  Cinéma: { id: 'composer', phase: 'Composer', outil: 'Cinéma' },
+  Analyser: { id: 'finaliser', phase: 'Finaliser', outil: 'Analyser' },
+  Exporter: { id: 'finaliser', phase: 'Finaliser', outil: 'Exporter' },
 };
 
 /**
@@ -153,20 +151,25 @@ async function remonterEnTete(page) {
 }
 
 async function allerAEtape(page, profile, label) {
+  const destination = PHASE_ETAPE[label];
+  if (!destination) throw new Error(`Étape inconnue du parcours : ${label}`);
+
   if (!profile.mobile) {
-    await page.click(`nav[aria-label="Étapes du montage"] button:has-text("${label}")`);
-    return;
+    await page.click(`nav[aria-label="Étapes du montage"] button:has-text("${destination.phase}")`);
+  } else {
+    const section = page.locator(`#phase-${destination.id}`);
+    await section.waitFor({ state: 'attached' });
+    await section.scrollIntoViewIfNeeded();
+    const heading = section.locator('.workflow-phase-heading');
+    if (await heading.getAttribute('aria-expanded') !== 'true') await heading.click();
+    // Le défilement peut être animé ; on laisse la page se poser avant de mesurer.
+    await page.waitForTimeout(400);
   }
 
-  const id = ANCRE_ETAPE[label];
-  if (!id) throw new Error(`Étape inconnue du parcours : ${label}`);
-
-  const section = page.locator(`#etape-${id}`);
-  await section.waitFor({ state: 'attached' });
-  await section.scrollIntoViewIfNeeded();
-  // Le défilement peut être animé ; on laisse la page se poser avant de mesurer
-  // ce qui s'y trouve, sinon le panneau est encore sous l'aperçu collé.
-  await page.waitForTimeout(400);
+  if (destination.outil) {
+    const groupe = page.getByRole('group', { name: `Outils : ${destination.phase}` });
+    await groupe.getByRole('button', { name: destination.outil, exact: true }).click();
+  }
 }
 
 const results = [];
@@ -501,13 +504,12 @@ if (profile.mobile) {
   }));
   check('Aucun débordement horizontal', overflow.scroll <= overflow.view + 1, `${overflow.scroll} px pour ${overflow.view} px de large`);
   /*
-   * Le téléphone n'a plus de barre d'étapes : il porte les sept panneaux sur
-   * une seule page qui défile. Ce qu'on contrôle ici, c'est donc qu'ils y
-   * soient tous — une page qui en perdrait un rendrait une partie du studio
-   * simplement inatteignable au doigt, sans qu'aucun autre test le voie.
+   * Le téléphone présente les trois phases sous forme d'accordéon. Le
+   * parcours les ouvrira une par une ; ce contrôle vérifie qu'aucune phase
+   * n'a disparu de la page avant de mesurer les actions qu'elle contient.
    */
-  const ancres = await page.locator('[id^="etape-"]').count();
-  check('Les sept étapes sont sur la page', ancres === 7, `${ancres} panneaux sur 7`);
+  const phases = await page.locator('[id^="phase-"]').count();
+  check('Les trois phases sont sur la page', phases === 3, `${phases} phases sur 3`);
 }
 
 // --------------------------------------------------------------- 1. Import

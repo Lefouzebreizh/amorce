@@ -768,6 +768,28 @@ input[type='range']::-moz-range-thumb {
 .studio-help-summary:hover .studio-help-chevron { color: var(--color-accent); }
 .studio-help-details[open] .studio-help-chevron { color: var(--color-accent); transform: rotate(180deg); }
 
+/* Le studio se parcourt par intention, puis par outil si besoin. */
+.phase-tools { display: grid; gap: 12px; }
+.phase-tool-picker { display: flex; flex-wrap: wrap; gap: 6px; padding: 3px; border: 1px solid rgb(201 216 244 / .08); border-radius: 14px; background: rgb(5 9 16 / .45); }
+.phase-tool-choice { min-height: 36px; padding: 7px 10px; border: 1px solid transparent; border-radius: 10px; color: #aab3c4; background: transparent; font-size: 11px; font-weight: 700; transition: color 150ms ease, background 150ms ease, border-color 150ms ease; }
+.phase-tool-choice:hover { color: var(--color-mist); background: rgb(255 255 255 / .045); }
+.phase-tool-choice.is-active { border-color: rgb(64 224 208 / .24); color: #d9fffb; background: linear-gradient(110deg, rgb(64 224 208 / .11), rgb(124 58 237 / .13)); }
+.phase-tool-body { min-width: 0; }
+.workflow-phase { overflow: hidden; border: 1px solid rgb(201 216 244 / .09); border-radius: 16px; background: linear-gradient(145deg, rgb(19 25 38 / .95), rgb(12 15 24 / .94)); }
+.workflow-phase-heading { display: flex; width: 100%; min-height: 68px; align-items: center; gap: 12px; padding: 12px 14px; color: inherit; text-align: left; transition: background 150ms ease; }
+.workflow-phase-heading:hover { background: rgb(255 255 255 / .035); }
+.workflow-phase.is-open .workflow-phase-heading { background: linear-gradient(100deg, rgb(64 224 208 / .07), rgb(124 58 237 / .07)); }
+.workflow-phase-number { display: grid; width: 32px; height: 32px; flex: 0 0 auto; place-items: center; border: 1px solid rgb(197 208 230 / .15); border-radius: 10px; color: #bac4d6; background: rgb(255 255 255 / .035); font-family: var(--font-body); font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 800; }
+.workflow-phase.is-open .workflow-phase-number { border-color: rgb(64 224 208 / .3); color: #c5fff9; background: rgb(64 224 208 / .09); }
+.workflow-phase-copy { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 4px; }
+.workflow-phase-title { color: var(--color-mist); font-size: 13px; font-weight: 750; }
+.workflow-phase-hint { color: #969eb0; font-size: 11px; line-height: 1.35; }
+.workflow-phase-chevron { color: var(--color-accent); font-size: 20px; line-height: 1; }
+.workflow-phase-content { padding: 0 10px 12px; }
+.workflow-phase-content .phase-tool-picker { margin-bottom: 10px; }
+.workflow-phase-content .phase-tool-choice { flex: 1 1 auto; }
+.workflow-phase-content .phase-tool-body > * { border: 0 !important; box-shadow: none !important; }
+
 /* Une ardoise de départ remplace le canvas vide sans simuler une image générée. */
 .preview-empty {
   z-index: 2;
@@ -850,6 +872,12 @@ input[type='range']::-moz-range-thumb {
     linear-gradient(152deg, #0d1119, #0b0c14 66%, #100b18);
 }
 .studio-mobile-shell .studio-header { min-height: 58px; padding-inline: 14px; }
+@media (max-width: 640px) {
+  .workflow-phase-heading { min-height: 62px; }
+  .workflow-phase-content { padding-inline: 8px; }
+  .phase-tool-picker { gap: 4px; }
+  .phase-tool-choice { flex: 1 1 auto; padding-inline: 8px; }
+}
 @media (max-width: 1100px) and (min-width: 861px) {
   .studio-nav { width: 188px; }
   .studio-rail { width: min(310px, 31vw); }
