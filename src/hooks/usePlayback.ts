@@ -181,30 +181,17 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
   if (video.readyState < 2) await attendreVideo(video, 'loadeddata');
 }
 
-/** Attend que le navigateur présente le cadre correspondant au seek. */
+/** Attend un avancement réel du décodeur après le seek. */
 function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number): Promise<void> {
-  const videoAvecCallback = video as HTMLVideoElement & {
-    requestVideoFrameCallback?: (
-      callback: (now: number, metadata: VideoFrameCallbackMetadata) => void,
-    ) => number;
-    cancelVideoFrameCallback?: (id: number) => void;
-  };
-
   return new Promise((resolve, reject) => {
-    let callback = 0;
-    let animation = 0;
+    let image = 0;
     let terminee = false;
-    // Accepte le cadre source le plus proche du temps cible. Exiger une
-    // avance supplémentaire faisait dépasser la cible à chaque image puis
-    // forçait un seek arrière pour l'image suivante, ce qui affamait Chromium.
-    const seuil = Math.max(0, tempsDemande - 0.5 / OUTPUT_FPS);
+    const avanceMinima = 0.6 / OUTPUT_FPS;
+    const seuil = tempsDemande + avanceMinima;
 
     const nettoyer = () => {
       clearTimeout(timer);
-      if (callback && videoAvecCallback.cancelVideoFrameCallback) {
-        videoAvecCallback.cancelVideoFrameCallback(callback);
-      }
-      if (animation) cancelAnimationFrame(animation);
+      if (image) cancelAnimationFrame(image);
     };
     const terminer = () => {
       if (terminee) return;
@@ -212,40 +199,25 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
       nettoyer();
       resolve();
     };
-    const echouer = (cause: Error) => {
+    const echouer = () => {
       if (terminee) return;
       terminee = true;
       nettoyer();
-      reject(cause);
+      reject(new Error('Le décodeur n’a pas avancé après le seek. Réessaie l’export.'));
     };
-    const timer = setTimeout(() => {
-      echouer(new Error('Le décodeur n’a pas présenté le cadre demandé à temps. Réessaie l’export.'));
-    }, ATTENTE_MAX_MS);
+    const timer = setTimeout(echouer, ATTENTE_MAX_MS);
 
-    if (typeof videoAvecCallback.requestVideoFrameCallback === 'function') {
-      const verifier = (_now: number, metadata: VideoFrameCallbackMetadata) => {
-        if (metadata.mediaTime >= seuil) {
-          terminer();
-          return;
-        }
-        callback = videoAvecCallback.requestVideoFrameCallback!(verifier);
-      };
-      callback = videoAvecCallback.requestVideoFrameCallback(verifier);
-    } else {
-      // Repli pour les navigateurs sans VideoFrameCallback.
-      const verifier = () => {
-        if (Math.abs(video.currentTime - tempsDemande) <= 1 / OUTPUT_FPS && video.readyState >= 2) {
-          terminer();
-          return;
-        }
-        animation = requestAnimationFrame(verifier);
-      };
-      animation = requestAnimationFrame(verifier);
-    }
+    const verifier = () => {
+      if (video.currentTime >= seuil && video.readyState >= 2) {
+        terminer();
+        return;
+      }
+      image = requestAnimationFrame(verifier);
+    };
 
-    void video.play().catch((cause: unknown) => {
-      echouer(cause instanceof Error ? cause : new Error(String(cause)));
-    });
+    void video.play().then(() => {
+      image = requestAnimationFrame(verifier);
+    }).catch(echouer);
   });
 }
 
