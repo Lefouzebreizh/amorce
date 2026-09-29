@@ -138,7 +138,7 @@ export function StudioMobile({
   return (
     // `100dvh` et non `100vh` : sur mobile, la barre d'adresse se replie en
     // cours de route et `vh` ne suit pas, ce qui ferait dépasser la page.
-    <div className="flex h-[100dvh] flex-col overflow-hidden">
+    <div className="studio-mobile-shell flex h-[100dvh] flex-col overflow-hidden">
       <MobileHeader />
 
       <div className="flex-1 overflow-y-auto overscroll-contain">
@@ -184,7 +184,12 @@ export function StudioMobile({
               agrandi ? 'h-[92dvh]' : 'sticky top-0 h-[38dvh]'
             }`}
           >
-            <Preview engine={engine} agrandi={agrandi} onAgrandir={() => setAgrandi((v) => !v)} />
+            <Preview
+              engine={engine}
+              agrandi={agrandi}
+              onAgrandir={() => setAgrandi((v) => !v)}
+              onImporter={() => onStep('import')}
+            />
             {/*
               La frise reste, dans les deux modes.
               Elle s'effaçait pendant l'agrandissement pour rendre ses 98 px à
@@ -239,7 +244,7 @@ function MobileHeader() {
 
   return (
     <header
-      className="flex shrink-0 items-center justify-between gap-3 border-b border-edge px-3 py-2.5"
+      className="studio-header flex shrink-0 items-center justify-between gap-3 border-b border-edge px-3 py-2.5"
       style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
     >
       {/* Le nom ramène à l'accueil : c'est là que tout le monde clique, et le

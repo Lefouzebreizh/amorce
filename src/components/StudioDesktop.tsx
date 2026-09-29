@@ -35,7 +35,7 @@ export function StudioDesktop({
 
       <main className="studio-body flex min-h-0 flex-1">
         <nav className="studio-nav flex w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-edge p-3" aria-label="Étapes du montage">
-          <p className="studio-nav-eyebrow">Le Phare · montage</p>
+          <p className="studio-nav-eyebrow">Le Phare <span>·</span> atelier</p>
           {STEPS.map((item) => {
             const active = item.id === step;
             return (
@@ -48,10 +48,15 @@ export function StudioDesktop({
                   active ? 'studio-step-active bg-raised ring-1 ring-select/60' : 'hover:bg-slab'
                 }`}
               >
-                <span className={`text-[13px] font-semibold ${active ? 'text-mist' : 'text-muted'}`}>
-                  {item.index}. {item.label}
+                <span className="studio-step-number" aria-hidden="true">
+                  {String(item.index).padStart(2, '0')}
                 </span>
-                <span className="mt-1 block text-[12px] leading-snug text-muted">{item.hint}</span>
+                <span className="studio-step-copy">
+                  <span className={`studio-step-label ${active ? 'text-mist' : 'text-muted'}`}>
+                    {item.label}
+                  </span>
+                  <span className="studio-step-hint">{item.hint}</span>
+                </span>
               </button>
             );
           })}
@@ -59,7 +64,7 @@ export function StudioDesktop({
 
         <section className="studio-workspace flex min-h-0 min-w-0 flex-1 flex-col gap-3 p-3">
           <div className="studio-preview-plate flex min-h-0 flex-1">
-            <Preview engine={engine} />
+            <Preview engine={engine} onImporter={() => onStep('import')} />
           </div>
           <div className="studio-timeline-plate shrink-0">
             <Timeline engine={engine} />
