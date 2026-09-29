@@ -167,8 +167,8 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
    * présenté l'image correspondante. Sur Chromium, l'export image par image
    * pouvait donc dessiner l'image précédente plusieurs fois, puis rattraper
    * d'un coup — le MP4 restait à la bonne durée mais contenait un gel réel.
-   * Demander aussi le prochain cadre présenté garantit que `drawImage` lit le
-   * plan demandé. Les navigateurs sans cette API gardent l'attente `seeked`.
+   * Après le seek, laisser le rush muet avancer d'une image source confirme
+   * que le décodeur a produit un nouveau cadre avant que `drawImage` le lise.
    */
   const pret = attendreVideo(video, 'seeked');
   video.currentTime = borne;
@@ -188,15 +188,17 @@ function attendreImageApresLecture(
   finSource: number,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    let image = 0;
     const timer = setTimeout(() => {
       cancelAnimationFrame(image);
       reject(new Error('Le cadre du rush n’a pas avancé à temps. Réessaie l’export.'));
     }, ATTENTE_MAX_MS);
 
-    const avanceVisee = Math.min(1 / OUTPUT_FPS, Math.max(TOLERANCE_HORS_LIGNE, finSource - tempsDemande));
+    const avanceVisee = Math.min(1 / OUTPUT_FPS, Math.max(0.01, finSource - tempsDemande));
+    let image = 0;
     const verifier = () => {
-      if (video.currentTime >= tempsDemande + avanceVisee - TOLERANCE_HORS_LIGNE) {
+      // Ne pas soustraire la tolérance ici : cela ramenait le seuil à
+      // `tempsDemande` et validait le tout premier frame après play().
+      if (video.currentTime >= tempsDemande + avanceVisee * 0.7) {
         clearTimeout(timer);
         resolve();
         return;
