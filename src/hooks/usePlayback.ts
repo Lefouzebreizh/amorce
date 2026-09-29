@@ -187,6 +187,13 @@ function attendreImageApresLecture(
   tempsDemande: number,
   finSource: number,
 ): Promise<void> {
+  const videoAvecCallback = video as HTMLVideoElement & {
+    requestVideoFrameCallback?: (
+      callback: (now: number, metadata: VideoFrameCallbackMetadata) => void,
+    ) => number;
+    cancelVideoFrameCallback?: (id: number) => void;
+  };
+
   return new Promise((resolve, reject) => {
     let callback = 0;
     let animation = 0;
@@ -196,8 +203,8 @@ function attendreImageApresLecture(
 
     const nettoyer = () => {
       clearTimeout(timer);
-      if (callback && 'cancelVideoFrameCallback' in video) {
-        video.cancelVideoFrameCallback(callback);
+      if (callback && videoAvecCallback.cancelVideoFrameCallback) {
+        videoAvecCallback.cancelVideoFrameCallback(callback);
       }
       if (animation) cancelAnimationFrame(animation);
     };
@@ -224,13 +231,13 @@ function attendreImageApresLecture(
      * postérieur au point demandé : un callback ancien ne peut donc pas valider
      * le mauvais cadre.
      */
-    if ('requestVideoFrameCallback' in video) {
+    if (typeof videoAvecCallback.requestVideoFrameCallback === 'function') {
       const verifier = (_now: number, metadata: VideoFrameCallbackMetadata) => {
         if (metadata.mediaTime >= seuil) {
           terminer();
           return;
         }
-        callback = video.requestVideoFrameCallback(verifier);
+        callback = videoAvecCallback.requestVideoFrameCallback(verifier);
       };
       callback = video.requestVideoFrameCallback(verifier);
     } else {
