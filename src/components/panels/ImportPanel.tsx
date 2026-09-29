@@ -388,18 +388,28 @@ export function ImportPanel({ engine }: { engine: PlaybackEngine }) {
         la propose qu'à une application installée, et rien dans l'interface ne
         laisserait deviner qu'elle existe.
       */}
-      <Panel
-        title="Un fichier refusé, ou arrivé vide ?"
-        subtitle="Le sélecteur d’Android rend parfois un fichier de zéro octet quand il vient du nuage."
-      >
-        <Hint>
-          Installe Amorce sur ton écran d’accueil — menu de ton navigateur, « Installer
-          l’application ». Tu pourras alors envoyer tes fichiers par le bouton <b>Partager</b> depuis
-          ton gestionnaire de fichiers : ce chemin transmet les octets réels, et il aboutit là où le
-          sélecteur échoue. Rien ne part pour autant sur un serveur, le partage est reçu par ton
-          navigateur.
-        </Hint>
-      </Panel>
+      <details className="studio-help-details">
+        <summary className="studio-help-summary">
+          <span>
+            <span className="studio-help-title">Un fichier refusé, ou arrivé vide ?</span>
+            <span className="studio-help-subtitle">
+              Le sélecteur d’Android rend parfois un fichier de zéro octet quand il vient du nuage.
+            </span>
+          </span>
+          <svg className="studio-help-chevron" aria-hidden="true" viewBox="0 0 20 20" fill="none">
+            <path d="m5 7.5 5 5 5-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </summary>
+        <div className="px-4 pb-4">
+          <Hint>
+            Installe Amorce sur ton écran d’accueil — menu de ton navigateur, « Installer
+            l’application ». Tu pourras alors envoyer tes fichiers par le bouton <b>Partager</b> depuis
+            ton gestionnaire de fichiers : ce chemin transmet les octets réels, et il aboutit là où le
+            sélecteur échoue. Rien ne part pour autant sur un serveur, le partage est reçu par ton
+            navigateur.
+          </Hint>
+        </div>
+      </details>
 
       <Panel title="Bibliothèque" subtitle={`${assets.length} rush${assets.length > 1 ? 'es' : ''} importé${assets.length > 1 ? 's' : ''}`}>
         {assets.length === 0 ? (
