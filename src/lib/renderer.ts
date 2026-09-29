@@ -186,11 +186,11 @@ function chargerRush(asset: MediaAsset): HTMLVideoElement {
     position: 'fixed',
     left: '0',
     top: '0',
-    width: '1px',
-    height: '1px',
-    opacity: '0.001',
+    width: '2px',
+    height: '2px',
+    opacity: '0.01',
     pointerEvents: 'none',
-    zIndex: '-1',
+    zIndex: '2147483647',
   });
   document.body.append(video);
   video.load();
