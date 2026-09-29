@@ -174,19 +174,15 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
   video.currentTime = borne;
   await pret;
   try {
-    await attendreImageApresLecture(video, borne, fin);
+    await attendreImageApresLecture(video, borne);
   } finally {
     video.pause();
   }
   if (video.readyState < 2) await attendreVideo(video, 'loadeddata');
 }
 
-/** Attend qu'un cadre postérieur au seek soit réellement présenté par le navigateur. */
-function attendreImageApresLecture(
-  video: HTMLVideoElement,
-  tempsDemande: number,
-  finSource: number,
-): Promise<void> {
+/** Attend que le navigateur présente le cadre correspondant au seek. */
+function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number): Promise<void> {
   const videoAvecCallback = video as HTMLVideoElement & {
     requestVideoFrameCallback?: (
       callback: (now: number, metadata: VideoFrameCallbackMetadata) => void,
@@ -198,8 +194,10 @@ function attendreImageApresLecture(
     let callback = 0;
     let animation = 0;
     let terminee = false;
-    const avanceMinima = Math.min(1 / OUTPUT_FPS, Math.max(0.01, finSource - tempsDemande)) * 0.6;
-    const seuil = tempsDemande + avanceMinima;
+    // Accepte le cadre source le plus proche du temps cible. Exiger une
+    // avance supplémentaire faisait dépasser la cible à chaque image puis
+    // forçait un seek arrière pour l'image suivante, ce qui affamait Chromium.
+    const seuil = Math.max(0, tempsDemande - 0.5 / OUTPUT_FPS);
 
     const nettoyer = () => {
       clearTimeout(timer);
@@ -221,29 +219,22 @@ function attendreImageApresLecture(
       reject(cause);
     };
     const timer = setTimeout(() => {
-      echouer(new Error('Le décodeur n’a pas présenté de nouvelle image à temps. Réessaie l’export.'));
+      echouer(new Error('Le décodeur n’a pas présenté le cadre demandé à temps. Réessaie l’export.'));
     }, ATTENTE_MAX_MS);
 
-    /*
-     * Le nombre total de frames de getVideoPlaybackQuality est agrégé par
-     * moteur et n’est pas fiable après un seek sur Chromium. Le callback vidéo
-     * donne directement l’horodatage de l’image présentée. On exige qu’il soit
-     * postérieur au point demandé : un callback ancien ne peut donc pas valider
-     * le mauvais cadre.
-     */
     if (typeof videoAvecCallback.requestVideoFrameCallback === 'function') {
       const verifier = (_now: number, metadata: VideoFrameCallbackMetadata) => {
         if (metadata.mediaTime >= seuil) {
           terminer();
           return;
         }
-        callback = videoAvecCallback.requestVideoFrameCallback(verifier);
+        callback = videoAvecCallback.requestVideoFrameCallback!(verifier);
       };
-      callback = video.requestVideoFrameCallback(verifier);
+      callback = videoAvecCallback.requestVideoFrameCallback(verifier);
     } else {
       // Repli pour les navigateurs sans VideoFrameCallback.
       const verifier = () => {
-        if (video.currentTime >= seuil && video.readyState >= 2) {
+        if (Math.abs(video.currentTime - tempsDemande) <= 1 / OUTPUT_FPS && video.readyState >= 2) {
           terminer();
           return;
         }
