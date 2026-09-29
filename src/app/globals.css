@@ -973,6 +973,7 @@ input[type='range']::-moz-range-thumb {
   box-shadow: 0 32px 84px rgb(0 0 0 / .62), 0 0 0 6px rgb(255 245 232 / .025), 0 0 52px rgb(255 174 125 / .08) !important;
 }
 .studio-rail > * { border-color: rgb(255 226 207 / .065); }
+.studio-help-details { background: var(--color-panel); }
 .phase-tool-picker {
   border-color: rgb(255 226 207 / .1);
   background: rgb(20 17 23 / .55);
