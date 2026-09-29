@@ -102,7 +102,7 @@ for (const spec of SPECS) {
         // Le fond et le disque bougent en continu : deux images consécutives
         // doivent différer, sinon les contrôles de « l'image change » seraient
         // satisfaits par une vidéo figée.
-        ctx.fillStyle = `hsl(${hue + t * 12} 55% ${20 + Math.sin(t * 2) * 8}%)`;
+        ctx.fillStyle = `hsl(${hue + t * 90} 55% ${20 + Math.sin(t * 2) * 12}%)`;
         ctx.fillRect(0, 0, L, H);
         ctx.fillStyle = `hsl(${hue + 40} 80% 62%)`;
         ctx.beginPath();
