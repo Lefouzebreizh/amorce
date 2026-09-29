@@ -181,35 +181,59 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
   if (video.readyState < 2) await attendreVideo(video, 'loadeddata');
 }
 
-/** Attend que la lecture muette fasse avancer le décodeur d'au moins une image. */
+/** Attend qu'un nouveau cadre soit réellement présenté par le décodeur. */
 function attendreImageApresLecture(
   video: HTMLVideoElement,
   tempsDemande: number,
   finSource: number,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
+    let rappel = 0;
+    let image = 0;
+    const terminer = () => {
+      clearTimeout(timer);
+      if (image) cancelAnimationFrame(image);
+      if (rappel && typeof video.cancelVideoFrameCallback === 'function') {
+        video.cancelVideoFrameCallback(rappel);
+      }
+      resolve();
+    };
     const timer = setTimeout(() => {
-      cancelAnimationFrame(image);
+      if (image) cancelAnimationFrame(image);
+      if (rappel && typeof video.cancelVideoFrameCallback === 'function') {
+        video.cancelVideoFrameCallback(rappel);
+      }
       reject(new Error('Le cadre du rush n’a pas avancé à temps. Réessaie l’export.'));
     }, ATTENTE_MAX_MS);
 
-    const avanceVisee = Math.min(1 / OUTPUT_FPS, Math.max(0.01, finSource - tempsDemande));
-    let image = 0;
-    const verifier = () => {
-      // Ne pas soustraire la tolérance ici : cela ramenait le seuil à
-      // `tempsDemande` et validait le tout premier frame après play().
-      if (video.currentTime >= tempsDemande + avanceVisee * 0.7) {
-        clearTimeout(timer);
-        resolve();
-        return;
-      }
+    if (typeof video.requestVideoFrameCallback === 'function') {
+      const tolerance = 0.5 / OUTPUT_FPS;
+      const verifier = (_now: DOMHighResTimeStamp, metadata: VideoFrameCallbackMetadata) => {
+        if (metadata.mediaTime >= tempsDemande - tolerance) {
+          terminer();
+          return;
+        }
+        rappel = video.requestVideoFrameCallback(verifier);
+      };
+      rappel = video.requestVideoFrameCallback(verifier);
+    } else {
+      const avanceMinima = Math.min(1 / OUTPUT_FPS, Math.max(0.01, finSource - tempsDemande)) * 0.7;
+      const verifier = () => {
+        if (video.currentTime >= tempsDemande + avanceMinima) {
+          terminer();
+          return;
+        }
+        image = requestAnimationFrame(verifier);
+      };
       image = requestAnimationFrame(verifier);
     };
 
-    void video.play().then(() => {
-      image = requestAnimationFrame(verifier);
-    }).catch((cause: unknown) => {
+    void video.play().catch((cause: unknown) => {
       clearTimeout(timer);
+      if (image) cancelAnimationFrame(image);
+      if (rappel && typeof video.cancelVideoFrameCallback === 'function') {
+        video.cancelVideoFrameCallback(rappel);
+      }
       reject(cause instanceof Error ? cause : new Error(String(cause)));
     });
   });
