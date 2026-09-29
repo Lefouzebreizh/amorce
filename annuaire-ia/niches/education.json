@@ -190,6 +190,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nPadlet est devenu un réflexe : un mur, un lien, et trente élèves déposent leurs contributions sans compte à créer. Les fonctions génératives ajoutent le montage du support — plan de leçon, images d’illustration, cartes mentales — directement dans le mur. C’est l’outil du travail de groupe qui ne demande aucune logistique.\n\n## Points forts\n- Aucun compte élève nécessaire : un lien suffit\n- Contributions en direct, visibles de toute la classe\n- Génération d’images et de plans intégrée au mur\n- Formule gratuite pour trois murs, largement suffisante pour essayer\n\n## Points faibles\n- Les fonctions génératives sont réservées aux formules payantes\n- Sans cadre posé, le mur devient vite illisible\n- L’hébergement des contributions d’élèves demande une vérification côté établissement\n\n## Idéal pour\nLes enseignants qui font travailler en groupe et perdent un quart d’heure à chaque séance en logistique de connexion.",
       "date_ajout": "2026-09-27"
+    },
+    {
+      "id": "brisk-teaching",
+      "nom": "Brisk Teaching",
+      "categorie": "Évaluation",
+      "prix": "Freemium — à partir de 10 $/mois",
+      "description_courte": "Les retours sur copie rédigés directement dans le document de l'élève, et l'historique de rédaction qui montre comment il a écrit.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/brisk-teaching",
+      "score_avis": 4.5,
+      "description_longue": "## Notre verdict\nBrisk s'installe dans le navigateur et travaille là où sont les copies. Il rédige un retour argumenté sur un devoir, selon les critères de la grille, et propose une note motivée que l'enseignant ajuste. Sa fonction la plus utile est ailleurs : rejouer l'historique de rédaction d'un document partagé, qui montre si le texte a été écrit ou collé d'un bloc. La question du travail personnel se règle par une observation, pas par un soupçon.\n\n## Points forts\n- Retours rédigés selon la grille d'évaluation fournie, pas selon un standard générique\n- Rejeu de l'historique de rédaction : une réponse mesurable au copier-coller\n- Fonctionne dans les outils de travail déjà utilisés en classe\n- Version gratuite généreuse, adoptée massivement par les enseignants\n\n## Points faibles\n- Dépend d'un environnement de documents partagés en ligne\n- Les retours doivent être relus : le ton passe parfois à côté de l'élève\n- Interface et exemples calibrés sur les usages nord-américains\n\n## Idéal pour\nLes enseignants qui corrigent des copies rédigées en ligne et passent leurs soirées à écrire des appréciations individualisées.",
+      "date_ajout": "2026-09-29"
     }
   ]
 }

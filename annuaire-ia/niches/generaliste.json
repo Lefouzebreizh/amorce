@@ -292,6 +292,17 @@
       "score_avis": 4.4,
       "description_longue": "## Notre verdict\nGrammarly n’écrit pas à votre place, il rattrape ce qui vous échappe — et il le fait partout, dans la messagerie, le traitement de texte, le navigateur, sans qu’on ait à coller son texte quelque part. Le réglage du ton est ce qui a le plus de valeur en usage professionnel : le même message peut sortir ferme, cordial ou neutre.\n\n## Points forts\n- Présent dans tous les outils : rien à copier-coller nulle part\n- Réglage du ton, précieux sur un courriel délicat\n- Excellente prise en charge de l’anglais professionnel\n- Formule gratuite déjà très utile au quotidien\n\n## Points faibles\n- Le français reste nettement en retrait de l’anglais\n- Les suggestions de style lissent parfois une voix personnelle\n- L’extension analyse ce que vous écrivez : à écarter des documents confidentiels\n\n## Idéal pour\nCeux qui écrivent en anglais professionnel toute la journée et n’ont personne pour relire avant l’envoi.",
       "date_ajout": "2026-09-27"
+    },
+    {
+      "id": "otter-ai",
+      "nom": "Otter.ai",
+      "categorie": "Productivité",
+      "prix": "Freemium — à partir de 17 $/mois",
+      "description_courte": "La réunion transcrite, résumée, et les décisions extraites — sans que personne n’ait pris de notes.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/otter-ai",
+      "score_avis": 4.3,
+      "description_longue": "## Notre verdict\nOtter s’invite dans la réunion, la transcrit en direct et rend, à la fin, un résumé avec les points d’action attribués. Le gain n’est pas la transcription — c’est que plus personne ne prend de notes, donc que tout le monde participe. Sur cinq réunions par semaine, cela rend plusieurs heures et supprime le débat sur ce qui avait été décidé.\n\n## Points forts\n- Rejoint automatiquement les réunions des principaux outils de visioconférence\n- Résumé et points d’action extraits, pas seulement une transcription brute\n- Recherche dans l’historique de toutes les réunions passées\n- Formule gratuite de plusieurs centaines de minutes par mois\n\n## Points faibles\n- Le français est correct mais moins fiable que l’anglais sur les accents marqués\n- L’enregistrement d’une réunion demande l’accord explicite des participants\n- La distinction des locuteurs se perd quand plusieurs parlent ensemble\n\n## Idéal pour\nLes équipes qui sortent des réunions sans compte rendu et rediscutent trois jours plus tard de ce qui avait été décidé.",
+      "date_ajout": "2026-09-29"
     }
   ]
 }
