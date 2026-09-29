@@ -173,50 +173,43 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
   const pret = attendreVideo(video, 'seeked');
   video.currentTime = borne;
   await pret;
-  if (typeof video.requestVideoFrameCallback === 'function') {
-    /*
-     * Chromium ne garantit pas de nouveau rappel tant qu'un élément vidéo
-     * reste en pause après son `seeked`. Les rushes sont muets : on les relance
-     * juste le temps que le compositeur confirme l'horodatage demandé, puis on
-     * les remet aussitôt en pause avant de dessiner.
-     */
-    const imagePresentee = attendreImagePresentee(video, borne);
-    try {
-      await Promise.all([video.play(), imagePresentee]);
-    } finally {
-      video.pause();
-    }
+  try {
+    await attendreImageApresLecture(video, borne, fin);
+  } finally {
+    video.pause();
   }
   if (video.readyState < 2) await attendreVideo(video, 'loadeddata');
 }
 
-/** Attend le cadre réellement présenté après un déplacement de la tête. */
-function attendreImagePresentee(video: HTMLVideoElement, tempsDemande: number): Promise<void> {
-  if (typeof video.requestVideoFrameCallback !== 'function') return Promise.resolve();
-
+/** Attend que la lecture muette fasse avancer le décodeur d'au moins une image. */
+function attendreImageApresLecture(
+  video: HTMLVideoElement,
+  tempsDemande: number,
+  finSource: number,
+): Promise<void> {
   return new Promise((resolve, reject) => {
+    let image = 0;
     const timer = setTimeout(() => {
-      reject(new Error('Le cadre du rush n’a pas été présenté à temps. Réessaie l’export.'));
+      cancelAnimationFrame(image);
+      reject(new Error('Le cadre du rush n’a pas avancé à temps. Réessaie l’export.'));
     }, ATTENTE_MAX_MS);
 
-    const tolerance = Math.max(TOLERANCE_HORS_LIGNE, 2 / OUTPUT_FPS);
-    const verifier = (_now: DOMHighResTimeStamp, metadata: VideoFrameCallbackMetadata) => {
-      /*
-       * Un callback déjà en attente peut livrer le cadre antérieur au seek.
-       * Il est tentant de traiter le premier callback comme une preuve, mais
-       * la capture des rushes montrait justement plusieurs secondes répétées :
-       * Chromium peut composer ce cadre pendant que la nouvelle image décode.
-       * On ne dessine qu'une image dont son horodatage confirme le seek.
-       */
-      if (Math.abs(metadata.mediaTime - tempsDemande) <= tolerance) {
+    const avanceVisee = Math.min(1 / OUTPUT_FPS, Math.max(TOLERANCE_HORS_LIGNE, finSource - tempsDemande));
+    const verifier = () => {
+      if (video.currentTime >= tempsDemande + avanceVisee - TOLERANCE_HORS_LIGNE) {
         clearTimeout(timer);
         resolve();
         return;
       }
-      video.requestVideoFrameCallback(verifier);
+      image = requestAnimationFrame(verifier);
     };
 
-    video.requestVideoFrameCallback(verifier);
+    void video.play().then(() => {
+      image = requestAnimationFrame(verifier);
+    }).catch((cause: unknown) => {
+      clearTimeout(timer);
+      reject(cause instanceof Error ? cause : new Error(String(cause)));
+    });
   });
 }
 
