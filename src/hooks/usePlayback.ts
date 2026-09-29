@@ -126,6 +126,9 @@ const TOLERANCE_HORS_LIGNE = 0.004;
 /** Une attente expirée doit interrompre l'export, jamais figer un plan. */
 const ATTENTE_MAX_MS = 10000;
 
+/** Rushes dont un premier cadre a déjà été réellement décodé après chargement. */
+const cadresPrets = new WeakSet<HTMLVideoElement>();
+
 function attendreVideo(video: HTMLVideoElement, evenement: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const nettoyer = () => {
@@ -160,21 +163,23 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
   const vise = item.clip.inPoint + (temps - item.start) * item.clip.speed;
   const borne = Math.max(0, Math.min(vise, fin - 0.02));
   if (video.seeking) await attendreVideo(video, 'seeked');
-  if (Math.abs(video.currentTime - borne) <= TOLERANCE_HORS_LIGNE) return;
+  const dejaAuBonEndroit = Math.abs(video.currentTime - borne) <= TOLERANCE_HORS_LIGNE;
+  if (dejaAuBonEndroit && cadresPrets.has(video)) return;
 
   /*
    * `seeked` confirme que le déplacement est fini, pas que le décodeur a déjà
-   * présenté l'image correspondante. Sur Chromium, l'export image par image
-   * pouvait donc dessiner l'image précédente plusieurs fois, puis rattraper
-   * d'un coup — le MP4 restait à la bonne durée mais contenait un gel réel.
-   * Après le seek, laisser le rush muet avancer d'une image source confirme
-   * que le décodeur a produit un nouveau cadre avant que `drawImage` le lise.
+   * présenté l'image correspondante. Sur Chromium, le premier cadre d'un
+   * nouveau rush pouvait donc être dessiné avant que le décodeur ne l'ait
+   * avancé. Même sans déplacement, on attend ce premier cadre une seule fois.
    */
-  const pret = attendreVideo(video, 'seeked');
-  video.currentTime = borne;
-  await pret;
+  if (!dejaAuBonEndroit) {
+    const pret = attendreVideo(video, 'seeked');
+    video.currentTime = borne;
+    await pret;
+  }
   try {
     await attendreImageApresLecture(video, borne);
+    cadresPrets.add(video);
   } finally {
     video.pause();
   }
