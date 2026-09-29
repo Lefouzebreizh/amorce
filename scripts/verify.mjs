@@ -782,6 +782,11 @@ if (profile.mobile) {
   await page.screenshot({ path: join(SHOTS, `02b-apercu-${profile.id}.png`) });
 }
 
+// Le test d'analyse précédent laisse cette phase active après annulation.
+// Ouvrir explicitement l'outil qui contient le texte évite de confondre un
+// panneau replié avec un montage express qui n'aurait pas créé l'accroche.
+await allerAEtape(page, profile, 'Accroche');
+
 check(
   'Le montage express a posé une accroche',
   await page.locator('text=Attends la fin').first().isVisible(),

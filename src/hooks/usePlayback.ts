@@ -9,7 +9,7 @@ import { ClipVideoPool, preloadCaptionFonts, renderFrame, syncPlayback } from '@
 import type { Project } from '@/lib/types';
 import { useStudio } from '@/lib/store';
 import { layoutClips, type PlacedClip } from '@/lib/timeline';
-import { OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
+import { OUTPUT_FPS, OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
 
 /**
  * Boucle de lecture.
@@ -170,15 +170,15 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
    * Demander aussi le prochain cadre présenté garantit que `drawImage` lit le
    * plan demandé. Les navigateurs sans cette API gardent l'attente `seeked`.
    */
-  const imagePresentee = attendreImagePresentee(video);
   const pret = attendreVideo(video, 'seeked');
+  const imagePresentee = attendreImagePresentee(video, borne);
   video.currentTime = borne;
   await Promise.all([pret, imagePresentee]);
   if (video.readyState < 2) await attendreVideo(video, 'loadeddata');
 }
 
 /** Attend le cadre réellement présenté après un déplacement de la tête. */
-function attendreImagePresentee(video: HTMLVideoElement): Promise<void> {
+function attendreImagePresentee(video: HTMLVideoElement, tempsDemande: number): Promise<void> {
   if (typeof video.requestVideoFrameCallback !== 'function') return Promise.resolve();
 
   return new Promise((resolve, reject) => {
@@ -186,10 +186,24 @@ function attendreImagePresentee(video: HTMLVideoElement): Promise<void> {
       reject(new Error('Le cadre du rush n’a pas été présenté à temps. Réessaie l’export.'));
     }, ATTENTE_MAX_MS);
 
-    video.requestVideoFrameCallback(() => {
-      clearTimeout(timer);
-      resolve();
-    });
+    const tolerance = Math.max(TOLERANCE_HORS_LIGNE, 2 / OUTPUT_FPS);
+    const verifier = (_now: DOMHighResTimeStamp, metadata: VideoFrameCallbackMetadata) => {
+      /*
+       * Un callback déjà en attente peut livrer le cadre antérieur au seek.
+       * Il est tentant de traiter le premier callback comme une preuve, mais
+       * la capture des rushes montrait justement plusieurs secondes répétées :
+       * Chromium peut composer ce cadre pendant que la nouvelle image décode.
+       * On ne dessine qu'une image dont son horodatage confirme le seek.
+       */
+      if (Math.abs(metadata.mediaTime - tempsDemande) <= tolerance) {
+        clearTimeout(timer);
+        resolve();
+        return;
+      }
+      video.requestVideoFrameCallback(verifier);
+    };
+
+    video.requestVideoFrameCallback(verifier);
   });
 }
 
