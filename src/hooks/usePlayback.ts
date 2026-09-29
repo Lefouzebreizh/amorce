@@ -127,7 +127,7 @@ const TOLERANCE_HORS_LIGNE = 0.004;
 const ATTENTE_MAX_MS = 10000;
 
 /** Rushes dont un premier cadre a déjà été réellement décodé après chargement. */
-const cadresPrets = new WeakSet<HTMLVideoElement>();
+const derniereImagePresentee = new WeakMap<HTMLVideoElement, number>();
 
 function attendreVideo(video: HTMLVideoElement, evenement: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -164,7 +164,7 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
   const borne = Math.max(0, Math.min(vise, fin - 0.02));
   if (video.seeking) await attendreVideo(video, 'seeked');
   const dejaAuBonEndroit = Math.abs(video.currentTime - borne) <= TOLERANCE_HORS_LIGNE;
-  if (dejaAuBonEndroit && cadresPrets.has(video)) return;
+  if (dejaAuBonEndroit && derniereImagePresentee.has(video)) return;
 
   /*
    * `seeked` confirme que le déplacement est fini, pas que le décodeur a déjà
@@ -178,51 +178,80 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
     await pret;
   }
   try {
-    await attendreImageApresLecture(video, borne);
-    cadresPrets.add(video);
+    const tempsCadre = await attendreImageApresLecture(video, borne);
+    derniereImagePresentee.set(video, tempsCadre);
   } finally {
     video.pause();
   }
   if (video.readyState < 2) await attendreVideo(video, 'loadeddata');
 }
 
-/** Attend un avancement réel du décodeur après le seek. */
-function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number): Promise<void> {
+/** Attend que le décodeur présente une image différente après le seek. */
+function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number): Promise<number> {
   return new Promise((resolve, reject) => {
-    let image = 0;
+    let callback = 0;
+    let animation = 0;
     let terminee = false;
-    const avanceMinima = 0.6 / OUTPUT_FPS;
-    const seuil = tempsDemande + avanceMinima;
+    const tempsPrecedent = derniereImagePresentee.get(video) ?? Number.NEGATIVE_INFINITY;
+    const seuil = Math.max(0, tempsDemande - 0.5 / OUTPUT_FPS);
 
     const nettoyer = () => {
       clearTimeout(timer);
-      if (image) cancelAnimationFrame(image);
-    };
-    const terminer = () => {
-      if (terminee) return;
-      terminee = true;
-      nettoyer();
-      resolve();
-    };
-    const echouer = () => {
-      if (terminee) return;
-      terminee = true;
-      nettoyer();
-      reject(new Error('Le décodeur n’a pas avancé après le seek. Réessaie l’export.'));
-    };
-    const timer = setTimeout(echouer, ATTENTE_MAX_MS);
-
-    const verifier = () => {
-      if (video.currentTime >= seuil && video.readyState >= 2) {
-        terminer();
-        return;
+      if (callback && videoAvecCallback.cancelVideoFrameCallback) {
+        videoAvecCallback.cancelVideoFrameCallback(callback);
       }
-      image = requestAnimationFrame(verifier);
+      if (animation) cancelAnimationFrame(animation);
+    };
+    const terminer = (tempsCadre: number) => {
+      if (terminee) return;
+      terminee = true;
+      nettoyer();
+      resolve(tempsCadre);
+    };
+    const echouer = (cause: Error) => {
+      if (terminee) return;
+      terminee = true;
+      nettoyer();
+      reject(cause);
+    };
+    const timer = setTimeout(() => {
+      echouer(new Error(
+        `Le décodeur n’a pas présenté une nouvelle image à ${video.currentTime.toFixed(2)} s. Réessaie l’export.`,
+      ));
+    }, ATTENTE_MAX_MS);
+
+    const videoAvecCallback = video as HTMLVideoElement & {
+      requestVideoFrameCallback?: (
+        callback: (now: number, metadata: VideoFrameCallbackMetadata) => void,
+      ) => number;
+      cancelVideoFrameCallback?: (id: number) => void;
     };
 
-    void video.play().then(() => {
-      image = requestAnimationFrame(verifier);
-    }).catch(echouer);
+    if (typeof videoAvecCallback.requestVideoFrameCallback === 'function') {
+      const verifier = (_now: number, metadata: VideoFrameCallbackMetadata) => {
+        const imageNouvelle = metadata.mediaTime > tempsPrecedent + 0.001;
+        const cibleAtteinte = video.currentTime >= seuil && video.readyState >= 2;
+        if (imageNouvelle && cibleAtteinte) {
+          terminer(metadata.mediaTime);
+          return;
+        }
+        callback = videoAvecCallback.requestVideoFrameCallback!(verifier);
+      };
+      callback = videoAvecCallback.requestVideoFrameCallback(verifier);
+    } else {
+      const verifier = () => {
+        if (video.currentTime >= tempsDemande + 0.6 / OUTPUT_FPS && video.readyState >= 2) {
+          terminer(video.currentTime);
+          return;
+        }
+        animation = requestAnimationFrame(verifier);
+      };
+      animation = requestAnimationFrame(verifier);
+    }
+
+    void video.play().catch((cause: unknown) => {
+      echouer(cause instanceof Error ? cause : new Error(String(cause)));
+    });
   });
 }
 
