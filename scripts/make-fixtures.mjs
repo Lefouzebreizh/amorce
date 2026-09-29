@@ -85,7 +85,11 @@ for (const spec of SPECS) {
     gain.connect(destination);
     oscillator.start();
 
-    const stream = canvas.captureStream(30);
+    // Le prélèvement automatique de Chromium peut rendre un WebM sans image
+    // sur le grand canvas paysage. On demande chaque image explicitement et
+    // à cadence fixe pour que les rushes restent déterministes en CI.
+    const stream = canvas.captureStream(0);
+    const pisteVideo = stream.getVideoTracks()[0];
     for (const track of destination.stream.getAudioTracks()) stream.addTrack(track);
 
     const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' });
@@ -95,32 +99,39 @@ for (const spec of SPECS) {
     recorder.start();
 
     const start = performance.now();
+    let dernierIndice = -1;
     await new Promise((resolve) => {
       const draw = () => {
-        const t = (performance.now() - start) / 1000;
-        if (t >= seconds) return resolve();
-        // Le fond et le disque bougent en continu : deux images consécutives
-        // doivent différer, sinon les contrôles de « l'image change » seraient
-        // satisfaits par une vidéo figée.
-        ctx.fillStyle = `hsl(${hue + t * 90} 55% ${20 + Math.sin(t * 2) * 12}%)`;
-        ctx.fillRect(0, 0, L, H);
-        ctx.fillStyle = `hsl(${hue + 40} 80% 62%)`;
-        ctx.beginPath();
-        // Sur un plan large, le sujet balaie toute la largeur — c'est ce qui
-        // fait sortir un cadrage centré. Sur un 9:16, il tourne comme avant.
-        const large = L > H;
-        const cx = large
-          ? L / 2 + Math.sin(t * 1.1) * (L / 2 - H * 0.16)
-          : L / 2 + Math.sin(t * 1.6) * (L * 0.28);
-        const cy = large ? H / 2 : H / 2 + Math.cos(t * 1.2) * (H * 0.21);
-        ctx.arc(cx, cy, Math.min(L, H) * 0.16, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#fff';
-        ctx.font = `900 ${Math.round(Math.min(L, H) * 0.13)}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.fillText(label, cx, cy + Math.min(L, H) * 0.045);
-        ctx.font = `600 ${Math.round(Math.min(L, H) * 0.06)}px monospace`;
-        ctx.fillText(`${t.toFixed(2)}s`, L / 2, H * 0.88);
+        const ecoule = (performance.now() - start) / 1000;
+        if (ecoule >= seconds) return resolve();
+        const indice = Math.floor(ecoule * 30);
+        if (indice !== dernierIndice) {
+          dernierIndice = indice;
+          const t = indice / 30;
+          // Le fond et le disque bougent franchement : deux images consécutives
+          // doivent différer, sinon les contrôles de « l'image change » seraient
+          // satisfaits par une vidéo figée.
+          ctx.fillStyle = `hsl(${hue + t * 90} 55% ${20 + Math.sin(t * 2) * 12}%)`;
+          ctx.fillRect(0, 0, L, H);
+          ctx.fillStyle = `hsl(${hue + 40} 80% 62%)`;
+          ctx.beginPath();
+          // Sur un plan large, le sujet balaie toute la largeur — c'est ce qui
+          // fait sortir un cadrage centré. Sur un 9:16, il tourne comme avant.
+          const large = L > H;
+          const cx = large
+            ? L / 2 + Math.sin(t * 1.1) * (L / 2 - H * 0.16)
+            : L / 2 + Math.sin(t * 1.6) * (L * 0.28);
+          const cy = large ? H / 2 : H / 2 + Math.cos(t * 1.2) * (H * 0.21);
+          ctx.arc(cx, cy, Math.min(L, H) * 0.16, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#fff';
+          ctx.font = `900 ${Math.round(Math.min(L, H) * 0.13)}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.fillText(label, cx, cy + Math.min(L, H) * 0.045);
+          ctx.font = `600 ${Math.round(Math.min(L, H) * 0.06)}px monospace`;
+          ctx.fillText(`${t.toFixed(2)}s`, L / 2, H * 0.88);
+          pisteVideo.requestFrame();
+        }
         requestAnimationFrame(draw);
       };
       draw();
