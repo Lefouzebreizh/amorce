@@ -186,9 +186,9 @@ function chargerRush(asset: MediaAsset): HTMLVideoElement {
     position: 'fixed',
     left: '0',
     top: '0',
-    width: '2px',
-    height: '2px',
-    opacity: '0.01',
+    width: '160px',
+    height: '90px',
+    opacity: '0.005',
     pointerEvents: 'none',
     zIndex: '2147483647',
   });
