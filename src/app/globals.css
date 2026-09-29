@@ -894,3 +894,147 @@ input[type='range']::-moz-range-thumb {
 @media (prefers-reduced-motion: reduce) {
   .preview-empty-action, .preview-empty-action svg, .studio-help-chevron { transition: none !important; }
 }
+
+/* Mouvance Studio — une salle de création chaleureuse, sans colorer le média. */
+.studio-shell,
+.studio-mobile-shell {
+  --color-ink: #171419;
+  --color-slab: #211c22;
+  --color-panel: #2b242b;
+  --color-raised: #342b34;
+  --color-edge: #493b45;
+  --color-mist: #f8f0e8;
+  --color-muted: #cbbbc0;
+  --color-accent: #ffc18d;
+  --color-accent-deep: #a95243;
+  --color-select: #efb6cc;
+  --color-violet: #b66a8d;
+  --color-violet-clair: #f2bfd0;
+  background:
+    radial-gradient(38rem 32rem at 14% 78%, rgb(182 106 141 / .09), transparent 72%),
+    radial-gradient(50rem 36rem at 74% 0%, rgb(255 169 111 / .12), transparent 72%),
+    linear-gradient(140deg, #171419 0%, #1c171e 50%, #151319 100%);
+}
+.studio-shell::before {
+  opacity: .1;
+  background-image: linear-gradient(rgb(255 232 214 / .035) 1px, transparent 1px), linear-gradient(90deg, rgb(255 232 214 / .035) 1px, transparent 1px);
+}
+.studio-shell::after {
+  right: 14%;
+  bottom: 6%;
+  border-color: rgb(255 193 141 / .15);
+  box-shadow: 0 0 0 5rem rgb(182 106 141 / .025), 0 0 8rem rgb(255 169 111 / .1);
+}
+.studio-header {
+  border-color: rgb(255 222 201 / .1) !important;
+  background: linear-gradient(90deg, rgb(23 20 25 / .97), rgb(36 27 34 / .9));
+}
+.studio-wordmark {
+  background: linear-gradient(105deg, #fff8f1 10%, #ffd1a8 58%, #e7b2c8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.studio-live-dot {
+  background: var(--color-accent);
+  box-shadow: 0 0 0 5px rgb(255 193 141 / .1), 0 0 18px rgb(255 169 111 / .5);
+}
+.studio-nav,
+.studio-rail {
+  border-color: rgb(255 222 201 / .1) !important;
+  background: linear-gradient(160deg, rgb(42 34 42 / .96), rgb(29 24 31 / .95));
+  box-shadow: inset 0 1px 0 rgb(255 244 232 / .04), 0 22px 60px rgb(0 0 0 / .2);
+}
+.studio-nav-eyebrow { color: #f5c7a0; }
+.studio-nav-eyebrow span { color: #d9a0b6; }
+.studio-step-active {
+  border-color: rgb(255 193 141 / .3) !important;
+  background: linear-gradient(110deg, rgb(255 193 141 / .11), rgb(182 106 141 / .12)) !important;
+}
+.studio-step-active .studio-step-number {
+  border-color: rgb(255 193 141 / .36);
+  color: #ffe0c4;
+  background: rgb(255 193 141 / .1);
+}
+.studio-preview-plate,
+.studio-timeline-plate {
+  border-color: rgb(255 222 201 / .11);
+  background:
+    radial-gradient(34rem 28rem at 50% 48%, rgb(117 67 80 / .18), transparent 74%),
+    linear-gradient(145deg, rgb(39 32 40 / .9), rgb(22 20 26 / .96));
+  box-shadow: inset 0 1px 0 rgb(255 244 232 / .045), 0 28px 68px rgb(0 0 0 / .23);
+}
+.studio-preview-plate::before {
+  top: -8rem;
+  background: radial-gradient(circle, rgb(255 181 123 / .17), rgb(195 117 142 / .08) 43%, transparent 72%);
+}
+.studio-preview-plate::after { border-color: rgb(255 224 205 / .045); }
+.studio-preview-plate canvas {
+  /* Le fond du canevas reste neutre : seule la scène autour prend la teinte chaude. */
+  box-shadow: 0 32px 84px rgb(0 0 0 / .62), 0 0 0 6px rgb(255 245 232 / .025), 0 0 52px rgb(255 174 125 / .08) !important;
+}
+.studio-rail > * { border-color: rgb(255 226 207 / .065); }
+.phase-tool-picker {
+  border-color: rgb(255 226 207 / .1);
+  background: rgb(20 17 23 / .55);
+}
+.phase-tool-choice { color: #d0c1c5; }
+.phase-tool-choice.is-active {
+  border-color: rgb(255 193 141 / .26);
+  color: #ffe3ca;
+  background: linear-gradient(110deg, rgb(255 193 141 / .12), rgb(182 106 141 / .13));
+}
+.workflow-phase {
+  border-color: rgb(255 226 207 / .08);
+  background: linear-gradient(145deg, rgb(42 35 43 / .97), rgb(30 25 32 / .96));
+}
+.workflow-phase.is-open .workflow-phase-heading {
+  background: linear-gradient(100deg, rgb(255 193 141 / .075), rgb(182 106 141 / .075));
+}
+.workflow-phase-number { border-color: rgb(255 226 207 / .16); }
+.workflow-phase.is-open .workflow-phase-number {
+  border-color: rgb(255 193 141 / .32);
+  color: #ffe0c4;
+  background: rgb(255 193 141 / .09);
+}
+.workflow-phase-chevron { color: var(--color-accent); }
+.preview-empty {
+  border-color: rgb(255 225 204 / .14);
+  background:
+    radial-gradient(28rem 19rem at 50% 40%, rgb(193 119 100 / .2), transparent 73%),
+    radial-gradient(21rem 17rem at 64% 69%, rgb(157 91 119 / .17), transparent 74%),
+    linear-gradient(145deg, #2a2027, #17151c 72%);
+  box-shadow: inset 0 1px 0 rgb(255 244 232 / .07), inset 0 0 70px rgb(0 0 0 / .26);
+}
+.preview-empty::before {
+  background-image: linear-gradient(rgb(255 228 209 / .028) 1px, transparent 1px), linear-gradient(90deg, rgb(255 228 209 / .028) 1px, transparent 1px);
+}
+.preview-empty-frame {
+  border-color: rgb(255 221 198 / .23);
+  background: linear-gradient(145deg, rgb(78 51 55 / .9), rgb(37 31 39 / .9));
+}
+.preview-empty-frame::before,
+.preview-empty-frame::after { background: repeating-linear-gradient(to bottom, rgb(255 220 196 / .3) 0 4px, transparent 4px 8px); }
+.preview-empty-frame-front {
+  border-color: rgb(255 193 141 / .48);
+  background: linear-gradient(145deg, rgb(96 61 54 / .96), rgb(49 37 44 / .94));
+}
+.preview-empty-clapper { color: #ffe1c6; filter: drop-shadow(0 0 14px rgb(255 181 123 / .3)); }
+.preview-empty-orbit { border-color: rgb(217 143 166 / .48); }
+.preview-empty-orbit-one { box-shadow: 0 0 18px rgb(182 106 141 / .16); }
+.preview-empty-orbit-two { border-color: rgb(255 193 141 / .25); }
+.preview-empty-eyebrow { color: #ffd0a8; }
+.preview-empty-title { color: #fff5eb; }
+.preview-empty-copy { color: #d5c6c7; }
+.preview-empty-action {
+  border-color: rgb(255 220 188 / .54);
+  color: #2a1c1c;
+  background: linear-gradient(105deg, #ffbd86, #ffdcad);
+  box-shadow: 0 10px 28px rgb(255 174 125 / .16), inset 0 1px 0 rgb(255 255 255 / .58);
+}
+.preview-empty-action:hover { box-shadow: 0 12px 34px rgb(255 174 125 / .26), inset 0 1px 0 rgb(255 255 255 / .65); }
+.preview-empty-footnote { color: #bdaeb5; }
+.studio-mobile-shell {
+  background:
+    radial-gradient(32rem 24rem at 50% -12%, rgb(255 181 123 / .12), transparent 72%),
+    linear-gradient(152deg, #1b171d, #17141a 66%, #21171e);
+}
