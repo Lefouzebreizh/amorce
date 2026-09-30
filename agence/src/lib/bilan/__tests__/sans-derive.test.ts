@@ -37,7 +37,7 @@ import { test } from 'node:test';
  * **nombres** : un seuil qui s'écarte fait diverger deux bilans qui devraient
  * dire la même chose.
  */
-const FIGES = ['modeles', 'baremes', 'valorisation'] as const;
+const FIGES = ['modeles', 'baremes', 'valorisation', 'allocation'] as const;
 const ADAPTES = ['constats', 'redaction'] as const;
 
 const ICI = path.join(import.meta.dirname, '..');
