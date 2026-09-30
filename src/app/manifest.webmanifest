@@ -1,7 +1,7 @@
 {
-  "name": "Amorce — studio de montage vertical",
-  "short_name": "Amorce",
-  "description": "Monte tes vidéos IA au format vertical. Tout se passe dans ton navigateur, aucun fichier n'est envoyé sur un serveur.",
+  "name": "Mouvance Studio — création vidéo",
+  "short_name": "Mouvance",
+  "description": "Crée des médias avec l’IA, puis monte tes vidéos dans le navigateur.",
   "start_url": "/studio",
   "scope": "/",
   "display": "standalone",
