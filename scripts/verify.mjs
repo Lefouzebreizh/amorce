@@ -176,6 +176,21 @@ async function allerAEtape(page, profile, label) {
 
 const results = [];
 let profileLabel = '';
+async function journaliserEtatExport(page, phase, cause) {
+  const etat = await page.evaluate(() => {
+    const filtre = /encodage|export|échec|erreur|terminé|arrêter|\\bMo\\b|\\bKo\\b/i;
+    const texte = document.body.innerText.split(/\\n+/).map((ligne) => ligne.trim()).filter((ligne) => filtre.test(ligne));
+    const boutons = [...document.querySelectorAll('button')]
+      .map((bouton) => bouton.innerText.trim().replace(/\\s+/g, ' '))
+      .filter((ligne) => filtre.test(ligne));
+    const alertes = [...document.querySelectorAll('[role="alert"], [aria-live]')]
+      .map((element) => element.innerText.trim().replace(/\\s+/g, ' '))
+      .filter(Boolean);
+    return { texte: texte.slice(-16), boutons, alertes };
+  });
+  console.log(`  DIAGNOSTIC EXPORT — ${phase} — ${JSON.stringify({ cause: String(cause).slice(0, 140), ...etat })}`);
+}
+
 const check = (name, ok, detail = '') => {
   results.push({ name: `[${profileLabel}] ${name}`, ok });
   console.log(`${ok ? '  OK  ' : ' ECHEC'} | ${name}${detail ? ` — ${detail}` : ''}`);
@@ -603,6 +618,7 @@ if (!profile.mobile) {
     }
 
   } catch (error) {
+    await journaliserEtatExport(page, 'export conservé', error);
     check('L’export conservé est produit et mesuré', false, String(error).slice(0, 160));
   }
   await allerAEtape(page, profile, 'Importer');
@@ -1522,6 +1538,7 @@ try {
   await download.saveAs(exportPath);
   check('Un fichier est téléchargé', true, download.suggestedFilename());
 } catch (error) {
+  await journaliserEtatExport(page, `export vidéo ${profile.id}`, error);
   check('Un fichier est téléchargé', false, String(error).slice(0, 120));
 }
 
