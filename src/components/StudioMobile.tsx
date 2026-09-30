@@ -247,7 +247,7 @@ function MobileHeader() {
         href="/"
         className="flex min-h-11 items-center font-display text-[19px] tracking-tight text-mist focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
-        amorce
+        Mouvance Studio
       </Link>
       <div className="flex items-center gap-2">
         <UndoControls canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
