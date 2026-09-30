@@ -199,7 +199,10 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
     let callback = 0;
     let animation = 0;
     let terminee = false;
-    const seuil = Math.max(0, tempsDemande - 0.5 / OUTPUT_FPS);
+    // Certains WebM ne donnent pas à leur dernière image un horodatage
+    // parfaitement aligné sur la durée annoncée. Une image et demie couvre ce
+    // décalage de bord tout en refusant une image sensiblement antérieure.
+    const seuil = Math.max(0, tempsDemande - 1.5 / OUTPUT_FPS);
 
     const nettoyer = () => {
       clearTimeout(timer);
@@ -235,8 +238,8 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
 
     if (typeof videoAvecCallback.requestVideoFrameCallback === 'function') {
       const verifier = (_now: number, metadata: VideoFrameCallbackMetadata) => {
-        // mediaTime décrit l'image effectivement présentée. Une image identique
-        // est valide si elle se trouve à moins d'une demi-image de la cible.
+        // mediaTime décrit l'image effectivement présentée. À la fin d'un
+        // WebM, son horodatage peut précéder légèrement la durée déclarée.
         const imageAuPointDemande = metadata.mediaTime >= seuil;
         const cibleAtteinte = video.currentTime >= seuil && video.readyState >= 2;
         if (imageAuPointDemande && cibleAtteinte) {
