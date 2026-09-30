@@ -209,6 +209,7 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
     const nettoyer = () => {
       clearTimeout(timer);
       video.removeEventListener('ended', terminerFin);
+      video.removeEventListener('seeked', verifierApresSeek);
       if (callback && videoAvecCallback.cancelVideoFrameCallback) {
         videoAvecCallback.cancelVideoFrameCallback(callback);
       }
@@ -220,10 +221,11 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
       nettoyer();
       resolve(tempsCadre);
     };
-    const terminerFin = () => {
+    const verifierApresSeek = () => {
       const procheDeLaCible = Math.abs(video.currentTime - tempsDemande) <= toleranceCadre;
-      if (video.readyState >= 2 && procheDeLaCible) terminer(video.currentTime);
+      if (!video.seeking && video.readyState >= 2 && procheDeLaCible) terminer(video.currentTime);
     };
+    const terminerFin = () => verifierApresSeek();
     const echouer = (cause: Error) => {
       if (terminee) return;
       terminee = true;
@@ -244,6 +246,8 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
     };
 
     video.addEventListener('ended', terminerFin);
+    video.addEventListener('seeked', verifierApresSeek);
+    verifierApresSeek();
     if (video.ended) terminerFin();
 
     if (!terminee && typeof videoAvecCallback.requestVideoFrameCallback === 'function') {
