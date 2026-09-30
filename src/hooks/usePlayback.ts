@@ -172,13 +172,15 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
    * nouveau rush pouvait donc être dessiné avant que le décodeur ne l'ait
    * avancé. Même sans déplacement, on attend ce premier cadre une seule fois.
    */
-  if (!dejaAuBonEndroit) {
-    const pret = attendreVideo(video, 'seeked');
-    video.currentTime = borne;
-    await pret;
-  }
   try {
-    const tempsCadre = await attendreImageApresLecture(video, borne);
+    /*
+     * Armer le rappel avant le seek : à la dernière image d'un rush, Chromium
+     * peut la présenter pendant le traitement du seeked. L'attente démarrée
+     * après cet événement ne recevrait alors plus aucun rappel.
+     */
+    const imagePresentee = attendreImageApresLecture(video, borne);
+    if (!dejaAuBonEndroit) video.currentTime = borne;
+    const tempsCadre = await imagePresentee;
     derniereImagePresentee.set(video, tempsCadre);
   } finally {
     video.pause();
@@ -202,7 +204,7 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
     // Certains WebM ne donnent pas à leur dernière image un horodatage
     // parfaitement aligné sur la durée annoncée. Une image et demie couvre ce
     // décalage de bord tout en refusant une image sensiblement antérieure.
-    const seuil = Math.max(0, tempsDemande - 1.5 / OUTPUT_FPS);
+    const toleranceCadre = 1.5 / OUTPUT_FPS;
 
     const nettoyer = () => {
       clearTimeout(timer);
@@ -240,8 +242,8 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
       const verifier = (_now: number, metadata: VideoFrameCallbackMetadata) => {
         // mediaTime décrit l'image effectivement présentée. À la fin d'un
         // WebM, son horodatage peut précéder légèrement la durée déclarée.
-        const imageAuPointDemande = metadata.mediaTime >= seuil;
-        const cibleAtteinte = video.currentTime >= seuil && video.readyState >= 2;
+        const imageAuPointDemande = Math.abs(metadata.mediaTime - tempsDemande) <= toleranceCadre;
+        const cibleAtteinte = !video.seeking && video.readyState >= 2;
         if (imageAuPointDemande && cibleAtteinte) {
           terminer(metadata.mediaTime);
           return;
@@ -251,7 +253,11 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
       callback = videoAvecCallback.requestVideoFrameCallback(verifier);
     } else {
       const verifier = () => {
-        if (!video.seeking && video.currentTime >= seuil && video.readyState >= 2) {
+        if (
+          !video.seeking
+          && Math.abs(video.currentTime - tempsDemande) <= toleranceCadre
+          && video.readyState >= 2
+        ) {
           terminer(video.currentTime);
           return;
         }
