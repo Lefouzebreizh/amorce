@@ -208,6 +208,7 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
 
     const nettoyer = () => {
       clearTimeout(timer);
+      video.removeEventListener('ended', terminerFin);
       if (callback && videoAvecCallback.cancelVideoFrameCallback) {
         videoAvecCallback.cancelVideoFrameCallback(callback);
       }
@@ -218,6 +219,10 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
       terminee = true;
       nettoyer();
       resolve(tempsCadre);
+    };
+    const terminerFin = () => {
+      const procheDeLaCible = Math.abs(video.currentTime - tempsDemande) <= toleranceCadre;
+      if (video.readyState >= 2 && procheDeLaCible) terminer(video.currentTime);
     };
     const echouer = (cause: Error) => {
       if (terminee) return;
@@ -238,7 +243,10 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
       cancelVideoFrameCallback?: (id: number) => void;
     };
 
-    if (typeof videoAvecCallback.requestVideoFrameCallback === 'function') {
+    video.addEventListener('ended', terminerFin);
+    if (video.ended) terminerFin();
+
+    if (!terminee && typeof videoAvecCallback.requestVideoFrameCallback === 'function') {
       const verifier = (_now: number, metadata: VideoFrameCallbackMetadata) => {
         // mediaTime décrit l'image effectivement présentée. À la fin d'un
         // WebM, son horodatage peut précéder légèrement la durée déclarée.
@@ -251,7 +259,7 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
         callback = videoAvecCallback.requestVideoFrameCallback!(verifier);
       };
       callback = videoAvecCallback.requestVideoFrameCallback(verifier);
-    } else {
+    } else if (!terminee) {
       const verifier = () => {
         if (
           !video.seeking
@@ -266,9 +274,11 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
       animation = requestAnimationFrame(verifier);
     }
 
-    void video.play().catch((cause: unknown) => {
-      echouer(cause instanceof Error ? cause : new Error(String(cause)));
-    });
+    if (!terminee) {
+      void video.play().catch((cause: unknown) => {
+        echouer(cause instanceof Error ? cause : new Error(String(cause)));
+      });
+    }
   });
 }
 
