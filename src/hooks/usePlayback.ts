@@ -186,13 +186,19 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
   if (video.readyState < 2) await attendreVideo(video, 'loadeddata');
 }
 
-/** Attend que le décodeur présente une image différente après le seek. */
+/**
+ * Attend une image décodée à l'instant demandé.
+ *
+ * À la dernière image d'un rush, Chromium peut présenter le même instant vidéo
+ * que lors du précédent appel : le média n'a simplement pas d'image suivante.
+ * Exiger un mediaTime strictement nouveau faisait alors échouer l'export près
+ * de la fin du plan, bien que la dernière image visible soit la bonne.
+ */
 function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number): Promise<number> {
   return new Promise((resolve, reject) => {
     let callback = 0;
     let animation = 0;
     let terminee = false;
-    const tempsPrecedent = derniereImagePresentee.get(video) ?? Number.NEGATIVE_INFINITY;
     const seuil = Math.max(0, tempsDemande - 0.5 / OUTPUT_FPS);
 
     const nettoyer = () => {
@@ -216,7 +222,7 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
     };
     const timer = setTimeout(() => {
       echouer(new Error(
-        `Le décodeur n’a pas présenté une nouvelle image à ${video.currentTime.toFixed(2)} s. Réessaie l’export.`,
+        `Le décodeur n’a pas présenté d’image à ${video.currentTime.toFixed(2)} s. Réessaie l’export.`,
       ));
     }, ATTENTE_MAX_MS);
 
@@ -229,9 +235,11 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
 
     if (typeof videoAvecCallback.requestVideoFrameCallback === 'function') {
       const verifier = (_now: number, metadata: VideoFrameCallbackMetadata) => {
-        const imageNouvelle = metadata.mediaTime > tempsPrecedent + 0.001;
+        // mediaTime décrit l'image effectivement présentée. Une image identique
+        // est valide si elle se trouve à moins d'une demi-image de la cible.
+        const imageAuPointDemande = metadata.mediaTime >= seuil;
         const cibleAtteinte = video.currentTime >= seuil && video.readyState >= 2;
-        if (imageNouvelle && cibleAtteinte) {
+        if (imageAuPointDemande && cibleAtteinte) {
           terminer(metadata.mediaTime);
           return;
         }
@@ -240,7 +248,7 @@ function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number
       callback = videoAvecCallback.requestVideoFrameCallback(verifier);
     } else {
       const verifier = () => {
-        if (video.currentTime >= tempsDemande + 0.6 / OUTPUT_FPS && video.readyState >= 2) {
+        if (!video.seeking && video.currentTime >= seuil && video.readyState >= 2) {
           terminer(video.currentTime);
           return;
         }
