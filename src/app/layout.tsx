@@ -30,9 +30,9 @@ const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
   'https://amorce-erwannchevallier-6916s-projects.vercel.app';
 
-const TITRE = 'Amorce — création et montage vidéo assistés de bout en bout';
+const TITRE = 'Mouvance Studio — création et montage vidéo';
 const DESCRIPTION =
-  'Monte tes vidéos IA au format vertical : transitions, bruitages, sous-titres, rendu cinéma et note de montage. Tout se passe dans ton navigateur, aucun fichier n’est envoyé sur un serveur.';
+  'Crée des images et des vidéos avec l’IA, puis monte-les dans ton navigateur avec transitions, son, sous-titres et rendu cinéma.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     title: TITRE,
     description: DESCRIPTION,
     url: '/',
-    siteName: 'Amorce',
+    siteName: 'Mouvance Studio',
     locale: 'fr_FR',
     type: 'website',
   },

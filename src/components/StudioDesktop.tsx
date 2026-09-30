@@ -94,7 +94,7 @@ function DesktopHeader() {
           href="/"
           className="studio-wordmark flex min-h-11 items-center font-display text-xl tracking-tight text-mist focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          amorce
+          Mouvance Studio
         </Link>
         <span className="studio-live-dot" aria-label="Studio prêt" />
         <span className="hidden text-[13px] text-muted sm:block">
