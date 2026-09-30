@@ -77,16 +77,26 @@ export function FormulaireBilan({ connecte }: { connecte: boolean }) {
   const derniereEtape = etape === ETAPES.length - 1;
 
   return (
-    <form action={action} className="flex flex-col gap-6" noValidate>
-      <ol className="flex gap-2 text-xs font-medium text-muted-foreground" aria-label="Étapes">
+    <form action={action} className="flex flex-col gap-7" noValidate>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold uppercase tracking-[.14em] text-violet-800">Votre bilan</p>
+          <p className="text-sm font-medium text-slate-600" aria-live="polite">Étape {etape + 1} <span className="text-slate-400">sur {ETAPES.length}</span></p>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-label="Progression du bilan" aria-valuemin={1} aria-valuemax={ETAPES.length} aria-valuenow={etape + 1}>
+          <div className="h-full rounded-full bg-gradient-to-r from-teal-500 to-violet-700 transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${((etape + 1) / ETAPES.length) * 100}%` }} />
+        </div>
+      </div>
+
+      <ol className="grid grid-cols-3 gap-2 text-xs font-medium" aria-label="Étapes">
         {ETAPES.map((titre, index) => (
           <li
             key={titre}
             aria-current={index === etape ? 'step' : undefined}
-            className={index === etape ? 'text-foreground' : undefined}
+            className={`rounded-xl px-2 py-2.5 text-center transition-colors motion-reduce:transition-none ${index === etape ? 'bg-violet-50 text-violet-950 ring-1 ring-violet-200' : index < etape ? 'bg-teal-50 text-teal-900' : 'bg-slate-50 text-slate-500'}`}
           >
-            {index + 1}. {titre}
-            {index < ETAPES.length - 1 ? <span aria-hidden className="ml-2">·</span> : null}
+            <span className="block text-[10px] uppercase tracking-wider opacity-70">{index + 1}</span>
+            <span className="mt-0.5 block">{titre}</span>
           </li>
         ))}
       </ol>
@@ -204,12 +214,13 @@ export function FormulaireBilan({ connecte }: { connecte: boolean }) {
         </p>
       ) : null}
 
-      <div className="flex justify-between gap-3">
+      <div className="flex justify-between gap-3 border-t border-slate-200 pt-5">
         <Button
           type="button"
           variante="contour"
           onClick={() => setEtape((valeur) => Math.max(0, valeur - 1))}
           disabled={etape === 0}
+          className="min-h-11 rounded-full border-slate-300 px-5 text-slate-700 hover:bg-slate-50 disabled:opacity-40"
         >
           Précédent
         </Button>
@@ -217,7 +228,7 @@ export function FormulaireBilan({ connecte }: { connecte: boolean }) {
         {derniereEtape ? (
           <BoutonSoumettre libelleEnCours="Calcul…">Voir mon bilan</BoutonSoumettre>
         ) : (
-          <Button type="button" onClick={() => setEtape((valeur) => Math.min(ETAPES.length - 1, valeur + 1))}>
+          <Button type="button" onClick={() => setEtape((valeur) => Math.min(ETAPES.length - 1, valeur + 1))} className="min-h-11 rounded-full bg-slate-950 px-6 text-white hover:bg-violet-800">
             Suivant
           </Button>
         )}
