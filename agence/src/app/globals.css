@@ -64,6 +64,30 @@
   --ring: oklch(0.52 0.2 267);
 }
 
+/* Le bilan FinancIA conserve une palette claire, même lorsque le navigateur
+ * suit le thème sombre du système. Les cartes et champs de formulaire
+ * héritent ainsi de couleurs adaptées à leur fond clair. */
+.financia-surface {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+  --primary: #6d28d9;
+  --primary-foreground: #ffffff;
+  --accent: #f5f3ff;
+  --accent-foreground: #3b0764;
+  --destructive: #b91c1c;
+  --destructive-foreground: #ffffff;
+  --success: #15803d;
+  --success-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #94a3b8;
+  --ring: #6d28d9;
+  color-scheme: light;
+}
+
 /*
  * Thème sombre. Il suit le réglage du système : aucun bouton ne le commande,
  * donc aucun état à conserver, et rien à synchroniser entre le serveur et le
