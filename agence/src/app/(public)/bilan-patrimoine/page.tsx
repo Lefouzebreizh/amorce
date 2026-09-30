@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 export default async function PageBilanPatrimoine() {
   const connecte = (await lireSession()) !== null;
   return (
-    <article className="relative left-1/2 w-[min(72rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-[2rem] border border-border bg-background shadow-[0_30px_100px_-48px_rgba(31,41,55,.28)] sm:w-[min(72rem,calc(100vw-3rem))]">
+    <article className="financia-surface relative left-1/2 w-[min(72rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-[2rem] border border-border bg-background shadow-[0_30px_100px_-48px_rgba(31,41,55,.28)] sm:w-[min(72rem,calc(100vw-3rem))]">
       <header className="relative grid gap-8 overflow-hidden bg-[radial-gradient(ellipse_at_80%_10%,rgba(64,224,208,.18),transparent_36%),radial-gradient(ellipse_at_100%_100%,rgba(124,58,237,.10),transparent_38%),linear-gradient(135deg,#f8faf9_0%,#f4f5f8_58%,#f2f0f8_100%)] px-6 py-10 sm:px-10 sm:py-14 lg:grid-cols-[1.15fr_.85fr] lg:items-end lg:px-14 lg:py-16">
         <div className="relative z-10 max-w-2xl">
           <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/75 px-3 py-1.5 text-xs font-semibold tracking-wide text-slate-700 shadow-sm">
