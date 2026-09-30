@@ -13,6 +13,7 @@ import { useSharedFiles } from '@/hooks/useSharedFiles';
 import { useDetectionCadrage } from '@/hooks/useDetectionCadrage';
 import { StudioDesktop } from './StudioDesktop';
 import { StudioMobile } from './StudioMobile';
+import { MouvanceCreation } from './MouvanceCreation';
 import { STEP_FOR_SELECTION, type StepId } from '@/lib/steps';
 
 /**
@@ -137,6 +138,7 @@ export function Studio() {
         // retombe sur l'import si le panneau avait été refermé côté téléphone.
         <StudioDesktop engine={engine} step={step ?? 'import'} onStep={openStep} />
       )}
+      <MouvanceCreation />
     </FournisseurLicence>
   );
 }
