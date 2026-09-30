@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowRight, Check, ShieldCheck } from 'lucide-react';
 import { enregistrerBilan } from '@/lib/actions/patrimoine';
 import type { Situation } from '@/lib/bilan/modeles';
 import { CONSTATS_MONTRES_MAX, premierGesteTexte, type Bilan } from '@/lib/bilan/redaction';
@@ -71,18 +72,18 @@ export function RapportBilan({ bilan, situation, connecte }: { bilan: Bilan; sit
         </p>
       ) : null}
 
-      <div>
-        <p className="text-2xl font-semibold tracking-tight">
+      <section className="overflow-hidden rounded-3xl bg-[radial-gradient(ellipse_at_100%_0%,rgba(64,224,208,.16),transparent_35%),linear-gradient(135deg,#f8fafc,#f5f3ff)] p-6 sm:p-8" aria-labelledby="titre-resultat">
+        <p className="text-xs font-semibold uppercase tracking-[.16em] text-violet-800">Votre photographie patrimoniale</p>
+        <h2 id="titre-resultat" className="mt-3 text-3xl font-semibold leading-tight tracking-[-.035em] text-slate-950 sm:text-4xl">
           {patrimoine.totalEur > 0
-            ? `Vous avez ${euros(patrimoine.totalEur)}, et vous ne le saviez sans doute pas.`
+            ? euros(patrimoine.totalEur)
             : "Nous n'avons pas encore assez d'éléments pour faire un total."}
-        </p>
+        </h2>
         {patrimoine.totalEur > 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">
-            C&apos;est le premier chiffre, et il surprend presque tout le monde : on additionne rarement
-            son logement, ses livrets et son épargne dans la même phrase.
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+            Estimation des éléments que vous avez indiqués.
             {patrimoine.partiel
-              ? ` Ce total est un minimum : vous n'avez rien indiqué pour ${patrimoine.pochesInconnues
+              ? ` Le total est partiel : vous n'avez rien indiqué pour ${patrimoine.pochesInconnues
                   .map((poche) => ETIQUETTES[poche].toLowerCase())
                   .join(', ')}.`
               : ''}
@@ -90,19 +91,19 @@ export function RapportBilan({ bilan, situation, connecte }: { bilan: Bilan; sit
         ) : null}
 
         {lignesConnues.length > 0 ? (
-          <dl className="mt-4 grid gap-2 sm:grid-cols-2">
+          <dl className="mt-6 grid gap-3 sm:grid-cols-2">
             {lignesConnues.map((ligne) => (
-              <div key={ligne.poche} className="rounded-md border border-border bg-card px-4 py-3">
-                <dt className="text-xs text-muted-foreground">{ETIQUETTES[ligne.poche]}</dt>
-                <dd className="text-lg font-semibold">
+              <div key={ligne.poche} className="rounded-2xl border border-white/80 bg-white/85 px-4 py-4 shadow-sm">
+                <dt className="text-xs font-medium uppercase tracking-wider text-slate-500">{ETIQUETTES[ligne.poche]}</dt>
+                <dd className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
                   {euros(ligne.montantEur ?? 0)}
-                  {ligne.detail ? <span className="ml-1 text-xs font-normal text-muted-foreground">({ligne.detail})</span> : null}
+                  {ligne.detail ? <span className="ml-1 text-xs font-normal text-slate-500">({ligne.detail})</span> : null}
                 </dd>
               </div>
             ))}
           </dl>
         ) : null}
-      </div>
+      </section>
 
       {bravos.length > 0 ? (
         <div className="flex flex-col gap-4">
@@ -137,35 +138,34 @@ export function RapportBilan({ bilan, situation, connecte }: { bilan: Bilan; sit
         </Card>
       ) : null}
 
-      <Card className="border-primary/30 bg-accent">
+      <Card className="overflow-hidden rounded-3xl border-violet-200 bg-[linear-gradient(130deg,#f5f3ff,#f0fdfa)]">
         <CardHeader>
           <CardTitle className="text-lg">FinancIA peut suivre cette évolution</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4 text-sm text-accent-foreground">
+        <CardContent className="flex flex-col gap-4 text-sm leading-6 text-slate-700">
           <p>
-            Enregistrez des instantanés datés pour comparer votre patrimoine dans le temps. Aucun nom
-            de banque, IBAN ou numéro de contrat n’est demandé.
+            Gardez une trace datée de ce bilan pour le comparer au suivant. Vous pourrez supprimer chaque instantané depuis votre espace. Aucun nom de banque, IBAN ou numéro de contrat n’est demandé.
           </p>
           {connecte ? (
             <form action={enregistrerBilan}>
               <input type="hidden" name="situation" value={JSON.stringify(situation)} />
-              <Button type="submit">Enregistrer ce bilan</Button>
+              <Button type="submit" className="min-h-11 rounded-full bg-slate-950 px-5 text-white hover:bg-violet-800"><Check aria-hidden className="size-4" /> Enregistrer ce bilan</Button>
             </form>
           ) : (
-            <Link href="/inscription" className="inline-flex min-h-11 items-center justify-center self-start rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:bg-primary/90">
-              Créer mon espace de suivi
+            <Link href="/inscription" className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-full bg-slate-950 px-5 py-2 font-medium text-white transition hover:bg-violet-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-700">
+              Créer mon espace de suivi <ArrowRight aria-hidden className="size-4" />
             </Link>
           )}
         </CardContent>
       </Card>
 
-      <p className="text-xs leading-relaxed text-muted-foreground">
-        Je suis un assistant IA d’aide à la décision. Ceci ne constitue pas un conseil en
-        investissement financier officiel (statut CIF). Investir comporte des risques de perte en capital.
+      <p className="flex gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs leading-5 text-slate-600">
+        <ShieldCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-teal-700" />
+        Ce bilan fournit des repères généraux à partir de vos réponses. Il ne constitue pas une recommandation d&apos;investissement personnalisée ni un conseil délivré par un conseiller en investissements financiers. Toute décision d&apos;investissement comporte un risque de perte en capital.
       </p>
 
       <div>
-        <Button variante="contour" onClick={() => window.location.reload()}>
+        <Button variante="contour" className="min-h-11 rounded-full px-5" onClick={() => window.location.reload()}>
           Refaire un bilan
         </Button>
       </div>
