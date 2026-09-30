@@ -19,7 +19,7 @@ export default async function PagePatrimoine({ searchParams }: { searchParams: P
   const evolution = evolutionEur(bilans);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="financia-surface flex flex-col gap-8">
       <header className="relative overflow-hidden rounded-3xl border border-slate-200 bg-[radial-gradient(ellipse_at_100%_0%,rgba(64,224,208,.15),transparent_34%),linear-gradient(135deg,#f8fafc,#f5f3ff)] p-6 sm:p-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
