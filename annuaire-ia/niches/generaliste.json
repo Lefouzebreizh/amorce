@@ -303,6 +303,17 @@
       "score_avis": 4.3,
       "description_longue": "## Notre verdict\nOtter s’invite dans la réunion, la transcrit en direct et rend, à la fin, un résumé avec les points d’action attribués. Le gain n’est pas la transcription — c’est que plus personne ne prend de notes, donc que tout le monde participe. Sur cinq réunions par semaine, cela rend plusieurs heures et supprime le débat sur ce qui avait été décidé.\n\n## Points forts\n- Rejoint automatiquement les réunions des principaux outils de visioconférence\n- Résumé et points d’action extraits, pas seulement une transcription brute\n- Recherche dans l’historique de toutes les réunions passées\n- Formule gratuite de plusieurs centaines de minutes par mois\n\n## Points faibles\n- Le français est correct mais moins fiable que l’anglais sur les accents marqués\n- L’enregistrement d’une réunion demande l’accord explicite des participants\n- La distinction des locuteurs se perd quand plusieurs parlent ensemble\n\n## Idéal pour\nLes équipes qui sortent des réunions sans compte rendu et rediscutent trois jours plus tard de ce qui avait été décidé.",
       "date_ajout": "2026-09-29"
+    },
+    {
+      "id": "framer",
+      "nom": "Framer",
+      "categorie": "Productivité",
+      "prix": "Freemium — à partir de 5 $/mois",
+      "description_courte": "Le site web décrit en une phrase, publié en ligne dans la foulée, sans une ligne de code.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/framer",
+      "score_avis": 4.2,
+      "description_longue": "## Notre verdict\nFramer a réuni deux mondes qui ne se parlaient pas : la souplesse d’un outil de design et la publication d’un vrai site. On décrit ce qu’on veut, la structure sort, on ajuste au pixel, et l’on publie sur son domaine en un clic. Pour une page de présentation ou un site vitrine, c’est plus rapide que n’importe quel gabarit à remplir.\n\n## Points forts\n- Du texte au site publié sans passer par un développeur\n- Contrôle réel de la mise en page, contrairement aux gabarits figés\n- Hébergement, domaine et statistiques inclus\n- Formule gratuite pour publier un premier site\n\n## Points faibles\n- Le rendu par défaut est reconnaissable si l’on ne retouche rien\n- Les sites très riches en contenu deviennent lourds à maintenir\n- Le référencement demande un travail que l’outil ne fait pas à votre place\n\n## Idéal pour\nLes indépendants et petites structures qui ont besoin d’un site de présentation crédible cette semaine, pas dans deux mois.",
+      "date_ajout": "2026-10-01"
     }
   ]
 }
