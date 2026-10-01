@@ -25,6 +25,38 @@ export const STEPS: Step[] = [
   { id: 'export', index: 7, label: 'Exporter', hint: 'Récupère le fichier' },
 ];
 
+export type PhaseId = 'creer' | 'composer' | 'finaliser';
+
+export type Phase = {
+  id: PhaseId;
+  label: string;
+  hint: string;
+  firstStep: StepId;
+  steps: StepId[];
+};
+
+/** Trois repères simples, sans retirer les réglages avancés du studio. */
+export const PHASES: Phase[] = [
+  { id: 'creer', label: 'Créer', hint: 'Ajoute tes médias', firstStep: 'import', steps: ['import'] },
+  {
+    id: 'composer',
+    label: 'Composer',
+    hint: 'Construis ton film',
+    firstStep: 'montage',
+    steps: ['montage', 'texte', 'son', 'cinema'],
+  },
+  {
+    id: 'finaliser',
+    label: 'Finaliser',
+    hint: 'Vérifie et exporte',
+    firstStep: 'analyse',
+    steps: ['analyse', 'export'],
+  },
+];
+
+export function phaseForStep(step: StepId): Phase {
+  return PHASES.find((phase) => phase.steps.includes(step)) ?? PHASES[0];
+}
+
 /** Étape vers laquelle amener l'utilisateur quand il sélectionne un élément. */
 export const STEP_FOR_SELECTION = { clip: 'montage', caption: 'texte', cue: 'son' } as const;
-

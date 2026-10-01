@@ -129,6 +129,7 @@ export class ClipVideoPool {
       element.pause();
       element.removeAttribute('src');
       element.load();
+      element.remove();
       return;
     }
     element.removeAttribute('src');
@@ -176,6 +177,22 @@ function chargerRush(asset: MediaAsset): HTMLVideoElement {
   // Le son des clips passe par le graphe Web Audio, jamais par l'élément :
   // c'est ce qui permet de le mixer avec les bruitages et la musique.
   video.muted = true;
+  // Les vidéos restent muettes et hors de l’interface, mais doivent être
+  // rattachées au document : Chromium ne présente pas de nouveaux cadres aux
+  // éléments vidéo détachés, même si leur currentTime avance pendant l’export.
+  video.setAttribute('aria-hidden', 'true');
+  video.tabIndex = -1;
+  Object.assign(video.style, {
+    position: 'fixed',
+    left: '0',
+    top: '0',
+    width: '160px',
+    height: '90px',
+    opacity: '0.005',
+    pointerEvents: 'none',
+    zIndex: '2147483647',
+  });
+  document.body.append(video);
   video.load();
   return video;
 }

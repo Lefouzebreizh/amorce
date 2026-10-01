@@ -9,16 +9,15 @@ import type { PlaybackEngine } from '@/hooks/usePlayback';
 import { Preview } from './Preview';
 import { Timeline } from './Timeline';
 import { NextStep } from './NextStep';
-import { StepPanel } from './steps';
-import { STEPS, type StepId } from '@/lib/steps';
+import { PhasePanel } from './steps';
+import { PHASES, phaseForStep, type StepId } from '@/lib/steps';
 import { ScoreBadge, UndoControls } from './ui';
 
 /**
  * Disposition ordinateur : trois colonnes.
  *
- * Le parcours reste visible en permanence à gauche et le panneau de l'étape
- * courante à droite, l'aperçu occupant le centre. La largeur disponible permet
- * de tout montrer d'un coup, ce que le téléphone ne peut pas se permettre.
+ * Les trois phases restent visibles à gauche et la phase courante à droite,
+ * l'aperçu occupant le centre. Les outils d'une phase sont réunis dans le rail.
  */
 export function StudioDesktop({
   engine,
@@ -35,23 +34,28 @@ export function StudioDesktop({
 
       <main className="studio-body flex min-h-0 flex-1">
         <nav className="studio-nav flex w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-edge p-3" aria-label="Étapes du montage">
-          <p className="studio-nav-eyebrow">Le Phare · montage</p>
-          {STEPS.map((item) => {
-            const active = item.id === step;
+          <p className="studio-nav-eyebrow">Le Phare <span>·</span> atelier</p>
+          {PHASES.map((phase, index) => {
+            const active = phase.id === phaseForStep(step).id;
             return (
               <button
-                key={item.id}
+                key={phase.id}
                 type="button"
                 aria-current={active ? 'step' : undefined}
-                onClick={() => onStep(item.id)}
+                onClick={() => onStep(phase.firstStep)}
                 className={`studio-step rounded-xl px-3 py-2.5 text-left transition-colors ${
                   active ? 'studio-step-active bg-raised ring-1 ring-select/60' : 'hover:bg-slab'
                 }`}
               >
-                <span className={`text-[13px] font-semibold ${active ? 'text-mist' : 'text-muted'}`}>
-                  {item.index}. {item.label}
+                <span className="studio-step-number" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
                 </span>
-                <span className="mt-1 block text-[12px] leading-snug text-muted">{item.hint}</span>
+                <span className="studio-step-copy">
+                  <span className={`studio-step-label ${active ? 'text-mist' : 'text-muted'}`}>
+                    {phase.label}
+                  </span>
+                  <span className="studio-step-hint">{phase.hint}</span>
+                </span>
               </button>
             );
           })}
@@ -59,7 +63,7 @@ export function StudioDesktop({
 
         <section className="studio-workspace flex min-h-0 min-w-0 flex-1 flex-col gap-3 p-3">
           <div className="studio-preview-plate flex min-h-0 flex-1">
-            <Preview engine={engine} />
+            <Preview engine={engine} onImporter={() => onStep('import')} />
           </div>
           <div className="studio-timeline-plate shrink-0">
             <Timeline engine={engine} />
@@ -68,7 +72,7 @@ export function StudioDesktop({
 
         <aside className="studio-rail w-full max-w-sm shrink-0 space-y-3 overflow-y-auto border-l border-edge p-3">
           <NextStep onStep={onStep} />
-          <StepPanel step={step} engine={engine} onStep={onStep} />
+          <PhasePanel phase={phaseForStep(step)} step={step} engine={engine} onStep={onStep} />
         </aside>
       </main>
     </div>
