@@ -207,6 +207,66 @@ body { background: #0F1115; color: #c9c9e6; font-family: 'Inter', ui-sans-serif,
 }
 .badge-1.choisi { box-shadow: inset 0 0 0 2px var(--teinte-1); }
 .badge-2.choisi { box-shadow: inset 0 0 0 2px var(--teinte-2); }
+
+/* Les filtres parlent d'abord en tâches concrètes. Sur téléphone, ils restent
+   sur une ligne défilable au doigt pour laisser les premiers résultats plus
+   haut dans la page ; sur ordinateur, ils se rangent sans défilement caché. */
+.filtres-usages {
+  display: flex;
+  gap: .5rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: .2rem .1rem .45rem;
+  scrollbar-color: var(--color-sourdine) var(--color-panneau);
+  scrollbar-width: thin;
+  touch-action: pan-x;
+}
+.besoin-chip {
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+  border: 1px solid var(--color-bord);
+  border-radius: 14px;
+  padding: .55rem .8rem;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-relief) 82%, transparent), var(--color-panneau));
+  color: var(--color-brume);
+  font-size: .875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+.besoin-chip:hover {
+  border-color: color-mix(in srgb, var(--teinte-1) 58%, var(--color-bord));
+  background: var(--color-relief);
+}
+.besoin-chip:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--teinte-1) 68%, white);
+  outline-offset: 2px;
+}
+.besoin-chip.choisi {
+  border-color: var(--color-sourdine);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--teinte-1) 12%, var(--color-relief)), var(--color-relief));
+  box-shadow: inset 0 0 0 1px var(--color-sourdine), 0 6px 20px -14px var(--teinte-1);
+  color: white;
+}
+.besoin-nombre {
+  display: inline-grid;
+  min-width: 1.6rem;
+  min-height: 1.6rem;
+  place-items: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-nuit) 65%, transparent);
+  color: var(--color-sourdine);
+  font-size: .75rem;
+  font-variant-numeric: tabular-nums;
+}
+.besoin-chip.choisi .besoin-nombre { color: var(--color-brume); }
+@media (min-width: 48rem) {
+  .filtres-usages { flex-wrap: wrap; overflow-x: visible; }
+}
 .pastille-accent { background: var(--teinte-1); }
 .texte-accent { color: var(--teinte-2-texte); }
 .bandeau-accent { background-image: linear-gradient(90deg, color-mix(in srgb, var(--teinte-1) 20%, transparent), color-mix(in srgb, var(--teinte-2) 8%, transparent)); }
