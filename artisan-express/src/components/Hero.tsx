@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useRef } from 'react';
 
 import { BOUTON_CONTOUR, BOUTON_PRINCIPAL } from '@/components/ui';
@@ -54,13 +53,16 @@ export function Hero() {
             Ton téléphone sonne.
           </h1>
 
-          <p className="artisan-hero__price">
-            <strong>300&nbsp;€</strong> pour la création <span>· sans abonnement</span>
-          </p>
+          <div className="artisan-hero__offer-rail" aria-label="Les trois formules Artisan Express">
+            <span><b>Express</b><strong>300&nbsp;€</strong></span>
+            <span className="is-featured"><b>Métier</b><strong>690&nbsp;€</strong></span>
+            <span><b>Signature</b><strong>1&nbsp;290&nbsp;€</strong></span>
+          </div>
 
           <p className="artisan-hero__lead">
             Tes photos, tes services et un moyen simple de te joindre, réunis dans
-            une page qui te ressemble. Nom de domaine en supplément.
+            une présence qui te ressemble. Choisis le niveau de finition adapté
+            à ton activité. Nom de domaine en supplément.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -101,19 +103,21 @@ export function Hero() {
         <div className="artisan-hero__scene px-6 pt-2 sm:px-12 md:px-0">
           <span className="artisan-hero__scene-orbit" aria-hidden="true" />
           <span className="artisan-hero__scene-beam" aria-hidden="true" />
-          <p className="artisan-hero__scene-caption"><span>01</span> Une vitrine qui tient dans une main</p>
-          <div className="artisan-hero__material artisan-hero__material--photos"><span>01</span><b>Photos</b><small>tes réalisations</small></div>
-          <div className="artisan-hero__material artisan-hero__material--contact"><span>03</span><b>Contact</b><small>appel direct</small></div>
-          <div className="artisan-hero__measure" aria-hidden="true"><span /> <span /></div>
+          <p className="artisan-hero__scene-caption">
+            <span>01</span> La maison devient ton téléphone
+          </p>
           <div className="artisan-hero__frame overflow-hidden rounded-2xl border border-violet-trait/60 bg-panel p-2 shadow-[0_20px_55px_rgba(64,224,208,0.08)]">
-            <Image
+            <video
               className="artisan-hero__film aspect-video w-full rounded-xl object-cover"
-              src="/atelier-artisan-express.webp"
-              alt="Atelier d’artisan avec téléphone, plans techniques et matériaux"
-              width={1672}
-              height={941}
-              preload
-            />
+              aria-label="Vidéo : une maison se transforme en téléphone pour montrer un site d’artisan"
+              controls
+              playsInline
+              preload="metadata"
+              poster="/maison-artisan.webp"
+            >
+              <source src="/maison-artisan.mp4" type="video/mp4" />
+              Ton navigateur ne peut pas lire cette vidéo.
+            </video>
           </div>
         </div>
       </div>
