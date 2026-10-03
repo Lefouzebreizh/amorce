@@ -314,6 +314,17 @@
       "score_avis": 4.2,
       "description_longue": "## Notre verdict\nFramer a réuni deux mondes qui ne se parlaient pas : la souplesse d’un outil de design et la publication d’un vrai site. On décrit ce qu’on veut, la structure sort, on ajuste au pixel, et l’on publie sur son domaine en un clic. Pour une page de présentation ou un site vitrine, c’est plus rapide que n’importe quel gabarit à remplir.\n\n## Points forts\n- Du texte au site publié sans passer par un développeur\n- Contrôle réel de la mise en page, contrairement aux gabarits figés\n- Hébergement, domaine et statistiques inclus\n- Formule gratuite pour publier un premier site\n\n## Points faibles\n- Le rendu par défaut est reconnaissable si l’on ne retouche rien\n- Les sites très riches en contenu deviennent lourds à maintenir\n- Le référencement demande un travail que l’outil ne fait pas à votre place\n\n## Idéal pour\nLes indépendants et petites structures qui ont besoin d’un site de présentation crédible cette semaine, pas dans deux mois.",
       "date_ajout": "2026-10-01"
+    },
+    {
+      "id": "deepl",
+      "nom": "DeepL",
+      "categorie": "Rédaction",
+      "prix": "Gratuit, puis abonnement mensuel",
+      "description_courte": "La traduction qui ne se remarque pas, et la réécriture d'un texte dans le registre attendu.",
+      "lien_affiliation": "https://exemple-affiliation.com/go/deepl",
+      "score_avis": 4.5,
+      "description_longue": "## Notre verdict\nDeepL reste, des années après son apparition, la référence sur un point précis : une traduction qui ne trahit pas son origine automatique. Pour un indépendant qui répond à un client étranger ou traduit une proposition commerciale, c'est la différence entre paraître professionnel et paraître pressé. L'outil de réécriture, moins connu, corrige et ajuste le registre d'un texte français sans le dénaturer. Éditeur allemand, données traitées en Europe.\n\n## Points forts\n- Qualité de traduction encore au-dessus des assistants généralistes\n- Réécriture et ajustement de registre sur un texte existant\n- Éditeur européen, traitement des données en Europe\n- Palier gratuit utilisable au quotidien, extensions bureautiques comprises\n\n## Points faibles\n- Périmètre volontairement étroit : traduire et reformuler, rien d'autre\n- Les documents longs demandent l'abonnement\n- Sur les textes très techniques, la relecture d'un spécialiste reste nécessaire\n- Le palier gratuit limite la taille des documents\n\n## Idéal pour\nTous ceux qui écrivent à des interlocuteurs étrangers et ne veulent pas que cela se voie.",
+      "date_ajout": "2026-10-03"
     }
   ]
 }
