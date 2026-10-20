@@ -51,27 +51,31 @@ function Camera() {
 const LOTS = [
   {
     icone: Ecran,
-    titre: 'Un site d’une page qui donne envie d’appeler',
+    titre: 'Un appel manqué, un contact préservé',
     texte:
-      'Un gabarit éprouvé, remis à ton métier, à ta ville et à tes chantiers. Une seule page, parce qu’un client qui cherche un couvreur ne lit pas six onglets.',
+      'Découvre comment un SMS pourrait prendre le relais quand tu ne peux pas répondre, puis te laisser une demande claire à rappeler.',
+    lien: '#appels-manques',
   },
   {
     icone: Telephone,
-    titre: 'Appel direct, WhatsApp, devis',
+    titre: 'Un devis préparé avant de rentrer',
     texte:
-      'Trois boutons, toujours sous le pouce, du haut de la page jusqu’en bas. Celui qui tombe sur ton site à 19 h te joint sans chercher.',
+      'Dicte ou écris tes notes. Retrouve un brouillon organisé, complète tes prix et télécharge un PDF de démonstration.',
+    lien: '#devis-vocal',
   },
   {
     icone: Loupe,
-    titre: 'Google trouve ton site',
+    titre: 'Une présence locale qui inspire confiance',
     texte:
-      'Titre, description, plan du site, fiche d’établissement reliée : ce qu’il faut pour sortir sur « ton métier + ta ville ». Je ne te promets pas la première place, je te promets d’exister.',
+      'Remets ta fiche Google au carré et prépare un message pour recueillir les retours de tes clients, sans leur imposer de note.',
+    lien: '#presence-locale',
   },
   {
     icone: Camera,
-    titre: 'Ta vidéo de chantier montée, offerte',
+    titre: 'Et un site, s’il sert ton activité',
     texte:
-      'Tu m’envoies deux minutes filmées au téléphone, je te rends un format court monté — rythme, sous-titres, musique. Je la facture 49 € en dehors de cette offre ; avec le site, elle est comprise.',
+      'Pour montrer tes réalisations et compléter ta fiche Google, la création de sites reste disponible. Explore les exemples de ton métier.',
+    lien: '#galerie',
   },
 ] as const;
 
@@ -79,16 +83,16 @@ export function CeQueTuAs() {
   return (
     <section className={`${SECTION} artisan-inclus`} id="contenu">
       <div className="artisan-section-heading">
-        <p className="artisan-kicker"><span>01</span> Une offre complète, sans surprise</p>
-        <h2 className={TITRE_SECTION}>Tout ce qu’il faut.<br /><span>Rien qui ne serve.</span></h2>
+        <p className="artisan-kicker">Moins de friction, du chantier au bureau</p>
+        <h2 className={TITRE_SECTION}>Qu’est-ce qui te fait<br /><span>perdre du temps ?</span></h2>
         <p>
-          Un site fini, pensé pour être vu sur téléphone et pour transformer une visite en appel.
-          Rien à installer, rien à apprendre, rien à payer le mois suivant.
+          Commence par ton problème le plus concret. Teste les démonstrations,
+          puis on regarde ce qui mérite d’être installé chez toi.
         </p>
       </div>
 
       <ul className="artisan-inclus__grid">
-        {LOTS.map(({ icone: Icone, titre, texte }, index) => (
+        {LOTS.map(({ icone: Icone, titre, texte, lien }, index) => (
           /*
             Le filet violet coiffe la carte d'un dégradé d'un pixel. C'est le
             relief que réclame une hiérarchie sombre, et la seule chose que le
@@ -114,6 +118,7 @@ export function CeQueTuAs() {
             </div>
             <h3>{titre}</h3>
             <p>{texte}</p>
+            <a className="pivot-lien" href={lien}>Découvrir ↗</a>
           </li>
         ))}
       </ul>

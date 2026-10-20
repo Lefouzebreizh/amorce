@@ -15,13 +15,13 @@ export function Navigation() {
         </a>
 
         <div className="artisan-nav__links">
-          <a href="#contenu">Ce qui est inclus</a>
-          <a href="#galerie">Les exemples</a>
-          <a href="#offre">L’offre</a>
+          <a href="#appels-manques">Appels manqués</a>
+          <a href="#devis-vocal">Devis vocal</a>
+          <a href="#presence-locale">Visibilité & avis</a>
         </div>
 
         <a className={`${BOUTON_PRINCIPAL} artisan-nav__cta`} href="#formulaire">
-          Parler de mon projet
+          Parlons de ton quotidien
         </a>
       </div>
     </nav>
