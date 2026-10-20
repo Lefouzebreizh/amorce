@@ -2,6 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { SimulateurAllocation } from '@/components/simulateur-allocation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { enregistrerBilan } from '@/lib/actions/patrimoine';
@@ -136,6 +137,8 @@ export function RapportBilan({ bilan, situation, connecte }: { bilan: Bilan; sit
           </CardContent>
         </Card>
       ) : null}
+
+      <SimulateurAllocation situation={situation} />
 
       <Card className="border-primary/30 bg-accent">
         <CardHeader>
