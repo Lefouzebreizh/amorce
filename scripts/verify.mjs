@@ -46,8 +46,10 @@ const EXPECTED_DURATION = 7.5;
 // présent tant que personne ne regarde ce qu'il pèse.
 for (const nom of ['rush1.webm', 'rush-paysage.webm']) {
   const chemin = join(RUSHES, nom);
-  if (existsSync(chemin) && statSync(chemin).size > 0) continue;
-  const etat = existsSync(chemin) ? 'vide' : 'absent';
+  const taille = existsSync(chemin) ? statSync(chemin).size : 0;
+  const tailleMinimale = nom === 'rush-paysage.webm' ? 4096 : 1;
+  if (taille >= tailleMinimale) continue;
+  const etat = existsSync(chemin) ? `incomplet (${taille} octets)` : 'absent';
   console.error(`Rush ${nom} ${etat}. Lance d’abord : npm run fixtures`);
   process.exit(1);
 }
@@ -116,24 +118,22 @@ const PROFILES = [
 /**
  * Aller à une étape, quelle que soit la coque.
  *
- * L'ordinateur garde une barre d'étapes à cliquer ; le téléphone est passé à
- * une page unique qui défile, où les sept panneaux sont **déjà** dans le
- * document et portent chacun une ancre. Le parcours cliquait la barre sur les
- * deux profils : sur téléphone il attendait trente secondes un bouton qui
- * n'existe plus, et tombait avant d'avoir rien mesuré.
+ * Les deux profils exposent maintenant trois phases. Les étapes restent
+ * choisies dans un sélecteur compact à l'intérieur des phases qui en ont
+ * plusieurs ; le téléphone ouvre la phase puis descend jusqu'à son panneau.
  *
- * Les intitulés sont ceux de `src/lib/steps.ts`, les ancres celles que pose
- * `ancre()` dans `StudioMobile.tsx`. Une étape inconnue lève ici plutôt que de
- * laisser le parcours dériver sur un défilement silencieux.
+ * Les étapes historiques sont conservées comme cas de test, mais leurs phases
+ * et leurs ancres reflètent le parcours visible. Une étape inconnue lève ici
+ * plutôt que de laisser le parcours dériver sur un défilement silencieux.
  */
-const ANCRE_ETAPE = {
-  Importer: 'import',
-  Monter: 'montage',
-  Accroche: 'texte',
-  Son: 'son',
-  Cinéma: 'cinema',
-  Analyser: 'analyse',
-  Exporter: 'export',
+const PHASE_ETAPE = {
+  Importer: { id: 'creer', phase: 'Créer' },
+  Monter: { id: 'composer', phase: 'Composer', outil: 'Monter' },
+  Accroche: { id: 'composer', phase: 'Composer', outil: 'Accroche' },
+  Son: { id: 'composer', phase: 'Composer', outil: 'Son' },
+  Cinéma: { id: 'composer', phase: 'Composer', outil: 'Cinéma' },
+  Analyser: { id: 'finaliser', phase: 'Finaliser', outil: 'Analyser' },
+  Exporter: { id: 'finaliser', phase: 'Finaliser', outil: 'Exporter' },
 };
 
 /**
@@ -153,24 +153,44 @@ async function remonterEnTete(page) {
 }
 
 async function allerAEtape(page, profile, label) {
+  const destination = PHASE_ETAPE[label];
+  if (!destination) throw new Error(`Étape inconnue du parcours : ${label}`);
+
   if (!profile.mobile) {
-    await page.click(`nav[aria-label="Étapes du montage"] button:has-text("${label}")`);
-    return;
+    await page.click(`nav[aria-label="Étapes du montage"] button:has-text("${destination.phase}")`);
+  } else {
+    const section = page.locator(`#phase-${destination.id}`);
+    await section.waitFor({ state: 'attached' });
+    await section.scrollIntoViewIfNeeded();
+    const heading = section.locator('.workflow-phase-heading');
+    if (await heading.getAttribute('aria-expanded') !== 'true') await heading.click();
+    // Le défilement peut être animé ; on laisse la page se poser avant de mesurer.
+    await page.waitForTimeout(400);
   }
 
-  const id = ANCRE_ETAPE[label];
-  if (!id) throw new Error(`Étape inconnue du parcours : ${label}`);
-
-  const section = page.locator(`#etape-${id}`);
-  await section.waitFor({ state: 'attached' });
-  await section.scrollIntoViewIfNeeded();
-  // Le défilement peut être animé ; on laisse la page se poser avant de mesurer
-  // ce qui s'y trouve, sinon le panneau est encore sous l'aperçu collé.
-  await page.waitForTimeout(400);
+  if (destination.outil) {
+    const groupe = page.getByRole('group', { name: `Outils : ${destination.phase}` });
+    await groupe.getByRole('button', { name: destination.outil, exact: true }).click();
+  }
 }
 
 const results = [];
 let profileLabel = '';
+async function journaliserEtatExport(page, phase, cause) {
+  const etat = await page.evaluate(() => {
+    const filtre = /encodage|export|échec|erreur|terminé|arrêter|\\bMo\\b|\\bKo\\b/i;
+    const texte = document.body.innerText.split(/\\n+/).map((ligne) => ligne.trim()).filter((ligne) => filtre.test(ligne));
+    const boutons = [...document.querySelectorAll('button')]
+      .map((bouton) => bouton.innerText.trim().replace(/\\s+/g, ' '))
+      .filter((ligne) => filtre.test(ligne));
+    const alertes = [...document.querySelectorAll('[role="alert"], [aria-live]')]
+      .map((element) => element.innerText.trim().replace(/\\s+/g, ' '))
+      .filter(Boolean);
+    return { texte: texte.slice(-16), boutons, alertes };
+  });
+  console.log(`  DIAGNOSTIC EXPORT — ${phase} — ${JSON.stringify({ cause: String(cause).slice(0, 140), ...etat })}`);
+}
+
 const check = (name, ok, detail = '') => {
   results.push({ name: `[${profileLabel}] ${name}`, ok });
   console.log(`${ok ? '  OK  ' : ' ECHEC'} | ${name}${detail ? ` — ${detail}` : ''}`);
@@ -501,13 +521,12 @@ if (profile.mobile) {
   }));
   check('Aucun débordement horizontal', overflow.scroll <= overflow.view + 1, `${overflow.scroll} px pour ${overflow.view} px de large`);
   /*
-   * Le téléphone n'a plus de barre d'étapes : il porte les sept panneaux sur
-   * une seule page qui défile. Ce qu'on contrôle ici, c'est donc qu'ils y
-   * soient tous — une page qui en perdrait un rendrait une partie du studio
-   * simplement inatteignable au doigt, sans qu'aucun autre test le voie.
+   * Le téléphone présente les trois phases sous forme d'accordéon. Le
+   * parcours les ouvrira une par une ; ce contrôle vérifie qu'aucune phase
+   * n'a disparu de la page avant de mesurer les actions qu'elle contient.
    */
-  const ancres = await page.locator('[id^="etape-"]').count();
-  check('Les sept étapes sont sur la page', ancres === 7, `${ancres} panneaux sur 7`);
+  const phases = await page.locator('[id^="phase-"]').count();
+  check('Les trois phases sont sur la page', phases === 3, `${phases} phases sur 3`);
 }
 
 // --------------------------------------------------------------- 1. Import
@@ -599,6 +618,7 @@ if (!profile.mobile) {
     }
 
   } catch (error) {
+    await journaliserEtatExport(page, 'export conservé', error);
     check('L’export conservé est produit et mesuré', false, String(error).slice(0, 160));
   }
   await allerAEtape(page, profile, 'Importer');
@@ -779,6 +799,11 @@ if (profile.mobile) {
   await remonterEnTete(page);
   await page.screenshot({ path: join(SHOTS, `02b-apercu-${profile.id}.png`) });
 }
+
+// Le test d'analyse précédent laisse cette phase active après annulation.
+// Ouvrir explicitement l'outil qui contient le texte évite de confondre un
+// panneau replié avec un montage express qui n'aurait pas créé l'accroche.
+await allerAEtape(page, profile, 'Accroche');
 
 check(
   'Le montage express a posé une accroche',
@@ -1513,6 +1538,7 @@ try {
   await download.saveAs(exportPath);
   check('Un fichier est téléchargé', true, download.suggestedFilename());
 } catch (error) {
+  await journaliserEtatExport(page, `export vidéo ${profile.id}`, error);
   check('Un fichier est téléchargé', false, String(error).slice(0, 120));
 }
 

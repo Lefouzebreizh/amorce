@@ -23,12 +23,15 @@ export function Preview({
   engine,
   agrandi,
   onAgrandir,
+  onImporter,
 }: {
   engine: PlaybackEngine;
   /** Vrai quand l'aperçu occupe presque tout l'écran. */
   agrandi?: boolean;
   /** Absent sur le bureau, où l'aperçu a déjà toute la place qu'il faut. */
   onAgrandir?: () => void;
+  /** Ouvre l'étape d'import depuis l'écran d'attente du studio. */
+  onImporter: () => void;
 }) {
   const playing = useStudio((s) => s.playing);
   const clipCount = useStudio((s) => s.project.clips.length);
@@ -138,13 +141,34 @@ export function Preview({
           }}
         />
         {clipCount === 0 && (
-          // Message volontairement court et tronqué : dans un aperçu réduit à
-          // quelques centimètres, un paragraphe déborderait par-dessus l'en-tête
-          // et la barre de lecture.
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden p-4">
-            <p className="line-clamp-3 max-w-[15rem] text-center text-xs leading-relaxed text-muted">
-              Importe tes vidéos pour voir le montage ici.
-            </p>
+          <div className="preview-empty absolute inset-0 flex items-center justify-center overflow-hidden p-5 sm:p-8">
+            <div className="preview-empty-content relative z-10 flex max-w-sm flex-col items-center text-center">
+              <div className="preview-empty-art" aria-hidden="true">
+                <span className="preview-empty-frame preview-empty-frame-back" />
+                <span className="preview-empty-frame preview-empty-frame-front" />
+                <svg className="preview-empty-clapper" viewBox="0 0 48 48" fill="none">
+                  <path d="M8 20.5h32v19H8z" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="m8 20.5 3-10h32l-3 10H8Z" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="m17 10.5 5 10m5-10 5 10m5-10 5 10" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M14 29h8m4 0h8m-20 5h5m4 0h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                <span className="preview-empty-orbit preview-empty-orbit-one" />
+                <span className="preview-empty-orbit preview-empty-orbit-two" />
+              </div>
+
+              <p className="preview-empty-eyebrow">TON ESPACE DE MONTAGE · 9:16</p>
+              <h2 className="preview-empty-title">Le premier plan t’attend.</h2>
+              <p className="preview-empty-copy">
+                Importe quelques vidéos ou images : tu les retrouveras ici pour construire ton film.
+              </p>
+              <button type="button" className="preview-empty-action" onClick={onImporter}>
+                <span>Ouvrir l’import</span>
+                <svg aria-hidden="true" viewBox="0 0 20 20" fill="none">
+                  <path d="M3.5 10h12m-5-5 5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <span className="preview-empty-footnote">Vidéos et images · conservées sur cet appareil</span>
+            </div>
           </div>
         )}
       </div>

@@ -9,12 +9,12 @@ import type { PlaybackEngine } from '@/hooks/usePlayback';
 import { Preview } from './Preview';
 import { Timeline } from './Timeline';
 import { NextStep } from './NextStep';
-import { StepPanel } from './steps';
-import { STEPS, type StepId } from '@/lib/steps';
+import { PhaseDisclosure } from './steps';
+import { PHASES, type StepId } from '@/lib/steps';
 import { ScoreBadge, UndoControls } from './ui';
 
 /**
- * Disposition téléphone : une seule page qui défile.
+ * Disposition téléphone : trois phases repliables, une seule ouverte à la fois.
  *
  * Les sept étapes vivaient derrière une barre d'onglets. Le raisonnement était
  * défendable — un panneau à la fois, toute la hauteur pour lui — mais il avait
@@ -138,7 +138,7 @@ export function StudioMobile({
   return (
     // `100dvh` et non `100vh` : sur mobile, la barre d'adresse se replie en
     // cours de route et `vh` ne suit pas, ce qui ferait dépasser la page.
-    <div className="flex h-[100dvh] flex-col overflow-hidden">
+    <div className="studio-mobile-shell flex h-[100dvh] flex-col overflow-hidden">
       <MobileHeader />
 
       <div className="flex-1 overflow-y-auto overscroll-contain">
@@ -184,7 +184,12 @@ export function StudioMobile({
               agrandi ? 'h-[92dvh]' : 'sticky top-0 h-[38dvh]'
             }`}
           >
-            <Preview engine={engine} agrandi={agrandi} onAgrandir={() => setAgrandi((v) => !v)} />
+            <Preview
+              engine={engine}
+              agrandi={agrandi}
+              onAgrandir={() => setAgrandi((v) => !v)}
+              onImporter={() => onStep('import')}
+            />
             {/*
               La frise reste, dans les deux modes.
               Elle s'effaçait pendant l'agrandissement pour rendre ses 98 px à
@@ -199,23 +204,15 @@ export function StudioMobile({
         <div className="space-y-3 px-2 pt-2 pb-8">
           <NextStep onStep={onStep} />
 
-          {STEPS.map((item) => (
+          {PHASES.map((phase) => (
             <section
-              key={item.id}
-              id={ancre(item.id)}
-              aria-label={item.label}
-              // `scroll-mt` compense la hauteur de l'aperçu collé : sans lui,
-              // un saut vers une étape la place derrière l'image. Il la suit
-              // donc : quand l'aperçu n'est pas rendu, la même marge laisserait
-              // 40 % d'écran vide au-dessus du panneau qu'on vient d'atteindre.
-              // Pas d'en-tête ici : chaque panneau porte déjà son titre
-              // numéroté. En ajouter un le faisait paraître deux fois, et une
-              // répétition se lit comme un bug avant de se lire comme un plan.
+              key={phase.id}
+              aria-label={phase.label}
               className={
                 clipCount === 0 ? 'scroll-mt-2' : agrandi ? 'scroll-mt-[82dvh]' : 'scroll-mt-[40dvh]'
               }
             >
-              <StepPanel step={item.id} engine={engine} onStep={onStep} />
+              <PhaseDisclosure phase={phase} step={step ?? 'import'} engine={engine} onStep={(next) => onStep(next)} />
             </section>
           ))}
         </div>
@@ -226,7 +223,8 @@ export function StudioMobile({
 
 /** L'ancre d'une étape, pour que le guide puisse y faire défiler la page. */
 export function ancre(id: StepId) {
-  return `etape-${id}`;
+  const phase = PHASES.find((candidate) => candidate.steps.includes(id)) ?? PHASES[0];
+  return `phase-${phase.id}`;
 }
 
 function MobileHeader() {
@@ -239,7 +237,7 @@ function MobileHeader() {
 
   return (
     <header
-      className="flex shrink-0 items-center justify-between gap-3 border-b border-edge px-3 py-2.5"
+      className="studio-header flex shrink-0 items-center justify-between gap-3 border-b border-edge px-3 py-2.5"
       style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
     >
       {/* Le nom ramène à l'accueil : c'est là que tout le monde clique, et le

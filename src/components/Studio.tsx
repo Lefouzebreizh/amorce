@@ -70,8 +70,8 @@ export function Studio() {
    */
   useDetectionCadrage();
 
-  // Sur téléphone, aucun panneau n'est ouvert au départ : l'aperçu occupe tout
-  // l'écran, et le parcours s'offre dans la barre du bas.
+  // Le téléphone ouvre la phase « Créer » au départ ; un utilisateur qui passe
+  // depuis l'aperçu vers un outil rejoint automatiquement sa phase.
   const [step, setStep] = useState<StepId | null>('import');
 
   // Un fichier partagé arrive sans que l'utilisateur ait ouvert quoi que ce

@@ -9,7 +9,7 @@ import { ClipVideoPool, preloadCaptionFonts, renderFrame, syncPlayback } from '@
 import type { Project } from '@/lib/types';
 import { useStudio } from '@/lib/store';
 import { layoutClips, type PlacedClip } from '@/lib/timeline';
-import { OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
+import { OUTPUT_FPS, OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
 
 /**
  * Boucle de lecture.
@@ -126,6 +126,9 @@ const TOLERANCE_HORS_LIGNE = 0.004;
 /** Une attente expirée doit interrompre l'export, jamais figer un plan. */
 const ATTENTE_MAX_MS = 10000;
 
+/** Rushes dont un premier cadre a déjà été réellement décodé après chargement. */
+const derniereImagePresentee = new WeakMap<HTMLVideoElement, number>();
+
 function attendreVideo(video: HTMLVideoElement, evenement: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const nettoyer = () => {
@@ -160,11 +163,127 @@ async function placerA(pool: ClipVideoPool, item: PlacedClip, temps: number): Pr
   const vise = item.clip.inPoint + (temps - item.start) * item.clip.speed;
   const borne = Math.max(0, Math.min(vise, fin - 0.02));
   if (video.seeking) await attendreVideo(video, 'seeked');
-  if (Math.abs(video.currentTime - borne) <= TOLERANCE_HORS_LIGNE) return;
-  const pret = attendreVideo(video, 'seeked');
-  video.currentTime = borne;
-  await pret;
+  const dejaAuBonEndroit = Math.abs(video.currentTime - borne) <= TOLERANCE_HORS_LIGNE;
+  if (dejaAuBonEndroit && derniereImagePresentee.has(video)) return;
+
+  /*
+   * `seeked` confirme que le déplacement est fini, pas que le décodeur a déjà
+   * présenté l'image correspondante. Sur Chromium, le premier cadre d'un
+   * nouveau rush pouvait donc être dessiné avant que le décodeur ne l'ait
+   * avancé. Même sans déplacement, on attend ce premier cadre une seule fois.
+   */
+  try {
+    /*
+     * Armer le rappel avant le seek : à la dernière image d'un rush, Chromium
+     * peut la présenter pendant le traitement du seeked. L'attente démarrée
+     * après cet événement ne recevrait alors plus aucun rappel.
+     */
+    const imagePresentee = attendreImageApresLecture(video, borne);
+    if (!dejaAuBonEndroit) video.currentTime = borne;
+    const tempsCadre = await imagePresentee;
+    derniereImagePresentee.set(video, tempsCadre);
+  } finally {
+    video.pause();
+  }
   if (video.readyState < 2) await attendreVideo(video, 'loadeddata');
+}
+
+/**
+ * Attend une image décodée à l'instant demandé.
+ *
+ * À la dernière image d'un rush, Chromium peut présenter le même instant vidéo
+ * que lors du précédent appel : le média n'a simplement pas d'image suivante.
+ * Exiger un mediaTime strictement nouveau faisait alors échouer l'export près
+ * de la fin du plan, bien que la dernière image visible soit la bonne.
+ */
+function attendreImageApresLecture(video: HTMLVideoElement, tempsDemande: number): Promise<number> {
+  return new Promise((resolve, reject) => {
+    let callback = 0;
+    let animation = 0;
+    let terminee = false;
+    // Certains WebM ne donnent pas à leur dernière image un horodatage
+    // parfaitement aligné sur la durée annoncée. Une image et demie couvre ce
+    // décalage de bord tout en refusant une image sensiblement antérieure.
+    const toleranceCadre = 1.5 / OUTPUT_FPS;
+
+    const nettoyer = () => {
+      clearTimeout(timer);
+      video.removeEventListener('ended', terminerFin);
+      video.removeEventListener('seeked', verifierApresSeek);
+      if (callback && videoAvecCallback.cancelVideoFrameCallback) {
+        videoAvecCallback.cancelVideoFrameCallback(callback);
+      }
+      if (animation) cancelAnimationFrame(animation);
+    };
+    const terminer = (tempsCadre: number) => {
+      if (terminee) return;
+      terminee = true;
+      nettoyer();
+      resolve(tempsCadre);
+    };
+    const verifierApresSeek = () => {
+      const procheDeLaCible = Math.abs(video.currentTime - tempsDemande) <= toleranceCadre;
+      if (!video.seeking && video.readyState >= 2 && procheDeLaCible) terminer(video.currentTime);
+    };
+    const terminerFin = () => verifierApresSeek();
+    const echouer = (cause: Error) => {
+      if (terminee) return;
+      terminee = true;
+      nettoyer();
+      reject(cause);
+    };
+    const timer = setTimeout(() => {
+      echouer(new Error(
+        `Le décodeur n’a pas présenté d’image à ${video.currentTime.toFixed(2)} s. Réessaie l’export.`,
+      ));
+    }, ATTENTE_MAX_MS);
+
+    const videoAvecCallback = video as HTMLVideoElement & {
+      requestVideoFrameCallback?: (
+        callback: (now: number, metadata: VideoFrameCallbackMetadata) => void,
+      ) => number;
+      cancelVideoFrameCallback?: (id: number) => void;
+    };
+
+    video.addEventListener('ended', terminerFin);
+    video.addEventListener('seeked', verifierApresSeek);
+    verifierApresSeek();
+    if (video.ended) terminerFin();
+
+    if (!terminee && typeof videoAvecCallback.requestVideoFrameCallback === 'function') {
+      const verifier = (_now: number, metadata: VideoFrameCallbackMetadata) => {
+        // mediaTime décrit l'image effectivement présentée. À la fin d'un
+        // WebM, son horodatage peut précéder légèrement la durée déclarée.
+        const imageAuPointDemande = Math.abs(metadata.mediaTime - tempsDemande) <= toleranceCadre;
+        const cibleAtteinte = !video.seeking && video.readyState >= 2;
+        if (imageAuPointDemande && cibleAtteinte) {
+          terminer(metadata.mediaTime);
+          return;
+        }
+        callback = videoAvecCallback.requestVideoFrameCallback!(verifier);
+      };
+      callback = videoAvecCallback.requestVideoFrameCallback(verifier);
+    } else if (!terminee) {
+      const verifier = () => {
+        if (
+          !video.seeking
+          && Math.abs(video.currentTime - tempsDemande) <= toleranceCadre
+          && video.readyState >= 2
+        ) {
+          terminer(video.currentTime);
+          return;
+        }
+        animation = requestAnimationFrame(verifier);
+      };
+      animation = requestAnimationFrame(verifier);
+    }
+
+    if (!terminee) {
+      void video.play().catch((cause: unknown) => {
+        echouer(cause instanceof Error ? cause : new Error(String(cause)));
+      });
+    }
+  });
 }
 
 export function usePlayback(fonts: FontSet, marque?: string): PlaybackEngine {
