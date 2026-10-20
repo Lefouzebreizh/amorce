@@ -26,7 +26,7 @@ import { contact } from '@/lib/config';
  * changement, et c'est toujours celui qu'on oublie qui reste affiché.
  */
 export const metadata: Metadata = {
-  title: 'Mentions légales — Site vitrine artisan express',
+  title: 'Mentions légales — Artisan Express',
   robots: { index: false, follow: true },
 };
 
@@ -132,6 +132,16 @@ export default function MentionsLegales() {
         <p>
           Pour demander l’accès à ces informations ou leur effacement, écrivez à l’adresse
           ci-dessus.
+        </p>
+        <p>
+          Les démonstrations d’appels manqués et de messages d’avis n’envoient aucun SMS et ne se connectent à aucun compte téléphonique ou Google.
+          Le brouillon de devis et son PDF sont préparés dans le navigateur, sans stockage sur le site.
+          Utilisez des données fictives pour les essais.
+        </p>
+        <p>
+          La dictée ne démarre qu’après action sur le micro et autorisation. Selon votre navigateur,
+          la reconnaissance vocale peut transmettre l’audio à son propre prestataire. Vous pouvez saisir le texte à la place.
+          Aucun modèle d’IA distant n’est connecté à la structuration de cette démonstration.
         </p>
       </Bloc>
     </main>

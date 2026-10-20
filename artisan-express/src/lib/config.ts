@@ -117,7 +117,7 @@ export const contact = {
     WHATSAPP === ''
       ? ''
       : `https://wa.me/${lienTelephonique(WHATSAPP).replace(/\D/g, '')}?text=${encodeURIComponent(
-          'Salut Erwann, je veux mon site artisan à 300 €.',
+          'Bonjour Erwann, j’aimerais simplifier les appels, les devis ou la visibilité de mon activité.',
         )}`,
   /** Sans lien de paiement, le bouton d'offre renvoie au formulaire. */
   stripeLien: STRIPE,

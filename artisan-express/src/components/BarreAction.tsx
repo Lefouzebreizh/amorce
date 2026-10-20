@@ -56,9 +56,9 @@ export function BarreAction() {
 
         <a
           className={PRINCIPAL}
-          href="#offre"
+          href="#appels-manques"
         >
-          Mon site
+          Tester
         </a>
       </div>
     </div>

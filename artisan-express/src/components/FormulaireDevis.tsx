@@ -6,9 +6,10 @@ import { aUnCourrielDirect, aUnTelephone, aUnWhatsapp, contact } from '@/lib/con
 import { CHAMP_PIEGE, analyserDemande, type ChampDemande, type Demande } from '@/lib/demande';
 import { lienMailtoDemande } from '@/lib/courriel';
 import { OFFRES, type OffreId } from '@/lib/offres';
+import { SERVICES, estBesoinId, type BesoinId } from '@/lib/services';
 
 /*
- * Le formulaire, et le seul morceau interactif de la page.
+ * Le formulaire de prise de contact, distinct des données des simulateurs.
  *
  * Il valide avec exactement la même fonction que la route serveur : un artisan
  * qui se trompe d'un chiffre le voit avant l'envoi, et personne ne peut poster
@@ -67,11 +68,23 @@ export function FormulaireDevis() {
   const idBase = useId();
   const [etat, setEtat] = useState<Etat>({ nom: 'repos' });
   const [offre, setOffre] = useState<OffreId>('express');
+  const [besoin, setBesoin] = useState<BesoinId>('appels');
 
   useEffect(() => {
-    const choisir = (evenement: Event) => setOffre((evenement as CustomEvent<OffreId>).detail);
+    const choisir = (evenement: Event) => {
+      setOffre((evenement as CustomEvent<OffreId>).detail);
+      setBesoin('site');
+    };
+    const choisirBesoin = (evenement: Event) => {
+      const valeur: unknown = (evenement as CustomEvent).detail;
+      if (estBesoinId(valeur)) setBesoin(valeur);
+    };
     window.addEventListener('artisan:offre', choisir);
-    return () => window.removeEventListener('artisan:offre', choisir);
+    window.addEventListener('artisan:besoin', choisirBesoin);
+    return () => {
+      window.removeEventListener('artisan:offre', choisir);
+      window.removeEventListener('artisan:besoin', choisirBesoin);
+    };
   }, []);
 
   const erreurs = etat.nom === 'invalide' ? etat.erreurs : {};
@@ -125,9 +138,10 @@ export function FormulaireDevis() {
           <div className="artisan-formulaire__success">
           <h2 className={TITRE_SECTION}>C’est envoyé.</h2>
           <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-ardoise">
-            Je te rappelle dans la journée. On parle cinq minutes de ton métier et de ta zone, et je
-            m’y mets. Si c’est urgent, appelle — je décroche plus vite que je ne lis mes courriels.
+            Merci pour ta demande. Je reviens vers toi pour comprendre ton besoin et te proposer la suite.
+            Aucun service ni abonnement n’a été activé. Si c’est urgent, appelle-moi directement.
           </p>
+          <button type="button" className="outil-bouton mt-6" onClick={() => setEtat({ nom: 'repos' })}>Faire une autre demande</button>
           </div>
         </div>
       </section>
@@ -139,10 +153,10 @@ export function FormulaireDevis() {
       <div className={SECTION}>
         <div className="artisan-formulaire__grid">
           <div className="artisan-formulaire__intro">
-            <p className="artisan-kicker"><span>07</span> On commence simplement</p>
-            <h2 className={TITRE_SECTION}>Parle-moi de<br /><span>ton activité.</span></h2>
+            <p className="artisan-kicker">On commence par ton quotidien</p>
+            <h2 className={TITRE_SECTION}>Qu’est-ce qu’on<br /><span>simplifie en premier ?</span></h2>
             <p>
-              Cinq lignes suffisent. Je te rappelle pour vérifier que l’offre correspond vraiment à ton métier.
+              Dis-moi ce qui te ralentit. On regarde ensemble si un outil peut t’aider, avec quel périmètre et à quel coût.
             </p>
             <dl>
               <div><dt>01</dt><dd><strong>Pas de compte</strong><span>Tu envoies, c’est tout.</span></dd></div>
@@ -154,9 +168,15 @@ export function FormulaireDevis() {
           <form className="artisan-formulaire__card grid gap-5 sm:grid-cols-2" onSubmit={envoyer} noValidate>
             <div className="artisan-formulaire__card-head sm:col-span-2">
               <span>Demande de rappel</span>
-              <small>Réponse dans la journée</small>
+              <small>Sans engagement</small>
             </div>
-            <fieldset className="artisan-formulaire__offers sm:col-span-2">
+            <label className="outil-label sm:col-span-2" htmlFor="contact-besoin">Ce qui t’intéresse
+              <select className="outil-champ" id="contact-besoin" name="besoin" value={besoin} onChange={(e) => { if (estBesoinId(e.target.value)) setBesoin(e.target.value); }}>
+                {SERVICES.map((service) => <option key={service.id} value={service.id}>{service.nom}</option>)}
+                <option value="site">Un site vitrine complémentaire</option>
+              </select>
+            </label>
+            {besoin === 'site' && <fieldset className="artisan-formulaire__offers sm:col-span-2">
               <legend>La formule qui t’intéresse</legend>
               <div>
                 {OFFRES.map((option) => (
@@ -166,7 +186,7 @@ export function FormulaireDevis() {
                   </label>
                 ))}
               </div>
-            </fieldset>
+            </fieldset>}
         <div>
           <label className="block text-lg font-bold text-encre" htmlFor={`${idBase}-nom`}>
             Ton nom

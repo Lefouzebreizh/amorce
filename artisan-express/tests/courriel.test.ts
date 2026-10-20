@@ -174,3 +174,10 @@ describe('lienMailtoDemande', () => {
     assert.ok(lien.includes('%20'));
   });
 });
+
+it('transmet le besoin de service sans lui attribuer le tarif d’un site', () => {
+  const courriel = construireCourriel({ ...DEMANDE, besoin: 'appels' });
+  assert.match(courriel.sujet, /Sauveur d’appels manqués/);
+  assert.match(courriel.texte, /tarif à définir/);
+  assert.doesNotMatch(courriel.texte, /300|690|1.?290/);
+});

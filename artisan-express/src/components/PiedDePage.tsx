@@ -9,7 +9,7 @@ export function PiedDePage() {
           <span className="artisan-nav__mark" aria-hidden="true"><span>AE</span></span>
           <div>
             <p>Artisan Express</p>
-            <span>Un site clair pour un métier bien fait.</span>
+            <span>Du temps pour ton métier. Des outils pour le reste.</span>
           </div>
         </div>
         {/*
@@ -57,8 +57,8 @@ export function PiedDePage() {
           cette page ne charge aucun script de mesure et ne dépose aucun témoin.
         */}
         <p className={`artisan-footer__privacy text-base leading-relaxed text-ardoise ${MESURE}`}>
-          Cette page ne dépose aucun cookie et ne charge aucun mouchard. Ce que tu écris dans le
-          formulaire m’arrive par courriel et n’est enregistré nulle part ailleurs.
+          Les simulateurs SMS restent dans cette page. Le devis est créé dans ton navigateur.
+          La dictée peut utiliser le service vocal de ton navigateur. Seul le formulaire de contact transmet ta demande par courriel.
         </p>
       </div>
     </footer>
