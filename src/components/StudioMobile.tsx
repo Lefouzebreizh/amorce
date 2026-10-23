@@ -36,11 +36,13 @@ export function StudioMobile({
   engine,
   step,
   onStep,
+  onAssistant,
 }: {
   engine: PlaybackEngine;
   /** Étape ouverte, ou null quand seul l'aperçu est affiché. */
   step: StepId | null;
   onStep: (step: StepId | null) => void;
+  onAssistant: () => void;
 }) {
   const clipCount = useStudio((s) => s.project.clips.length);
 
@@ -139,7 +141,7 @@ export function StudioMobile({
     // `100dvh` et non `100vh` : sur mobile, la barre d'adresse se replie en
     // cours de route et `vh` ne suit pas, ce qui ferait dépasser la page.
     <div className="flex h-[100dvh] flex-col overflow-hidden">
-      <MobileHeader />
+      <MobileHeader onAssistant={onAssistant} />
 
       <div className="flex-1 overflow-y-auto overscroll-contain">
         {/*
@@ -229,7 +231,7 @@ export function ancre(id: StepId) {
   return `etape-${id}`;
 }
 
-function MobileHeader() {
+function MobileHeader({ onAssistant }: { onAssistant: () => void }) {
   const project = useStudio((s) => s.project);
   const analysis = useMemo(() => analyzeProject(project), [project]);
   const undo = useStudio((s) => s.undo);
@@ -254,6 +256,7 @@ function MobileHeader() {
       <div className="flex items-center gap-2">
         <UndoControls canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
         {analysis.shotCount > 0 && <ScoreBadge score={analysis.score} compact />}
+        <button type="button" onClick={onAssistant} className="min-h-11 rounded-xl border border-accent/25 px-3 text-xs font-semibold text-accent">Assistant</button>
       </div>
     </header>
   );

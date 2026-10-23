@@ -693,9 +693,12 @@ plus élaboré. Détail du cas d'origine dans
 Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
 
 - **Amorce** (racine) — Next.js **16.3.2**, React 19, Tailwind v4, TypeScript
-  strict. **Le moteur de montage tourne entièrement dans le navigateur** : ni
-  serveur, ni base, ni route API. Seul le module de licence fait exception, et
-  il ne touche à aucun média — voir plus bas.
+  strict. **Le moteur de montage tourne entièrement dans le navigateur**. Le
+  copilote appelle une route serveur Gemini qui reçoit le texte de conversation,
+  les paroles et un résumé du projet, jamais les fichiers audio ou vidéo ; les
+  requêtes désactivent l’historique Gemini (`store: false`). Aucune base n’est
+  utilisée par Amorce. Le module de licence reste séparé et ne touche à aucun
+  média — voir plus bas.
 - **agence/** — Next.js 16, Supabase (PostgreSQL + RLS), Server Actions, shadcn.
   Se vérifie depuis son dossier, jamais depuis la racine.
 - **artisan-express/** — page de vente du site vitrine artisan à 300 €. Next.js

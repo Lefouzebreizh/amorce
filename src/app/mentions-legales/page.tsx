@@ -53,11 +53,24 @@ export default function Page() {
 
       <Bloc titre="Ce que le site sait de vous">
         <p>
-          <strong className="text-mist">Le studio de montage ne transmet rien.</strong>{' '}
-          Vos vidéos, vos sons et vos textes restent dans votre navigateur : il
-          n’existe aucun serveur qui les reçoive, aucune base de données, aucune
-          route qui accepte un fichier. Rien à supprimer, parce que rien n’est
-          collecté.
+          <strong className="text-mist">Les vidéos et les sons restent dans votre navigateur.</strong>{' '}
+          Amorce ne les téléverse pas. Si vous utilisez le copilote, le texte de
+          vos messages, vos paroles et un résumé technique du projet sont envoyés
+          à Google Gemini pour produire une réponse et proposer des actions dans
+          le studio. Aucun fichier audio ou vidéo n’est joint à ces requêtes.
+        </p>
+        <p>
+          Amorce désactive l’historique de conversation de l’API Gemini. Cela ne
+          remplace pas les règles de traitement de Google : l’offre gratuite peut
+          utiliser les entrées et réponses pour améliorer ses produits ; l’offre
+          payante indique ne pas les utiliser à cette fin. Google peut aussi
+          traiter des journaux limités pour la sécurité. Consultez la{' '}
+          <a href="https://ai.google.dev/gemini-api/docs/logs-policy" target="_blank" rel="noreferrer" className="text-accent underline underline-offset-4">documentation Gemini sur les données</a>.
+        </p>
+        <p>
+          L’utilisation de l’API Gemini peut entraîner une facturation selon le
+          niveau et le modèle configurés dans Google AI Studio. Amorce ne connaît
+          pas le forfait rattaché à votre clé.
         </p>
         <p>
           Une seule exception, et elle ne touche à aucun média : si vous achetez

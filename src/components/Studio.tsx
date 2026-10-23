@@ -13,6 +13,7 @@ import { useSharedFiles } from '@/hooks/useSharedFiles';
 import { useDetectionCadrage } from '@/hooks/useDetectionCadrage';
 import { StudioDesktop } from './StudioDesktop';
 import { StudioMobile } from './StudioMobile';
+import { StudioAssistant } from './StudioAssistant';
 import { STEP_FOR_SELECTION, type StepId } from '@/lib/steps';
 
 /**
@@ -73,6 +74,7 @@ export function Studio() {
   // Sur téléphone, aucun panneau n'est ouvert au départ : l'aperçu occupe tout
   // l'écran, et le parcours s'offre dans la barre du bas.
   const [step, setStep] = useState<StepId | null>('import');
+  const [assistantMode, setAssistantMode] = useState(true);
 
   // Un fichier partagé arrive sans que l'utilisateur ait ouvert quoi que ce
   // soit : on l'amène là où il devra en décider, sinon les fichiers reçus
@@ -125,17 +127,23 @@ export function Studio() {
   }, [engine]);
 
   const openStep = useCallback((next: StepId) => setStep(next), []);
+  const openAdvanced = useCallback((next?: StepId) => {
+    if (next) setStep(next);
+    setAssistantMode(false);
+  }, []);
 
   // Les deux coques rendent les mêmes panneaux : le fournisseur les enveloppe
   // toutes deux, plutôt que d'enfiler l'état dans leurs signatures.
   return (
     <FournisseurLicence valeur={licence}>
-      {compact ? (
-        <StudioMobile engine={engine} step={step} onStep={setStep} />
+      {assistantMode ? (
+        <StudioAssistant engine={engine} onAdvanced={openAdvanced} />
+      ) : compact ? (
+        <StudioMobile engine={engine} step={step} onStep={setStep} onAssistant={() => setAssistantMode(true)} />
       ) : (
         // La colonne latérale d'un grand écran affiche toujours une étape : on
         // retombe sur l'import si le panneau avait été refermé côté téléphone.
-        <StudioDesktop engine={engine} step={step ?? 'import'} onStep={openStep} />
+        <StudioDesktop engine={engine} step={step ?? 'import'} onStep={openStep} onAssistant={() => setAssistantMode(true)} />
       )}
     </FournisseurLicence>
   );

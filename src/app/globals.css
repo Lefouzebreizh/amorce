@@ -640,3 +640,28 @@ input[type='range']::-moz-range-thumb {
 .studio-shell button:focus-visible, .studio-shell a:focus-visible, .studio-shell input:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
 @media (max-width: 860px) { .studio-body { padding: 0; } .studio-nav, .studio-rail { border-radius: 0; } }
 @media (prefers-reduced-motion: reduce) { .studio-step, .studio-step::before { transition: none !important; } }
+
+/* Amorce conversationnelle : l'aperçu reste visible, les réglages quittent le premier plan. */
+.studio-assistant-main { gap: 12px; }
+.studio-assistant-panel { min-height: 0; }
+.studio-assistant-messages { scrollbar-width: thin; scrollbar-color: rgb(145 165 190 / .3) transparent; }
+.studio-assistant-shell button:hover { box-shadow: 0 0 22px rgb(64 224 208 / .1); }
+.studio-assistant-shell button:focus-visible,
+.studio-assistant-shell textarea:focus-visible,
+.studio-assistant-shell a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+@media (max-width: 860px) {
+  .studio-assistant-main { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(190px, 31dvh) minmax(0, 1fr); gap: 8px; padding: 8px; }
+  .studio-assistant-main > section { min-height: 0; gap: 6px; }
+  .studio-assistant-main .studio-preview-plate { padding: 6px; border-radius: 18px; }
+  .studio-assistant-main .studio-timeline-plate { max-height: 78px; overflow: hidden; border-radius: 14px; }
+  .studio-assistant-main > section > div:last-child { min-height: 32px; }
+  .studio-assistant-panel { border-radius: 20px; }
+  .studio-assistant-panel > div:first-child { padding: 10px 14px; }
+  .studio-assistant-panel h1 { font-size: 1.25rem; }
+}
+@media (max-width: 420px) {
+  .studio-assistant-shell .studio-header { min-height: 58px; padding-inline: 10px; }
+  .studio-assistant-main { grid-template-rows: minmax(160px, 25dvh) minmax(0, 1fr); }
+  .studio-assistant-panel form { padding: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .studio-assistant-shell button { transition: none !important; } }

@@ -24,14 +24,16 @@ export function StudioDesktop({
   engine,
   step,
   onStep,
+  onAssistant,
 }: {
   engine: PlaybackEngine;
   step: StepId;
   onStep: (step: StepId) => void;
+  onAssistant: () => void;
 }) {
   return (
     <div className="studio-shell flex h-screen flex-col overflow-hidden">
-      <DesktopHeader />
+      <DesktopHeader onAssistant={onAssistant} />
 
       <main className="studio-body flex min-h-0 flex-1">
         <nav className="studio-nav flex w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-edge p-3" aria-label="Étapes du montage">
@@ -75,7 +77,7 @@ export function StudioDesktop({
   );
 }
 
-function DesktopHeader() {
+function DesktopHeader({ onAssistant }: { onAssistant: () => void }) {
   const project = useStudio((s) => s.project);
   const analysis = useMemo(() => analyzeProject(project), [project]);
   const undo = useStudio((s) => s.undo);
@@ -101,6 +103,7 @@ function DesktopHeader() {
       <div className="flex items-center gap-3">
         <UndoControls canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo} />
         {analysis.shotCount > 0 && <ScoreBadge score={analysis.score} />}
+        <button type="button" onClick={onAssistant} className="min-h-11 rounded-xl border border-accent/25 px-3 text-sm font-semibold text-accent transition hover:bg-accent/10 focus-visible:outline-2 focus-visible:outline-accent">Parler à Amorce</button>
       </div>
     </header>
   );

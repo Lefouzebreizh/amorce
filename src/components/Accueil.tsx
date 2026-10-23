@@ -77,7 +77,7 @@ export function Accueil() {
             className="entree titre-degrade eclat text-balance text-4xl font-bold leading-[1.08] sm:text-5xl"
             style={{ animationDelay: '70ms' }}
           >
-            Monte ta vidéo verticale sans rien envoyer à personne.
+            Monte ta vidéo verticale sans téléverser tes rushes.
           </h1>
 
           <p
@@ -85,8 +85,9 @@ export function Accueil() {
             style={{ animationDelay: '140ms' }}
           >
             Tes rushes restent sur ton téléphone. Amorce les coupe, les
-            sous-titre, les sonorise et te rend un fichier prêt à publier — sans
-            compte, sans téléversement, sans serveur qui garde une copie.
+            sous-titre, les sonorise et te rend un fichier prêt à publier. Si tu
+            choisis le copilote, tes messages et tes paroles sont envoyés à
+            Google Gemini ; tes vidéos et tes sons, eux, restent sur ton appareil.
           </p>
 
           <dl
