@@ -4,6 +4,7 @@ import type { PlaybackEngine } from '@/hooks/usePlayback';
 import { type StepId } from '@/lib/steps';
 import { AnalysisPanel } from './panels/AnalysisPanel';
 import { CinemaPanel } from './panels/CinemaPanel';
+import { ComposerPanel } from './panels/ComposerPanel';
 import { ClipPanel } from './panels/ClipPanel';
 import { ExportPanel } from './panels/ExportPanel';
 import { ImportPanel } from './panels/ImportPanel';
@@ -35,6 +36,8 @@ export function StepPanel({
       return <ClipPanel />;
     case 'texte':
       return <TextPanel />;
+    case 'composer':
+      return <ComposerPanel onStep={onStep} />;
     case 'son':
       return <SoundPanel engine={engine} />;
     case 'cinema':

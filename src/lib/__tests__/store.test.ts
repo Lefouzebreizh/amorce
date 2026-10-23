@@ -89,6 +89,55 @@ test('une tête de lecture déjà dans les bornes n’est pas déplacée', () =>
   assert.equal(useStudio.getState().playhead, 2, 'aucune raison de bouger la tête de lecture');
 });
 
+test('le brouillon musical se modifie et peut s’annuler', () => {
+  useStudio.getState().updateSongDraft({ title: 'Les mots qui pansent', lyrics: 'Une pierre à l’édifice' });
+  assert.equal(useStudio.getState().project.song?.title, 'Les mots qui pansent');
+  assert.equal(useStudio.getState().project.song?.lyrics, 'Une pierre à l’édifice');
+
+  useStudio.getState().undo();
+  assert.equal(useStudio.getState().project.song?.title, '');
+  assert.equal(useStudio.getState().project.song?.lyrics, '');
+});
+
+test('les paroles calées deviennent des sous-titres karaoké sans retirer les autres', () => {
+  useStudio.getState().addAssets([asset('calage', 5)]);
+  useStudio.getState().appendClip('calage');
+  useStudio.getState().setMusic({ name: 'chanson.mp3', url: '', duration: 5, gain: 1, offset: 0 });
+  useStudio.getState().addCaption();
+  const manual = useStudio.getState().project.captions[0];
+
+  useStudio.getState().createSongCaptions([
+    { text: 'Une pierre à l’édifice', start: 1, end: 3 },
+  ]);
+  const captions = useStudio.getState().project.captions;
+
+  assert.ok(captions.some((caption) => caption.id === manual.id));
+  const generated = captions.filter((caption) => caption.songId === 'current-song');
+  assert.ok(generated.length > 0);
+  assert.equal(generated.every((caption) => caption.style === 'karaoke' && caption.mots?.length), true);
+  assert.ok(generated.every((caption) => caption.start >= 1 && caption.end <= 3));
+
+  useStudio.getState().createSongCaptions([
+    { text: 'Calage invalide', start: 4, end: 8 },
+  ]);
+  assert.ok(useStudio.getState().project.captions.some((caption) => caption.text.includes('pierre')));
+
+  useStudio.getState().setMusic({ name: 'chanson.mp3', url: '', duration: 5, gain: 1, offset: 1 });
+  useStudio.getState().createSongCaptions([
+    { text: 'Avant la musique', start: 0, end: 0.5 },
+  ]);
+  useStudio.getState().createSongCaptions([
+    { text: 'Repère invalide', start: Number.NaN, end: 2 },
+  ]);
+  assert.ok(useStudio.getState().project.captions.some((caption) => caption.text.includes('pierre')));
+
+  useStudio.getState().createSongCaptions([
+    { text: 'Belle âme', start: 3, end: 4 },
+  ]);
+  assert.equal(useStudio.getState().project.captions.some((caption) => caption.text.includes('pierre')), false);
+  assert.equal(useStudio.getState().project.captions.some((caption) => caption.text.includes('Belle')), true);
+});
+
 test('allonger un plan ne touche pas à la tête de lecture', () => {
   const clips = twoClipsAtEnd();
   useStudio.getState().updateClip(clips[0].id, { outPoint: 5 });

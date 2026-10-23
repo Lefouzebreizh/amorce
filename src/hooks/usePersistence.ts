@@ -32,7 +32,7 @@ export function usePersistence(): void {
       .then((project) => {
         if (abandoned || !project) return;
         // L'utilisateur n'a rien fait pendant la lecture : on peut reprendre.
-        if (useStudio.getState().project.assets.length > 0) return;
+        if (worthSaving(useStudio.getState().project)) return;
         useStudio.setState({ project, selection: null, playhead: 0, playing: false });
       })
       .catch(() => {

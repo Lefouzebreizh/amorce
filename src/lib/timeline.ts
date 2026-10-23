@@ -383,6 +383,7 @@ export function emptyProject(): Project {
     samples: [],
     voices: [],
     music: null,
+    song: { title: '', lyrics: '', style: '', mood: '', voice: '' },
     // Un nouveau projet respecte l'étalonnage des médias importés. Les looks
     // restent disponibles, mais ne doivent pas retraiter une vidéo à l'insu
     // de la personne qui vient simplement l'assembler.

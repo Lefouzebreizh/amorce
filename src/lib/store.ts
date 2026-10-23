@@ -24,6 +24,8 @@ import {
   type Project,
   type SfxId,
   type SampleCue,
+  type SongDraft,
+  type SyncedLyricLine,
   type SoundCue,
   type VoiceCue,
 } from './types.ts';
@@ -73,6 +75,7 @@ const COALESCE_MS = 600;
 const COALESCING = new Set([
   'reglage',
   'texte-reglage',
+  'chanson-reglage',
   'son-reglage',
   'musique-reglage',
   'voix-reglage',
@@ -243,6 +246,8 @@ type StudioState = {
   /** Ajuste l'équilibre entre les trois sources sonores. */
   setMix: (patch: Partial<MixSettings>) => void;
   updateMusic: (patch: Partial<MusicTrack>) => void;
+  updateSongDraft: (patch: Partial<SongDraft>) => void;
+  createSongCaptions: (lines: SyncedLyricLine[]) => void;
 
   // -- Lecture --------------------------------------------------------------
   select: (selection: Selection) => void;
@@ -902,6 +907,44 @@ export const useStudio = create<StudioState>((set, get) => {
     mutate('musique-reglage', (state) => ({
       project: { ...state.project, music: state.project.music ? { ...state.project.music, ...patch } : null },
     })),
+
+  updateSongDraft: (patch) =>
+    mutate('chanson-reglage', (state) => ({
+      project: {
+        ...state.project,
+        song: { title: '', lyrics: '', style: '', mood: '', voice: '', ...state.project.song, ...patch },
+      },
+    })),
+
+  createSongCaptions: (lines) =>
+    mutate('calage-chanson', (state) => {
+      const limit = totalDuration(state.project.clips);
+      const track = state.project.music;
+      if (!track || limit <= 0 || lines.length === 0) return state;
+      if (lines.some((line) =>
+        line.start === null
+        || line.end === null
+        || !Number.isFinite(line.start)
+        || !Number.isFinite(line.end)
+        || line.text.trim() === ''
+        || line.start < track.offset
+        || line.end > track.offset + track.duration
+        || line.end <= line.start
+        || line.end > limit
+      )) return state;
+      const produced = lines.flatMap((line) => {
+        return captionsFromVoice(line.text, [{ start: line.start!, end: line.end! }], () => uid('cap'))
+          .map((caption) => ({ ...caption, songId: 'current-song' }));
+      });
+      if (produced.length === 0) return state;
+
+      return {
+        project: {
+          ...state.project,
+          captions: [...state.project.captions.filter((caption) => caption.songId !== 'current-song'), ...produced],
+        },
+      };
+    }),
 
   select: (selection) => set({ selection }),
   setPlayhead: (time) => set((state) => ({ playhead: clamp(time, 0, totalDuration(state.project.clips)) })),

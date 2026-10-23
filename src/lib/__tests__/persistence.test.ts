@@ -63,6 +63,17 @@ test('un projet vierge n’a rien à conserver', () => {
   assert.equal(worthSaving(project()), true);
 });
 
+test('un brouillon musical sans rush est conservé et restaurable', () => {
+  const original: Project = {
+    ...emptyProject(),
+    song: { title: 'Mon morceau', lyrics: 'Une ligne', style: '', mood: '', voice: '' },
+  };
+  assert.equal(worthSaving(original), true);
+  const restored = restoreProject(serializeProject(original), new Map());
+  assert.equal(restored?.song?.title, 'Mon morceau');
+  assert.equal(restored?.song?.lyrics, 'Une ligne');
+});
+
 test('le rangement vide les liens, qui ne valent que pour leur page', () => {
   const saved = serializeProject(project());
   assert.deepEqual(saved.project.assets.map((a) => a.url), ['', '']);

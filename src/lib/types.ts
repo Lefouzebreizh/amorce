@@ -166,6 +166,8 @@ export type Caption = {
    * la première.
    */
   voiceId?: string;
+  /** Sous-titre généré depuis le brouillon musical, remplaçable au recalage. */
+  songId?: string;
   /**
    * Les mots du texte avec l'instant où chacun est prononcé.
    *
@@ -400,6 +402,27 @@ export type MusicTrack = {
   offset: number;
 };
 
+/** Matière d'écriture et direction du morceau associé au montage. */
+export type SongDraft = {
+  title: string;
+  lyrics: string;
+  style: string;
+  mood: string;
+  voice: string;
+  /** Calage manuel des lignes, conservé avec les paroles tant qu'elles ne changent pas. */
+  lyricTiming?: { sourceText: string; lines: SyncedLyricLine[] };
+};
+
+export type SyncedLyricLine = { text: string; start: number | null; end: number | null };
+
+export const DEFAULT_SONG_DRAFT: SongDraft = {
+  title: '',
+  lyrics: '',
+  style: '',
+  mood: '',
+  voice: '',
+};
+
 export type Project = {
   name: string;
   assets: MediaAsset[];
@@ -409,6 +432,8 @@ export type Project = {
   samples: SampleCue[];
   voices: VoiceCue[];
   music: MusicTrack | null;
+  /** Absent dans les anciens projets sauvegardés. */
+  song?: SongDraft;
   cinema: CinemaSettings;
   mix: MixSettings;
 };

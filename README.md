@@ -47,7 +47,7 @@ au son quasi inaudible, contre 0,11 Mo et un son normal en 720.
 
 ## Le parcours
 
-L'interface est numérotée de 1 à 7 plutôt que de présenter tous les outils à
+L'interface est numérotée de 1 à 8 plutôt que de présenter tous les outils à
 plat. Un débutant suit l'ordre ; un habitué clique directement sur l'étape qui
 l'intéresse.
 
@@ -55,13 +55,18 @@ l'intéresse.
    express* assemble seul un projet complet, à retoucher ensuite.
 2. **Monter** — ordre des plans, points d'entrée et de sortie, vitesse,
    transition entrante, mouvement de caméra.
-3. **Accroche** — le texte des trois premières secondes, avec dix formules
+3. **Composer** — paroles et intention musicale conservées avec le projet,
+   puis un brief à copier dans un générateur musical. La génération audio
+   intégrée reste à venir ; la piste obtenue s'importe dans l'étape Son. Les
+   paroles peuvent ensuite être calées à l'écoute par ligne, puis transformées
+   en sous-titres karaoké éditables.
+4. **Accroche** — le texte des trois premières secondes, avec dix formules
    éprouvées et l'explication de ce qui les fait fonctionner.
-4. **Son** — bruitages et musique de fond.
-5. **Cinéma** — étalonnage, grain, vignettage, halo, bandes.
-6. **Analyser** — note sur 100, courbe de tension, liste de ce qu'il faut
+5. **Son** — bruitages et musique de fond.
+6. **Cinéma** — étalonnage, grain, vignettage, halo, bandes.
+7. **Analyser** — note sur 100, courbe de tension, liste de ce qu'il faut
    corriger.
-7. **Exporter** — le fichier, en 1080 × 1920 à 30 images par seconde.
+8. **Exporter** — le fichier, en 1080 × 1920 à 30 images par seconde.
 
 ## Ce que l'analyse mesure
 

@@ -27,6 +27,7 @@ const STEP_FOR_CRITERION: Record<CriterionId, StepId> = {
 const STEP_LABEL: Record<StepId, string> = {
   import: 'Importer',
   montage: 'Monter',
+  composer: 'Composer',
   texte: 'Accroche',
   son: 'Son',
   cinema: 'Cinéma',

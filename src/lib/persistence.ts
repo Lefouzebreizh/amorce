@@ -129,7 +129,9 @@ export function restoreProject(saved: SavedProject, urls: Map<string, string>): 
 
 /** Vrai si le projet mérite d'être rangé — un montage vierge n'a rien à reprendre. */
 export function worthSaving(project: Project): boolean {
-  return project.assets.length > 0;
+  return project.assets.length > 0 || Object.entries(project.song ?? {}).some(
+    ([key, value]) => key !== 'lyricTiming' && typeof value === 'string' && value.trim() !== '',
+  );
 }
 
 // -- Accès au stockage --------------------------------------------------------
@@ -238,7 +240,7 @@ export async function load(): Promise<Project | null> {
       for (const url of urls.values()) URL.revokeObjectURL(url);
     }
 
-    return project && project.assets.length > 0 ? project : null;
+    return project && worthSaving(project) ? project : null;
   } finally {
     db.close();
   }
