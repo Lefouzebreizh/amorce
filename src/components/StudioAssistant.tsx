@@ -115,7 +115,9 @@ export function StudioAssistant({
         setExportPreset(answer.exportPreset);
         applied.push('définition d’export');
       }
-      if (answer.openStep !== 'none') onAdvanced(answer.openStep);
+      // L'assistant pilote les outils et leurs réglages en arrière-plan. Le
+      // passage à l'atelier détaillé reste un choix explicite de l'utilisateur :
+      // changer toute la coque au milieu d'une conversation la ferait perdre.
 
       setStatus(applied.length ? `Mis à jour : ${applied.join(' · ')}. Tu peux annuler avec la flèche ↶.` : '');
       setMessages([...next, { role: 'assistant', content: answer.reply }]);
