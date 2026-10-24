@@ -10,7 +10,7 @@ import { Preview } from './Preview';
 import { Timeline } from './Timeline';
 import { NextStep } from './NextStep';
 import { StepPanel } from './steps';
-import { STEPS, type StepId } from '@/lib/steps';
+import { stepsForLyrics, type StepId } from '@/lib/steps';
 import { ScoreBadge, UndoControls } from './ui';
 
 /**
@@ -29,6 +29,8 @@ export function StudioDesktop({
   step: StepId;
   onStep: (step: StepId) => void;
 }) {
+  const hasLyrics = useStudio((s) => s.project.music !== null && s.project.music.kind !== 'ambience');
+  const steps = stepsForLyrics(hasLyrics);
   return (
     <div className="studio-shell flex h-screen flex-col overflow-hidden">
       <DesktopHeader />
@@ -36,7 +38,7 @@ export function StudioDesktop({
       <main className="studio-body flex min-h-0 flex-1">
         <nav className="studio-nav flex w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-edge p-3" aria-label="Étapes du montage">
           <p className="studio-nav-eyebrow">Le Phare · montage</p>
-          {STEPS.map((item) => {
+          {steps.map((item) => {
             const active = item.id === step;
             return (
               <button

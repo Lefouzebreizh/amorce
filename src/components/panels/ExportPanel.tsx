@@ -43,6 +43,9 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
    */
   const captions = useStudio((s) => s.project.captions);
   const aRemplir = crochetsARemplir(captions);
+  const calagesAAcouter = captions.filter((caption) =>
+    caption.wordTimingSource === 'transcript' && caption.wordTimingReviewed !== true,
+  );
 
   /*
    * Un montage peut avoir la bonne cadence, la bonne durée, la bonne note, et
@@ -410,6 +413,15 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
           </div>
         )}
 
+        {!audioOnly && calagesAAcouter.length > 0 && (
+          <div className="mb-2 rounded-xl border border-warn/40 bg-warn/5 px-3.5 py-3 text-[12.5px] leading-relaxed text-warn" role="alert">
+            <p className="font-semibold">Écoute à valider avant l’export vidéo</p>
+            <p className="mt-1 text-muted">
+              {calagesAAcouter.length === 1 ? 'Un calage automatique' : `${calagesAAcouter.length} calages automatiques`} contient des paroles ou des temps qui peuvent être faux. Ouvre l’étape Paroles, écoute le morceau, corrige les erreurs puis coche la validation pour chaque calage.
+            </p>
+          </div>
+        )}
+
         {!audioOnly && plusGrand > 2 && (
           <div className="mb-2 rounded-xl bg-warn/10 px-3.5 py-3 text-[12.5px] leading-relaxed text-warn">
             <p className="font-semibold">
@@ -423,7 +435,7 @@ export function ExportPanel({ engine }: { engine: PlaybackEngine }) {
           </div>
         )}
 
-        <Button variant="primary" className="w-full" onClick={run} disabled={busy || duration <= 0 || !format}>
+        <Button variant="primary" className="w-full" onClick={run} disabled={busy || duration <= 0 || !format || (!audioOnly && calagesAAcouter.length > 0)}>
           {busy
             // « Encodage » et non « enregistrement » hors ligne : rien n'est
             // enregistré, chaque image est composée puis encodée. Le mot juste

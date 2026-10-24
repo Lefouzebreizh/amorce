@@ -169,11 +169,15 @@ export type Caption = {
   /**
    * Les mots du texte avec l'instant où chacun est prononcé.
    *
-   * Absent pour un sous-titre écrit à la main : on ne sait alors pas quand
-   * chaque mot tombe, et le karaoké répartit la durée en parts égales, comme
-   * avant. Présent quand le texte vient d'une voix calée sur son signal.
+   * Absent quand aucun repère n'a été créé : le karaoké répartit alors la
+   * durée en parts égales. `wordTimingSource` précise si les repères stockés
+   * sont estimés, retouchés à la main ou issus d'une transcription.
    */
   mots?: MotDate[];
+  /** Origine des repères, pour distinguer une estimation d'un calage contrôlé. */
+  wordTimingSource?: 'estimated' | 'manual' | 'transcript';
+  /** Validation humaine des paroles et des temps après écoute du morceau. */
+  wordTimingReviewed?: boolean;
 };
 
 /**
@@ -398,6 +402,8 @@ export type MusicTrack = {
   gain: number;
   /** Décalage de départ dans le morceau, en secondes. */
   offset: number;
+  /** Distingue une nappe synthétique d’une chanson importée. */
+  kind?: 'song' | 'ambience';
 };
 
 export type Project = {

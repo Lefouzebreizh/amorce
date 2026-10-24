@@ -10,7 +10,7 @@ import { Preview } from './Preview';
 import { Timeline } from './Timeline';
 import { NextStep } from './NextStep';
 import { StepPanel } from './steps';
-import { STEPS, type StepId } from '@/lib/steps';
+import { stepsForLyrics, type StepId } from '@/lib/steps';
 import { ScoreBadge, UndoControls } from './ui';
 
 /**
@@ -43,6 +43,8 @@ export function StudioMobile({
   onStep: (step: StepId | null) => void;
 }) {
   const clipCount = useStudio((s) => s.project.clips.length);
+  const hasLyrics = useStudio((s) => s.project.music !== null && s.project.music.kind !== 'ambience');
+  const steps = stepsForLyrics(hasLyrics);
 
   /*
    * L'aperçu prend la largeur, et c'est l'état par défaut.
@@ -199,7 +201,7 @@ export function StudioMobile({
         <div className="space-y-3 px-2 pt-2 pb-8">
           <NextStep onStep={onStep} />
 
-          {STEPS.map((item) => (
+          {steps.map((item) => (
             <section
               key={item.id}
               id={ancre(item.id)}

@@ -278,14 +278,14 @@ export function popScale(elapsed: number): number {
  */
 export function activeWordIndex(caption: Caption, time: number, wordCount: number): number {
   /*
-   * Quand les instants sont connus, on les lit ; sinon on partage la durée.
+   * Quand des instants sont enregistrés, on les lit ; sinon on partage la durée.
    *
    * Le partage égal reste le comportement d'un sous-titre écrit à la main :
    * personne n'a dit quand chaque mot tombe, et inventer un rythme serait pire
    * qu'un rythme régulier. Mais un texte issu d'une voix calée sur son signal
-   * porte ses `mots`, et là le partage égal était un mensonge visible — le
-   * surlignage passait au mot suivant pendant qu'on entendait encore le
-   * précédent.
+   * porte ses `mots`, le partage égal pouvait décaler le surlignage. Sa
+   * provenance reste affichée dans l'éditeur pour distinguer une estimation
+   * d'un calage contrôlé.
    *
    * Le nombre de mots est comparé avant de s'y fier : le tracé découpe le
    * texte *après* le passage à la ligne, et si les deux découpages ne tombent
@@ -345,15 +345,72 @@ export function drawCaption(
   const text = style.uppercase ? caption.text.toUpperCase() : caption.text;
   if (!text.trim()) return null;
 
+  let visibleCaption = caption;
+  let visibleText = text;
   const scale = caption.scale ?? 1;
-  const fontSize = style.fontSize * scale;
 
   ctx.save();
   ctx.font = fontString(style, fonts, scale);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  const lines = wrapLines(ctx, text, MAX_TEXT_WIDTH);
+  /*
+   * Un bloc karaoké synchronisé peut contenir une ligne entière de chanson.
+   * Le garder affiché d'un seul coup obligeait le moteur à produire trois,
+   * quatre lignes, parfois hors écran. On ne réécrit rien : on montre le groupe
+   * de mots qui contient le mot actif, avec au plus deux lignes. Les frontières
+   * viennent des mots horodatés, donc l'export et l'aperçu changent de groupe au
+   * même instant.
+   */
+  const words = text.trim().split(/\s+/);
+  const mappedWordTimes = style.highlight
+    && caption.mots?.length === words.length
+    && caption.mots.every((word, index) => word.text.toLocaleLowerCase('fr-FR') === words[index].toLocaleLowerCase('fr-FR'));
+  if (style.highlight) {
+    const wordTimes = mappedWordTimes && caption.mots
+      ? caption.mots
+      : words.map((word, index) => {
+          const span = Math.max(0.001, caption.end - caption.start);
+          return {
+            text: word,
+            start: caption.start + (span * index) / words.length,
+            end: caption.start + (span * (index + 1)) / words.length,
+          };
+        });
+    const chunks: number[][] = [];
+    let chunk: number[] = [];
+    for (let index = 0; index < words.length; index++) {
+      const candidate = [...chunk, index];
+      const candidateLines = wrapLines(ctx, candidate.map((i) => words[i]).join(' '), MAX_TEXT_WIDTH);
+      if (chunk.length && candidateLines.length > 2) {
+        chunks.push(chunk);
+        chunk = [index];
+      } else {
+        chunk = candidate;
+      }
+    }
+    if (chunk.length) chunks.push(chunk);
+
+    const active = mappedWordTimes
+      ? activeWordIndex(caption, time, words.length)
+      : Math.min(words.length - 1, Math.max(0, Math.floor(((time - caption.start) / Math.max(0.001, caption.end - caption.start)) * words.length)));
+    const activeChunk = chunks.find((part) => part.includes(active)) ?? chunks[0];
+    const first = activeChunk[0];
+    const last = activeChunk.at(-1)!;
+    visibleText = activeChunk.map((i) => words[i]).join(' ');
+    visibleCaption = {
+      ...caption,
+      text: visibleText,
+      start: wordTimes[first].start,
+      end: wordTimes[last].end,
+      mots: wordTimes.slice(first, last + 1),
+    };
+  }
+
+  const fontSize = style.fontSize * scale;
+  ctx.font = fontString(style, fonts, scale);
+
+  const lines = wrapLines(ctx, visibleText, MAX_TEXT_WIDTH);
   const lineHeight = fontSize * LINE_HEIGHT_RATIO;
   const blockHeight = lines.length * lineHeight;
   // Le bloc entier tient dans la bande sure, pas seulement son ancre.
@@ -390,7 +447,7 @@ export function drawCaption(
   const color = caption.color ?? style.color;
 
   if (style.highlight) {
-    drawKaraokeLines(ctx, lines, caption, time, style, firstLineY, lineHeight, scale);
+    drawKaraokeLines(ctx, lines, visibleCaption, time, style, firstLineY, lineHeight, scale);
   } else {
     lines.forEach((line, index) => {
       drawStyledText(ctx, line, OUTPUT_WIDTH / 2, firstLineY + index * lineHeight, style, color, scale);

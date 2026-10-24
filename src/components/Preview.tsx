@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { alerteSurDecoupage } from '@/lib/analysis';
+import { BANDE_SURE } from '@/lib/captions';
 import { useStudio } from '@/lib/store';
 import { formatTime } from '@/lib/media';
 import { OUTPUT_HEIGHT, OUTPUT_WIDTH } from '@/lib/types';
@@ -120,7 +121,7 @@ export function Preview({
 
             if (!current.moved && Math.abs(event.clientY - current.startY) < DRAG_THRESHOLD_PX) return;
             current.moved = true;
-            updateCaption(current.id, { y: engine.toRelativeY(event.clientY) });
+            updateCaption(current.id, { y: Math.min(BANDE_SURE.bas, Math.max(BANDE_SURE.haut, engine.toRelativeY(event.clientY))) });
           }}
           onPointerUp={(event) => {
             const current = gesture.current;

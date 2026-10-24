@@ -386,6 +386,7 @@ export function captionsFromVoice(
       start: offset + word.start,
       end: offset + word.end,
     })),
+    wordTimingSource: 'estimated',
   }));
 }
 

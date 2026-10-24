@@ -25,6 +25,14 @@ export const STEPS: Step[] = [
   { id: 'export', index: 7, label: 'Exporter', hint: 'Récupère le fichier' },
 ];
 
+/** Libellés adaptés au travail sur un clip musical, sans changer le parcours. */
+export function stepsForLyrics(hasLyrics: boolean): Step[] {
+  if (!hasLyrics) return STEPS;
+  return STEPS.map((step) => step.id === 'texte'
+    ? { ...step, label: 'Paroles', hint: 'Calage et relecture' }
+    : step);
+}
+
 /** Étape vers laquelle amener l'utilisateur quand il sélectionne un élément. */
 export const STEP_FOR_SELECTION = { clip: 'montage', caption: 'texte', cue: 'son' } as const;
 

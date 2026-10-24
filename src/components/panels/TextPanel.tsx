@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { CAPTION_STYLES } from '@/lib/captions';
+import { useEffect, useRef, useState } from 'react';
+import { BANDE_SURE, CAPTION_STYLES } from '@/lib/captions';
 import { HOOK_WINDOW, captionCoverage } from '@/lib/analysis';
 import { hooksByFamily } from '@/lib/hooks';
 import { useStudio } from '@/lib/store';
@@ -26,6 +26,11 @@ export function TextPanel() {
   const duration = useStudio((s) => s.duration());
   const clips = useStudio((s) => s.project.clips);
   const assets = useStudio((s) => s.project.assets);
+  const music = useStudio((s) => s.project.music);
+  const hasParoles = music !== null && music.kind !== 'ambience';
+  const [transcriptionMessage, setTranscriptionMessage] = useState('');
+  const [transcriptionError, setTranscriptionError] = useState('');
+  const transcriptionFile = useRef<HTMLInputElement>(null);
 
   /*
    * Le chemin rapide n'est pas dans ce panneau, et rien ne le disait.
@@ -79,6 +84,79 @@ export function TextPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.id]);
   const hook = [...captions].sort((a, b) => a.start - b.start).find((c) => c.start <= 1.2);
+
+  const importerCalageLocal = async (file: File) => {
+    try {
+      if (!music) throw new Error('Ajoute une musique au projet avant d’importer son calage.');
+      const data: unknown = JSON.parse(await file.text());
+      if (!data || typeof data !== 'object' || !('format' in data) || data.format !== 'amorce.word-timings.v1' || !('words' in data) || !Array.isArray(data.words)) {
+        throw new Error('Ce fichier ne contient pas un calage WhisperX reconnu par Amorce.');
+      }
+      if ('audio' in data && typeof data.audio === 'string' && data.audio.toLocaleLowerCase('fr-FR') !== music.name.toLocaleLowerCase('fr-FR')) {
+        throw new Error(`Ce calage a été créé pour « ${data.audio} », mais la musique du projet est « ${music.name} ».`);
+      }
+      const mots = data.words.flatMap((item) => {
+        if (!item || typeof item !== 'object' || !('text' in item) || !('start' in item) || !('end' in item)) return [];
+        const { text, start, end } = item;
+        if (typeof text !== 'string' || !text.trim() || typeof start !== 'number' || typeof end !== 'number' || !Number.isFinite(start) || !Number.isFinite(end) || end <= start) return [];
+        return [{ text: text.trim(), start, end }];
+      });
+      if (mots.length === 0) throw new Error('Aucun repère mot à mot valide n’a été trouvé dans ce fichier.');
+
+      const musicOffset = music.offset;
+      const clipDuration = useStudio.getState().duration();
+      if (clipDuration <= 0) throw new Error('Ajoute d’abord au moins un plan au montage pour y placer les paroles.');
+      const transcript = 'transcript' in data && typeof data.transcript === 'string' ? data.transcript : '';
+      const lignes = transcript
+        ? transcript.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+        : [];
+      const nombreDeMots = (line: string) => line.split(/\s+/).filter(Boolean).length;
+      const nombreAnnonce = lignes.reduce((total, line) => total + nombreDeMots(line), 0);
+      if (lignes.length === 0 || nombreAnnonce !== mots.length) {
+        throw new Error('Le texte et les repères mot à mot ne correspondent pas. Réexporte le calage avec une ligne par phrase.');
+      }
+
+      let curseur = 0;
+      let derniereSelection: string | undefined;
+      let captionsImportees = 0;
+      for (const line of lignes) {
+        const count = nombreDeMots(line);
+        const motsDeLaLigne = mots.slice(curseur, curseur + count);
+        curseur += count;
+        const timedWords = motsDeLaLigne
+          .filter((word) => word.end > musicOffset && word.start - musicOffset < clipDuration)
+          .map((word) => ({
+            text: word.text,
+            start: Math.max(0, word.start - musicOffset),
+            end: Math.min(clipDuration, word.end - musicOffset),
+          }))
+          .filter((word) => word.end > word.start);
+        if (timedWords.length === 0) continue;
+        const first = timedWords[0];
+        const last = timedWords.at(-1)!;
+        addCaption('karaoke');
+        const created = useStudio.getState().project.captions.at(-1);
+        if (!created) throw new Error('Un sous-titre n’a pas pu être ajouté au projet.');
+        updateCaption(created.id, {
+          text: timedWords.map((word) => word.text).join(' '),
+          start: first.start,
+          end: last.end,
+          mots: timedWords,
+          wordTimingSource: 'transcript',
+          wordTimingReviewed: false,
+        });
+        derniereSelection = created.id;
+        captionsImportees += 1;
+      }
+      if (!derniereSelection) throw new Error('Aucune parole ne tombe dans la durée du montage. Allonge le montage ou déplace la musique.');
+      if (derniereSelection) select({ kind: 'caption', id: derniereSelection });
+      setTranscriptionMessage(`${mots.length} mots importés en ${captionsImportees} lignes — écoute et corrige les passages incertains.`);
+      setTranscriptionError('');
+    } catch (error) {
+      setTranscriptionMessage('');
+      setTranscriptionError(error instanceof Error ? error.message : 'Le calage local n’a pas pu être importé.');
+    }
+  };
 
   return (
     <div className="space-y-3">
@@ -153,14 +231,45 @@ export function TextPanel() {
       </Panel>
 
       <Panel
-        title="Sous-titres"
-        subtitle="La majorité regarde sans le son. Vise environ 70 % de la vidéo couverte par du texte."
+        title={hasParoles ? 'Paroles et sous-titres' : 'Sous-titres'}
+        subtitle={hasParoles
+          ? 'Préserve les paroles exactes, puis écoute le morceau pour relire le texte et son calage.'
+          : 'La majorité regarde sans le son. Vise environ 70 % de la vidéo couverte par du texte.'}
         action={
-          <Button variant="ghost" onClick={() => addCaption('punch')} title="Ajouter à la position de lecture">
+          <div className="flex gap-1">
+            {hasParoles && (
+              <Button variant="ghost" onClick={() => transcriptionFile.current?.click()} title="Importer une transcription WhisperX calculée localement">
+                Importer le calage
+              </Button>
+            )}
+            <Button variant="ghost" onClick={() => addCaption('punch')} title="Ajouter à la position de lecture">
             + Ajouter
-          </Button>
+            </Button>
+          </div>
         }
       >
+        {hasParoles && (
+          <div className="mb-3 rounded-xl border border-edge bg-slab p-3">
+            <p className="text-xs font-semibold text-mist">Paroles de « {music.name} »</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-muted">
+              Transcris ce fichier avec le script WhisperX local fourni dans <code>scripts/transcription-locale/</code>, puis importe son JSON ici. L’audio reste sur ton appareil.
+            </p>
+            {transcriptionMessage && <p className="mt-2 text-[11px] text-accent" aria-live="polite">{transcriptionMessage}</p>}
+            {transcriptionError && <p className="mt-2 text-[11px] text-danger" role="alert">{transcriptionError}</p>}
+            <input
+              ref={transcriptionFile}
+              type="file"
+              accept="application/json,.json"
+              className="sr-only"
+              aria-label="Choisir un fichier de calage WhisperX"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = '';
+                if (file) void importerCalageLocal(file);
+              }}
+            />
+          </div>
+        )}
         {aDeLaVoix && couverture < 0.5 && (
           <div className="mb-3">
             <Hint>
@@ -215,14 +324,147 @@ export function TextPanel() {
             </Button>
           }
         >
-          <Field label="Texte" help="Court et frappant. Une idée par phrase, pas deux.">
+          <Field
+            label="Texte"
+            help={hasParoles
+              ? 'Garde les paroles exactes. Une ligne par phrase facilite la relecture et le calage.'
+              : 'Court et frappant. Une idée par phrase, pas deux.'}
+          >
             <textarea
               value={selected.text}
               rows={2}
-              onChange={(event) => updateCaption(selected.id, { text: event.target.value })}
+              onChange={(event) => {
+                const text = event.target.value;
+                const words = text.trim().split(/\s+/).filter(Boolean);
+                const sameWords = selected.mots?.length === words.length
+                  && selected.mots.every((word, index) => word.text === words[index]);
+                updateCaption(selected.id, {
+                  text,
+                  // Toute retouche du texte — ponctuation comprise — invalide
+                  // l’écoute précédente. On conserve les repères seulement si
+                  // chaque mot reste strictement identique et dans le même ordre.
+                  wordTimingReviewed: text === selected.text ? selected.wordTimingReviewed : false,
+                  ...(sameWords ? {} : { mots: undefined }),
+                });
+              }}
               className="w-full resize-none min-h-11 rounded-xl bg-slab px-3 py-2 text-sm text-mist outline-none focus:border-accent"
             />
           </Field>
+
+          {selected.style === 'karaoke' && (
+            <Field
+              label="Calage mot à mot"
+              help="Ajuste chaque début et chaque fin sur la timeline. Modifier les paroles efface les repères devenus incompatibles."
+            >
+              {selected.mots?.length ? (
+                <>
+                  <p className="mb-2 text-[11px] text-muted">
+                    {selected.wordTimingSource === 'transcript'
+                      ? 'Brouillon automatique — les paroles et les temps peuvent contenir des erreurs.'
+                      : selected.wordTimingSource === 'manual'
+                        ? 'Repères retouchés à la main — vérifie aussi les mots non retouchés.'
+                        : selected.wordTimingSource === 'estimated'
+                          ? 'Répartition estimée à partir des passages parlés, non vérifiée mot à mot.'
+                          : 'Repères hérités sans origine confirmée.'}
+                  </p>
+                  <ol className="max-h-72 space-y-2 overflow-y-auto rounded-xl border border-edge bg-slab p-2">
+                  {selected.mots.map((word, index) => (
+                    <li key={`${selected.id}-${index}`} className="grid grid-cols-[minmax(0,1fr)_5.25rem_5.25rem] items-center gap-2">
+                      <button
+                        type="button"
+                        className="min-w-0 truncate text-left text-xs font-semibold text-mist hover:text-accent"
+                        title={`Aller à ${word.start.toFixed(2)} secondes`}
+                        onClick={() => useStudio.setState({ playhead: word.start })}
+                      >
+                        {index + 1}. {word.text}
+                      </button>
+                      <label className="sr-only" htmlFor={`mot-debut-${selected.id}-${index}`}>Début de « {word.text} » en secondes</label>
+                      <input
+                        id={`mot-debut-${selected.id}-${index}`}
+                        aria-label={`Début de ${word.text}`}
+                        type="number"
+                        min={0}
+                        max={duration}
+                        step={0.01}
+                        value={word.start.toFixed(2)}
+                        onChange={(event) => {
+                          const value = Number(event.target.value);
+                          if (!Number.isFinite(value)) return;
+                          const previousEnd = selected.mots![index - 1]?.end ?? 0;
+                          const mots = selected.mots!.map((item, i) => i === index
+                            ? { ...item, start: Math.max(previousEnd, Math.min(value, item.end - 0.02)) }
+                            : item);
+                          updateCaption(selected.id, { mots, wordTimingReviewed: false, start: mots[0].start, end: mots.at(-1)!.end });
+                        }}
+                        className="w-full rounded-lg border border-edge bg-raised px-1.5 py-1 text-center font-mono text-[11px] text-mist"
+                      />
+                      <label className="sr-only" htmlFor={`mot-fin-${selected.id}-${index}`}>Fin de « {word.text} » en secondes</label>
+                      <input
+                        id={`mot-fin-${selected.id}-${index}`}
+                        aria-label={`Fin de ${word.text}`}
+                        type="number"
+                        min={0}
+                        max={duration}
+                        step={0.01}
+                        value={word.end.toFixed(2)}
+                        onChange={(event) => {
+                          const value = Number(event.target.value);
+                          if (!Number.isFinite(value)) return;
+                          const nextStart = selected.mots![index + 1]?.start ?? duration;
+                          const mots = selected.mots!.map((item, i) => i === index
+                            ? { ...item, end: Math.max(item.start + 0.02, Math.min(value, nextStart)) }
+                            : item);
+                          updateCaption(selected.id, { mots, wordTimingReviewed: false, start: mots[0].start, end: mots.at(-1)!.end });
+                        }}
+                        className="w-full rounded-lg border border-edge bg-raised px-1.5 py-1 text-center font-mono text-[11px] text-mist"
+                      />
+                    </li>
+                  ))}
+                  </ol>
+                </>
+              ) : (
+                <Hint tone="warn">
+                  Aucun repère audio mot à mot n’est enregistré pour ce texte. Le surlignage actuel répartit sa durée uniformément ; il ne doit pas être présenté comme un calage vérifié.
+                  <Button
+                    variant="ghost"
+                    className="mt-2 w-full"
+                    onClick={() => {
+                      const words = selected.text.trim().split(/\s+/).filter(Boolean);
+                      const span = Math.max(0, selected.end - selected.start);
+                      const mots = words.map((text, index) => ({
+                        text,
+                        start: selected.start + (span * index) / Math.max(1, words.length),
+                        end: selected.start + (span * (index + 1)) / Math.max(1, words.length),
+                      }));
+                      updateCaption(selected.id, {
+                        mots,
+                        wordTimingSource: selected.wordTimingSource === 'transcript' ? 'transcript' : 'estimated',
+                        wordTimingReviewed: false,
+                      });
+                    }}
+                  >
+                    Créer une base à retoucher mot par mot
+                  </Button>
+                </Hint>
+              )}
+            </Field>
+          )}
+
+          {selected.wordTimingSource === 'transcript' && (
+            <label className="flex min-h-11 cursor-pointer items-start gap-2 rounded-xl border border-edge bg-raised p-3 text-xs leading-relaxed text-mist">
+              <input
+                type="checkbox"
+                checked={selected.wordTimingReviewed === true}
+                disabled={!selected.mots?.length}
+                onChange={(event) => updateCaption(selected.id, { wordTimingReviewed: event.target.checked })}
+                className="mt-0.5 size-4 accent-accent"
+              />
+              <span>
+                J’ai écouté le morceau et vérifié les paroles ainsi que les débuts et fins des mots.
+                {!selected.mots?.length && <span className="mt-1 block text-muted">Rétablis ou crée d’abord les repères mot à mot ci-dessus.</span>}
+              </span>
+            </label>
+          )}
 
           <Field label="Couleur" help="Toutes très contrastées : sur une image vidéo, un ton pâle devient illisible.">
             <div className="flex flex-wrap gap-1.5">
@@ -323,7 +565,7 @@ export function TextPanel() {
               max={Math.max(0.1, duration)}
               step={0.05}
               value={selected.start}
-              onChange={(value) => updateCaption(selected.id, { start: Math.min(value, selected.end - 0.2) })}
+              onChange={(value) => updateCaption(selected.id, { start: Math.min(value, selected.end - 0.2), ...(selected.wordTimingSource === 'transcript' ? { wordTimingReviewed: false } : {}) })}
             />
           </Field>
 
@@ -338,19 +580,19 @@ export function TextPanel() {
               max={Math.max(0.3, duration)}
               step={0.05}
               value={selected.end}
-              onChange={(value) => updateCaption(selected.id, { end: Math.max(value, selected.start + 0.2) })}
+              onChange={(value) => updateCaption(selected.id, { end: Math.max(value, selected.start + 0.2), ...(selected.wordTimingSource === 'transcript' ? { wordTimingReviewed: false } : {}) })}
             />
           </Field>
 
           <Field
             label="Hauteur à l’écran"
             value={`${Math.round(selected.y * 100)} %`}
-            help="Tu peux aussi faire glisser le texte directement dans l’aperçu. Garde-le entre 25 % et 70 % : le bas de l’écran est masqué par l’interface de l’application."
+            help={`Tu peux aussi le faire glisser dans l’aperçu. La bande sûre commune à TikTok, Instagram et Facebook va de ${Math.round(BANDE_SURE.haut * 100)} % à ${Math.round(BANDE_SURE.bas * 100)} % de la hauteur.`}
           >
             <Slider
               ariaLabel="Position verticale"
-              min={0.1}
-              max={0.9}
+              min={BANDE_SURE.haut}
+              max={BANDE_SURE.bas}
               step={0.01}
               value={selected.y}
               onChange={(value) => updateCaption(selected.id, { y: value })}
