@@ -2,8 +2,8 @@
  * Fabrique les médias de test.
  *
  * Aucun fichier vidéo n'est versionné : ils sont produits à la demande par
- * Chromium, en animant un canvas et en l'enregistrant avec `MediaRecorder` —
- * exactement la technique qu'utilise l'export du studio. Chaque rush porte une
+ * Chromium pour dessiner chaque image, puis FFmpeg pour les encoder hors
+ * temps réel. Chaque rush porte une
  * piste sonore synthétique, sans quoi il serait impossible de vérifier plus tard
  * que le mixage restitue bien le son d'origine des plans.
  *
@@ -11,9 +11,10 @@
  * et non d'un écran de téléphone : c'est la matière de quiconque publie ce
  * qu'il dessine, et c'est elle qui éprouve le recadrage en 9:16.
  *
- * Usage : npm run fixtures
+ * Prérequis : FFmpeg et ffprobe sur le PATH. Usage : npm run fixtures
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, statSync } from 'node:fs';
+import { spawn, execFileSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
@@ -55,6 +56,10 @@ const IMAGE_SPECS = [
   { name: 'illustration-paysage', hue: 20, label: 'PAGE 2', width: 1920, height: 1080 },
 ];
 
+// Échouer avant d'ouvrir Chromium si les encodeurs requis sont absents.
+execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' });
+execFileSync('ffprobe', ['-version'], { stdio: 'ignore' });
+
 mkdirSync(OUT, { recursive: true });
 mkdirSync(IMAGES, { recursive: true });
 
@@ -65,40 +70,36 @@ const browser = await chromium.launch({
 const page = await browser.newPage();
 await page.goto('about:blank');
 
+// La capture temps réel rendait parfois un paysage de 0,28 s pour 4 s et
+// des gels dans les rushes eux-mêmes sur le runner. Le temps du dessin vient
+// désormais du numéro d'image, jamais de la charge CPU ou de l'horloge.
 for (const spec of SPECS) {
-  const base64 = await page.evaluate(async ({ hue, label, seconds, width, height }) => {
-    const L = width ?? 1080;
-    const H = height ?? 1920;
-    const canvas = document.createElement('canvas');
-    canvas.width = L;
-    canvas.height = H;
-    const ctx = canvas.getContext('2d');
-
-    const audioCtx = new AudioContext();
-    const oscillator = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    const destination = audioCtx.createMediaStreamDestination();
-    oscillator.type = 'sawtooth';
-    oscillator.frequency.value = 180 + hue;
-    gain.gain.value = 0.25;
-    oscillator.connect(gain);
-    gain.connect(destination);
-    oscillator.start();
-
-    const stream = canvas.captureStream(30);
-    for (const track of destination.stream.getAudioTracks()) stream.addTrack(track);
-
-    const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' });
-    const chunks = [];
-    recorder.ondataavailable = (event) => event.data.size && chunks.push(event.data);
-    const stopped = new Promise((resolve) => (recorder.onstop = resolve));
-    recorder.start();
-
-    const start = performance.now();
-    await new Promise((resolve) => {
-      const draw = () => {
-        const t = (performance.now() - start) / 1000;
-        if (t >= seconds) return resolve();
+  const output = join(OUT, `${spec.name}.webm`);
+  const frames = spec.seconds * 30;
+  const encoder = spawn('ffmpeg', [
+    '-hide_banner', '-loglevel', 'error', '-y',
+    '-f', 'image2pipe', '-framerate', '30', '-i', 'pipe:0',
+    '-f', 'lavfi', '-i', `aevalsrc=0.25*(2*(t*${180 + spec.hue}-floor(t*${180 + spec.hue}))-1):s=48000`,
+    '-t', String(spec.seconds), '-c:v', 'libvpx', '-b:v', '4M',
+    '-deadline', 'good', '-cpu-used', '4', '-threads', '2', '-g', '30',
+    '-pix_fmt', 'yuv420p', '-c:a', 'libopus', output,
+  ], { stdio: ['pipe', 'ignore', 'pipe'] });
+  let errorText = '';
+  encoder.stderr.on('data', chunk => { errorText = (errorText + chunk).slice(-4000); });
+  encoder.on('error', error => { errorText = error.message; });
+  // L'erreur est propagée par le callback de write et la fermeture ci-dessous.
+  encoder.stdin.on('error', () => {});
+  const closed = new Promise(resolve => encoder.once('close', code => resolve(code)));
+  try {
+    for (let frame = 0; frame < frames; frame++) {
+      const base64 = await page.evaluate(({ hue, label, width, height, frame }) => {
+        const L = width ?? 1080;
+        const H = height ?? 1920;
+        const canvas = document.createElement('canvas');
+        canvas.width = L;
+        canvas.height = H;
+        const ctx = canvas.getContext('2d');
+        const t = frame / 30;
         // Le fond et le disque bougent en continu : deux images consécutives
         // doivent différer, sinon les contrôles de « l'image change » seraient
         // satisfaits par une vidéo figée.
@@ -121,42 +122,37 @@ for (const spec of SPECS) {
         ctx.fillText(label, cx, cy + Math.min(L, H) * 0.045);
         ctx.font = `600 ${Math.round(Math.min(L, H) * 0.06)}px monospace`;
         ctx.fillText(`${t.toFixed(2)}s`, L / 2, H * 0.88);
-        requestAnimationFrame(draw);
-      };
-      draw();
-    });
-
-    recorder.stop();
-    await stopped;
-    oscillator.stop();
-    await audioCtx.close();
-
-    const bytes = new Uint8Array(await new Blob(chunks).arrayBuffer());
-    let binary = '';
-    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-    return btoa(binary);
-  }, spec);
-
-  const buffer = Buffer.from(base64, 'base64');
-  /*
-   * Un rush de zéro octet n'est pas un rush, et il ne se voyait nulle part.
-   *
-   * Mesuré le 11/09/2026 sur le runner : `rush-paysage.webm  0 Ko` s'est
-   * imprimé comme les quatre autres, la fabrique est sortie en succès, et le
-   * parcours est tombé quatre minutes plus tard sur « 4 médias pour 5 » — puis
-   * a planté sur une attente de 30 s, loin de la cause. L'enregistreur du
-   * navigateur avait rendu zéro morceau, sans erreur.
-   *
-   * C'est la même famille que le contrôle sauté compté comme passé : **un
-   * fichier vide compte comme présent** tant que personne ne regarde sa
-   * taille. On regarde ici, et on tombe tout de suite.
-   */
-  if (buffer.length === 0) {
-    console.error(`${spec.name}.webm est vide — l'enregistreur n'a rendu aucun morceau.`);
-    process.exit(1);
+        return canvas.toDataURL('image/png').split(',')[1];
+      }, { ...spec, frame });
+      await new Promise((resolve, reject) => {
+        encoder.stdin.write(Buffer.from(base64, 'base64'), error => error ? reject(error) : resolve());
+      });
+    }
+    encoder.stdin.end();
+    if (await closed !== 0) throw new Error(errorText || 'Encodage des rushes impossible.');
+  } catch (error) {
+    encoder.stdin.destroy();
+    encoder.kill();
+    await closed;
+    await browser.close();
+    throw new Error(`${spec.name}: ${errorText || error.message}`);
   }
-  writeFileSync(join(OUT, `${spec.name}.webm`), buffer);
-  console.log(`${spec.name}.webm  ${(buffer.length / 1024).toFixed(0)} Ko`);
+
+  // La présence seule ne suffit pas : on décode et compte les vraies images.
+  const probe = JSON.parse(execFileSync('ffprobe', [
+    '-v', 'error', '-count_frames', '-show_entries',
+    'format=duration:stream=codec_type,nb_read_frames,width,height', '-of', 'json', output,
+  ], { encoding: 'utf8' }));
+  const video = probe.streams.find(stream => stream.codec_type === 'video');
+  const audio = probe.streams.some(stream => stream.codec_type === 'audio');
+  const duration = Number(probe.format.duration);
+  if (Number(video?.nb_read_frames) !== frames || !audio
+      || video.width !== (spec.width ?? 1080) || video.height !== (spec.height ?? 1920)
+      || !Number.isFinite(duration) || Math.abs(duration - spec.seconds) > 0.1) {
+    await browser.close();
+    throw new Error(`${spec.name}: durée, dimensions, images ou son invalides.`);
+  }
+  console.log(`${spec.name}.webm  ${(statSync(output).size / 1024).toFixed(0)} Ko — ${frames} images, ${probe.format.duration} s`);
 }
 
 for (const spec of IMAGE_SPECS) {

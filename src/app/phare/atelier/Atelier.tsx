@@ -77,7 +77,7 @@ export default function Atelier() {
       </section>
       <p role="status" className={`atelier-notice${blocked ? ' atelier-warning' : ''}`}>{notice}</p>
       {workspace && project && <>
-        <div className="atelier-tools">
+        <details className="atelier-backups"><summary>Sauvegarde, restauration et annulation</summary><div className="atelier-tools">
           <button onClick={() => download(JSON.stringify(workspace, null, 2), `le-phare-${new Date().toISOString().slice(0, 10)}.json`, 'application/json')}>Exporter la sauvegarde</button>
           <button disabled={blocked} onClick={() => backupInput.current?.click()}>Restaurer une copie</button>
           <input ref={backupInput} hidden type="file" accept=".json,application/json" aria-label="Sauvegarde à restaurer" onChange={async event => {
@@ -94,13 +94,19 @@ export default function Atelier() {
           <button disabled={!undo || blocked} onClick={() => {
             if (undo && commit(undo, 'Dernière action annulée.', false)) { setSelected(undo.projects[0].id); setUndo(null); }
           }}>Annuler la dernière action</button>
-        </div>
+        </div></details>
         <div className="atelier-layout">
           <aside className="atelier-projects" aria-label="Mes morceaux">
             <h2>Mes morceaux</h2>
-            {workspace.projects.map(p => <button key={p.id} aria-pressed={p.id === project.id} onClick={() => { setSelected(p.id); setQuery(''); }}>
+            <label className="atelier-mobile-project" htmlFor="mobile-project">Mon projet
+              <select id="mobile-project" value={project.id} onChange={event => { setSelected(event.target.value); setQuery(''); }}>
+                {workspace.projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+              </select>
+            </label>
+            <div className="atelier-project-list">{workspace.projects.map(p => <button key={p.id} aria-pressed={p.id === project.id} onClick={() => { setSelected(p.id); setQuery(''); }}>
               <strong>{p.title}</strong><span>{p.entries.length} texte{p.entries.length > 1 ? 's' : ''} · {p.entries.filter(e => e.status === 'Retenu').length} retenu{p.entries.filter(e => e.status === 'Retenu').length > 1 ? 's' : ''}</span>
-            </button>)}
+            </button>)}</div>
+            <details><summary>Créer un autre projet</summary>
             <form onSubmit={event => {
               event.preventDefault(); if (!title.trim() || workspace.projects.length >= 50) return;
               const p = { id: uid(), title: title.trim(), intention: '', next: '', entries: [] };
@@ -110,14 +116,35 @@ export default function Atelier() {
               <input id="new-project" value={title} maxLength={120} onChange={e => setTitle(e.target.value)} placeholder="Titre du morceau" required />
               <button disabled={blocked || workspace.projects.length >= 50}>Créer le projet</button>
             </form>
+            </details>
           </aside>
           <section className="atelier-work" aria-label={`Projet ${project.title}`}>
             <div className="atelier-heading"><div><p className="atelier-kicker">Le fil du projet</p><h2>{project.title}</h2></div><span>{project.entries.filter(e => e.status === 'Retenu').length} textes retenus</span></div>
-            <ProjectForm key={`project-${project.id}-${project.intention}-${project.next}`} project={project} disabled={blocked} save={updateProject} />
-            <TextForm key={`text-${project.id}`} disabled={blocked} save={values => {
+            <p className="atelier-next"><strong>Prochain pas</strong><br/>{project.next || 'Choisir une première petite action.'}</p>
+            <form key={`capture-${project.id}`} className="atelier-capture" onSubmit={event => {
+              event.preventDefault(); const form = event.currentTarget;
+              const text = String(new FormData(form).get('quick-note'));
+              try {
+                if (updateProject(addEntry(project, { text, origin: 'Mes mots', source: 'Note saisie dans ce projet', section: 'Idée' }), 'Idée enregistrée dans ce projet.')) form.reset();
+              } catch (error) { setNotice((error as Error).message); }
+            }}>
+              <label htmlFor="quick-note">Une idée, une phrase ou une chose à faire</label>
+              <textarea id="quick-note" name="quick-note" required maxLength={20000} rows={3} placeholder="Pose-la ici. Tu pourras la reprendre plus tard." />
+              <button className="atelier-primary" disabled={blocked}>Garder dans ce projet</button>
+              <small>Classée comme idée · tes mots · conservée dans ce navigateur.</small>
+            </form>
+            <details className="atelier-options"><summary>Préciser mon cap et le prochain pas</summary>
+              <ProjectForm key={`project-${project.id}-${project.intention}-${project.next}`} project={project} disabled={blocked} save={updateProject} />
+            </details>
+            <details className="atelier-options"><summary>Ajouter un texte avec sa provenance</summary>
+              <TextForm key={`text-${project.id}`} disabled={blocked} save={values => {
               try { return updateProject(addEntry(project, values), 'Texte et provenance enregistrés.'); }
               catch (error) { setNotice((error as Error).message); return false; }
-            }} />
+              }} />
+            </details>
+            {project.entries.length >= 2 && <details className="atelier-options"><summary>Comparer deux versions</summary>
+              <CompareVersions key={`compare-${project.id}-${project.entries.length}`} entries={project.entries} />
+            </details>}
             <div className="atelier-heading"><h3>Les mots et leurs versions</h3><button onClick={() => {
               const retained = project.entries.filter(e => e.status === 'Retenu');
               const text = `# ${project.title}\n\n${retained.map(e => `## ${e.section}\n${e.text}\n\nOrigine : ${e.origin} · ${e.source}\nVersion : ${e.id}${e.parentId ? ` · Variante de ${e.parentId}` : ''}`).join('\n\n')}`;
@@ -142,6 +169,23 @@ export default function Atelier() {
       <footer className="atelier-footer">Les textes enregistrés restent dans ce navigateur, sans compte ni synchronisation. Pense à exporter : effacer les données du navigateur efface aussi l’atelier. L’import ajoute une copie, sans remplacer tes projets. Aucune IA, dictée, connexion Drive ou production audio n’est branchée dans ce pilote.</footer>
     </div>
   </main>;
+}
+
+function CompareVersions({ entries }: { entries: Entry[] }) {
+  const [leftId, setLeftId] = useState(entries[0].id);
+  const [rightId, setRightId] = useState(entries[entries.length - 1].id);
+  const choices = [{ id: leftId, set: setLeftId }, { id: rightId, set: setRightId }];
+  return <div className="atelier-comparison">{choices.map((choice, index) => {
+    const entry = entries.find(e => e.id === choice.id)!;
+    return <section key={index} aria-label={`Version à comparer ${index + 1}`}>
+      <label htmlFor={`compare-${index}`}>Version {index + 1}</label>
+      <select id={`compare-${index}`} value={choice.id} onChange={event => choice.set(event.target.value)}>
+        {entries.map((e, i) => <option key={e.id} value={e.id}>Version {i + 1} · {e.section} · {e.status}</option>)}
+      </select>
+      <p className="atelier-provenance">{entry.origin} · {entry.source}</p>
+      <p className="atelier-words">{entry.text}</p>
+    </section>;
+  })}<p className="atelier-comparison-note">Comparaison en lecture seule : aucun texte n’est remplacé.</p></div>;
 }
 
 function ProjectForm({ project, disabled, save }: { project: PhareProject; disabled: boolean; save: (p: PhareProject, message: string) => boolean }) {
