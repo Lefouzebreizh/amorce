@@ -25,7 +25,10 @@ export default function PharePage() {
           <p className="phare-eyebrow">Le Phare · Orientation humaine</p>
           <h1>Lefouzèbreizh donne le cap.<br/><span>Le Phare éclaire ton chemin.</span></h1>
           <p>Quand tout se mélange, Le Phare remet l’essentiel devant toi : une direction lisible, une prochaine étape, et assez d’espace pour respirer.</p>
-          <a className="phare-cta" href="#reperes">Trouver mon prochain repère <span>→</span></a>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+            <a className="phare-cta" href="/phare/atelier">Ouvrir mon atelier <span aria-hidden="true">→</span></a>
+            <a className="phare-cta" href="#reperes">Trouver mon prochain repère <span>→</span></a>
+          </div>
         </div>
         <p className="phare-mantra">Racines · Rêves · Possibilités</p>
       </section>
