@@ -112,10 +112,10 @@ test('upstream executor receives transport and preserves a real error as respons
       return socket;
     };
     function synthetic(id, values) {
-      const module = new vm.SyntheticModule(Object.keys(values), function () {
+      const vmModule = new vm.SyntheticModule(Object.keys(values), function () {
         for (const [key, value] of Object.entries(values)) this.setExport(key, value);
       }, { context, identifier: id });
-      modules.set(id, module); return module;
+      modules.set(id, vmModule); return vmModule;
     }
     synthetic('wreq-js', { websocket: socketFactory });
     synthetic('base', { BaseExecutor: class { constructor() {} } });
@@ -149,12 +149,12 @@ test('upstream executor receives transport and preserves a real error as respons
     async function get(id) {
       if (modules.has(id)) return modules.get(id);
       const source = fs.readFileSync(path.join(upstream, id), 'utf8');
-      const module = new vm.SourceTextModule(stripTypeScriptTypes(source, { mode: 'transform' }), {
+      const vmModule = new vm.SourceTextModule(stripTypeScriptTypes(source, { mode: 'transform' }), {
         context, identifier: id,
       });
-      modules.set(id, module);
-      await module.link((spec, ref) => get(resolve(spec, ref)));
-      return module;
+      modules.set(id, vmModule);
+      await vmModule.link((spec, ref) => get(resolve(spec, ref)));
+      return vmModule;
     }
     const executor = await get('open-sse/executors/codex-app-server.ts');
     await executor.evaluate();
@@ -162,10 +162,10 @@ test('upstream executor receives transport and preserves a real error as respons
     const factoryText = repairText('export const instance = new CodexAppServerExecutor({},"codex-app-server");').text;
     const factory = new vm.SourceTextModule('import {CodexAppServerExecutor} from "executor";\n' + factoryText, {
       context, identifier: 'factory', importModuleDynamically: async (spec) => {
-        const module = modules.get(spec); assert.ok(module, 'Only existing wreq-js may load');
-        if (module.status === 'unlinked') await module.link(() => { throw new Error('unexpected dependency'); });
-        if (module.status !== 'evaluated') await module.evaluate();
-        return module;
+        const vmModule = modules.get(spec); assert.ok(vmModule, 'Only existing wreq-js may load');
+        if (vmModule.status === 'unlinked') await vmModule.link(() => { throw new Error('unexpected dependency'); });
+        if (vmModule.status !== 'evaluated') await vmModule.evaluate();
+        return vmModule;
       },
     });
     await factory.link(spec => modules.get(spec)); await factory.evaluate();
