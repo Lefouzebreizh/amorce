@@ -1027,6 +1027,10 @@ Ce dépôt porte plusieurs projets, chacun avec sa pile réelle :
   **Aucune route HTTP, aucune clé, aucun essai réel** : rien de ce code n'a
   joint MiniMax. Se vérifie depuis son dossier.
 - **annuaire-ia/** — onze sites de niche à gabarit partagé.
+- **ensemble-face-au-chomage/** — prototype HTML de première orientation après
+  une perte d’emploi ou une fin de droits. Ne calcule aucun droit et renvoie
+  vers les organismes compétents ; voir son README. Inventorié lors de la
+  reprise du Phare le 11/11/2026, sans modification de son application.
 - **titan-builder/** — Next.js 16, React 19, Tailwind v4. La plateforme où le
   client configure lui-même le site vitrine qu'il achète : quatre modèles, un
   formulaire en cinq étapes, un dossier de commande écrit et envoyé par

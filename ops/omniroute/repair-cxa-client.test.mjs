@@ -59,9 +59,9 @@ test('real upstream client uses fallback, preserves injection and denies approva
   const context=vm.createContext({setTimeout,clearTimeout,console});
   const transport=new vm.SyntheticModule(['websocket'],function(){this.setExport('websocket',async(url,options)=>{fallbackCalls++;assert.equal(url,'ws://127.0.0.1:1456');assert.equal(options.headers.Authorization,'Bearer test-capability');return socket;});},{context});
   await transport.link(()=>{throw Error('Unexpected import');});await transport.evaluate();
-  const module=new vm.SourceTextModule(stripTypeScriptTypes(fixed.text,{mode:'transform'}),{context,importModuleDynamically:async spec=>{assert.equal(spec,'wreq-js');return transport;}});
-  await module.link(()=>{throw Error('Unexpected static dependency');});await module.evaluate();
-  const Client=module.namespace.CodexAppServerClient;
+  const vmModule=new vm.SourceTextModule(stripTypeScriptTypes(fixed.text,{mode:'transform'}),{context,importModuleDynamically:async spec=>{assert.equal(spec,'wreq-js');return transport;}});
+  await vmModule.link(()=>{throw Error('Unexpected static dependency');});await vmModule.evaluate();
+  const Client=vmModule.namespace.CodexAppServerClient;
   const client=new Client();await client.connect('ws://127.0.0.1:1456','test-capability');assert.equal(fallbackCalls,1);
   socket.onmessage({data:JSON.stringify({id:42,method:'item/commandExecution/requestApproval',params:{}})});
   assert.equal(sent.at(-1).result.decision,'denied');
