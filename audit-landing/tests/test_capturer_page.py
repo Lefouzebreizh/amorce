@@ -1,4 +1,4 @@
-"""Tests de la logique pure de capturer_page.py — aucun navigateur requis.
+"""Tests de la logique pure de segments_capture.py — aucun navigateur requis.
 
 Le découpage en segments est ce qui décide si le futur modèle de vision
 reçoit des images lisibles ou un bandeau écrasé (voir l'en-tête du module) :
@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from capturer_page import Segment, calculer_segments, nom_dossier_pour_url
+from segments_capture import Segment, calculer_segments, nom_dossier_pour_url
 
 
 class TestCalculerSegments(unittest.TestCase):
