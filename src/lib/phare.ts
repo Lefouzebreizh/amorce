@@ -1,4 +1,5 @@
-/** Local text workspace. No media, network calls or generated lyrics. */
+/** Local creative memory. Media stays out of this JSON backup. */
+import type { ChatMessage } from './phare-assistant.ts';
 export const PHARE_KEY = 'le-phare-atelier-v1';
 export const ORIGINS = ['Mes mots', 'Texte source', 'Proposition IA'] as const;
 export const SECTIONS = ['Idée', 'Couplet', 'Refrain', 'Pont'] as const;
@@ -8,7 +9,7 @@ export type Entry = {
   created: string; parentId: string | null;
 };
 export type PhareProject = { id: string; title: string; intention: string; next: string; entries: Entry[] };
-export type Workspace = { version: 1; projects: PhareProject[] };
+export type Workspace = { version: 1; projects: PhareProject[]; conversation?: ChatMessage[]; profile?: string; lastProjectId?: string };
 export const uid = () => crypto.randomUUID();
 export function initialWorkspace(): Workspace {
   return { version: 1, projects: ['Le Phare', 'Ça va', 'Les coups de mou'].map(title => ({
@@ -53,11 +54,38 @@ export function parseWorkspace(raw: string): Workspace {
     if (!title.trim()) invalid();
     return { id, title, intention: string(p.intention, 4000), next: string(p.next, 1000), entries };
   });
-  return { version: 1, projects };
+  const profile = data.profile === undefined ? undefined : string(data.profile, 4000);
+  const conversation = data.conversation === undefined ? undefined : (() => {
+    if (!Array.isArray(data.conversation) || data.conversation.length > 100) invalid();
+    const ids = new Set<string>();
+    return data.conversation.map((m: ChatMessage) => {
+      if (!m || !['user', 'assistant'].includes(m.role)) invalid();
+      const id = string(m.id, 100);
+      if (!id || ids.has(id)) invalid();
+      ids.add(id);
+      const created = string(m.created, 40);
+      if (!Number.isFinite(Date.parse(created))) invalid();
+      const sources = m.sources === undefined ? undefined : (() => {
+        if (!Array.isArray(m.sources) || m.sources.length > 10) invalid();
+        return m.sources.map(s => {
+          const uri = string(s.uri, 2000);
+          if (!/^https:\/\//.test(uri)) invalid();
+          return { title: string(s.title, 300), uri };
+        });
+      })();
+      return { id, role: m.role, text: string(m.text, 20000), created, projectId: string(m.projectId, 100), ...(sources ? { sources } : {}) };
+    });
+  })();
+  const lastProjectId = data.lastProjectId === undefined ? undefined : string(data.lastProjectId, 100);
+  if (lastProjectId !== undefined && !projects.some((p: PhareProject) => p.id === lastProjectId)) invalid();
+  return { version: 1, projects, ...(lastProjectId ? { lastProjectId } : {}), ...(profile !== undefined ? { profile } : {}), ...(conversation ? { conversation } : {}) };
 }
 export function mergeWorkspace(current: Workspace, incoming: Workspace): Workspace {
   if (current.projects.length + incoming.projects.length > 50) throw new Error('Limite de 50 projets atteinte.');
-  return { version: 1, projects: [...current.projects, ...incoming.projects.map(p => ({ ...p, id: uid(), title: `${p.title.slice(0, 105)} (restauré)` }))] };
+  const projectIds = new Map(incoming.projects.map(p => [p.id, uid()]));
+  const restoredMessages = (incoming.conversation || []).map(m => ({ ...m, id: uid(), projectId: projectIds.get(m.projectId) || 'archive' }));
+  const conversation = [...(current.conversation || []), ...restoredMessages].slice(-100);
+  return { ...current, version: 1, projects: [...current.projects, ...incoming.projects.map(p => ({ ...p, id: projectIds.get(p.id)!, title: `${p.title.slice(0, 105)} (restauré)` }))], ...(conversation.length ? { conversation } : {}) };
 }
 export function searchEntries(project: PhareProject, query: string): Entry[] {
   const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('fr');

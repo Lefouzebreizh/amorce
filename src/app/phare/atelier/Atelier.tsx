@@ -1,6 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import Conversation from './Conversation';
+import Production from './Production';
+import { applyAssistantActions } from '@/lib/phare-assistant';
 import { useEffect, useRef, useState } from 'react';
 import { PHARE_KEY, ORIGINS, SECTIONS, addEntry, initialWorkspace, mergeWorkspace, parseWorkspace, searchEntries, uid } from '@/lib/phare';
 import type { Entry, PhareProject, Workspace } from '@/lib/phare';
@@ -13,7 +16,9 @@ export default function Atelier() {
   const [undo, setUndo] = useState<Workspace | null>(null);
   const [query, setQuery] = useState('');
   const [title, setTitle] = useState('');
+  const [production, setProduction] = useState(false);
   const snapshot = useRef<string | null>(null);
+  const latestWorkspace = useRef<Workspace | null>(null);
   const backupInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -23,7 +28,7 @@ export default function Atelier() {
       const value = raw === null ? initialWorkspace() : parseWorkspace(raw);
       // One-time hydration from browser storage: never read localStorage during SSR.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setWorkspace(value); setSelected(value.projects[0].id);
+      latestWorkspace.current = value; setWorkspace(value); setSelected(value.lastProjectId || value.projects[0].id);
       setNotice(raw === null ? 'Choisis un morceau et apporte tes premiers mots.' : 'Ton atelier a été retrouvé dans ce navigateur.');
     } catch {
       setBlocked(true);
@@ -40,6 +45,7 @@ export default function Atelier() {
 
   function commit(next: Workspace, message: string, remember = true) {
     if (blocked) return false;
+    if (latestWorkspace.current !== workspace) { setNotice("Le projet a changé pendant l’échange. Aucun changement ancien n’a été réappliqué ; renvoie ta demande."); return false; }
     try {
       if (localStorage.getItem(PHARE_KEY) !== snapshot.current) {
         setBlocked(true); throw new Error('Sauvegarde modifiée ailleurs. Exporte ton état puis recharge la page.');
@@ -49,7 +55,7 @@ export default function Atelier() {
       localStorage.setItem(PHARE_KEY, raw);
       snapshot.current = raw;
       if (remember) setUndo(workspace);
-      setWorkspace(next); setNotice(message);
+      latestWorkspace.current = next; setWorkspace(next); setNotice(message);
       return true;
     } catch (error) {
       setNotice(error instanceof Error ? `Non enregistré : ${error.message}` : 'Non enregistré : stockage indisponible. Exporte une sauvegarde.');
@@ -58,6 +64,10 @@ export default function Atelier() {
   }
   function updateProject(project: PhareProject, message: string) {
     return workspace ? commit({ ...workspace, projects: workspace.projects.map(p => p.id === project.id ? project : p) }, message) : false;
+  }
+  function selectProject(id: string) {
+    setSelected(id); setQuery('');
+    if (workspace && !blocked) commit({ ...workspace, lastProjectId: id }, 'Projet repris. Tu retrouveras ce contexte à la réouverture.', false);
   }
   function download(content: string, name: string, type: string) {
     const url = URL.createObjectURL(new Blob([content], { type }));
@@ -69,48 +79,30 @@ export default function Atelier() {
 
   return <main className="phare-atelier">
     <div className="atelier-wrap">
-      <header className="atelier-top"><Link href="/phare">← Le Phare</Link><span>Pilote local · textes uniquement</span></header>
+      <header className="atelier-top"><Link href="/phare">← Le Phare</Link><span>Un seul chat · de l’idée au clip</span></header>
       <section className="atelier-intro">
         <p className="atelier-kicker">Lefouzèbreizh · ton atelier</p>
-        <h1>Retrouver le fil.<br/><em>Garder tes mots.</em></h1>
-        <p>Un morceau à la fois. Tes phrases restent à toi, chaque variante garde son histoire.</p>
+        <h1>Ton idée.<br/><em>On en fait un morceau.</em></h1>
+        <p>Parle au Phare. On écrit, on choisit, on prépare le clip. Tes mots et tes versions restent dans ton atelier.</p>
       </section>
       <p role="status" className={`atelier-notice${blocked ? ' atelier-warning' : ''}`}>{notice}</p>
       {workspace && project && <>
-        <details className="atelier-backups"><summary>Sauvegarde, restauration et annulation</summary><div className="atelier-tools">
-          <button onClick={() => download(JSON.stringify(workspace, null, 2), `le-phare-${new Date().toISOString().slice(0, 10)}.json`, 'application/json')}>Exporter la sauvegarde</button>
-          <button disabled={blocked} onClick={() => backupInput.current?.click()}>Restaurer une copie</button>
-          <input ref={backupInput} hidden type="file" accept=".json,application/json" aria-label="Sauvegarde à restaurer" onChange={async event => {
-            const file = event.target.files?.[0]; event.target.value = '';
-            if (!file) return;
-            try {
-              if (file.size > 2_000_000) throw new Error('Fichier trop volumineux (2 Mo maximum).');
-              const incoming = parseWorkspace(await file.text());
-              // Read current storage again: an import may finish after a different tab writes.
-              const current = parseWorkspace(snapshot.current ?? JSON.stringify(workspace));
-              commit(mergeWorkspace(current, incoming), 'Copie restaurée dans des projets séparés. Les projets présents sont conservés.');
-            } catch (error) { setNotice(error instanceof Error ? error.message : 'Sauvegarde illisible.'); }
-          }} />
-          <button disabled={!undo || blocked} onClick={() => {
-            if (undo && commit(undo, 'Dernière action annulée.', false)) { setSelected(undo.projects[0].id); setUndo(null); }
-          }}>Annuler la dernière action</button>
-        </div></details>
         <div className="atelier-layout">
           <aside className="atelier-projects" aria-label="Mes morceaux">
             <h2>Mes morceaux</h2>
             <label className="atelier-mobile-project" htmlFor="mobile-project">Mon projet
-              <select id="mobile-project" value={project.id} onChange={event => { setSelected(event.target.value); setQuery(''); }}>
+              <select id="mobile-project" value={project.id} onChange={event => selectProject(event.target.value)}>
                 {workspace.projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
               </select>
             </label>
-            <div className="atelier-project-list">{workspace.projects.map(p => <button key={p.id} aria-pressed={p.id === project.id} onClick={() => { setSelected(p.id); setQuery(''); }}>
+            <div className="atelier-project-list">{workspace.projects.map(p => <button key={p.id} aria-pressed={p.id === project.id} onClick={() => selectProject(p.id)}>
               <strong>{p.title}</strong><span>{p.entries.length} texte{p.entries.length > 1 ? 's' : ''} · {p.entries.filter(e => e.status === 'Retenu').length} retenu{p.entries.filter(e => e.status === 'Retenu').length > 1 ? 's' : ''}</span>
             </button>)}</div>
             <details><summary>Créer un autre projet</summary>
             <form onSubmit={event => {
               event.preventDefault(); if (!title.trim() || workspace.projects.length >= 50) return;
               const p = { id: uid(), title: title.trim(), intention: '', next: '', entries: [] };
-              if (commit({ version: 1, projects: [...workspace.projects, p] }, 'Nouveau morceau enregistré.')) { setSelected(p.id); setTitle(''); }
+              if (commit({ ...workspace, version: 1, projects: [...workspace.projects, p], lastProjectId: p.id }, 'Nouveau morceau enregistré.')) { setSelected(p.id); setTitle(''); }
             }}>
               <label htmlFor="new-project">Un autre morceau</label>
               <input id="new-project" value={title} maxLength={120} onChange={e => setTitle(e.target.value)} placeholder="Titre du morceau" required />
@@ -120,6 +112,32 @@ export default function Atelier() {
           </aside>
           <section className="atelier-work" aria-label={`Projet ${project.title}`}>
             <div className="atelier-heading"><div><p className="atelier-kicker">Le fil du projet</p><h2>{project.title}</h2></div><span>{project.entries.filter(e => e.status === 'Retenu').length} textes retenus</span></div>
+            <Conversation workspace={workspace} selected={project.id} blocked={blocked} openProduction={() => setProduction(true)} local={(message, result) => {
+              const created = new Date().toISOString();
+              const conversation = [...(workspace.conversation || []),
+                { id: uid(), role: 'user' as const, text: message, created, projectId: project.id },
+                { id: uid(), role: 'assistant' as const, text: result.reply, created, projectId: result.selected },
+              ].slice(-100);
+              if (!commit({ ...result.workspace, conversation, lastProjectId: result.selected }, 'Commande interne effectuée sans appel fournisseur. Tu peux annuler.')) return false;
+              setSelected(result.selected); if (result.production) setProduction(true); return true;
+            }} save={(message, answer) => {
+              try {
+                const result = applyAssistantActions(workspace, project.id, answer.actions);
+                const created = new Date().toISOString();
+                const conversation = [...(workspace.conversation || []),
+                  { id: uid(), role: 'user' as const, text: message, created, projectId: project.id },
+                  { id: uid(), role: 'assistant' as const, text: answer.reply, created, projectId: result.selected, ...(answer.sources?.length ? { sources: answer.sources } : {}) },
+                ].slice(-100);
+                if (!commit({ ...result.workspace, conversation, lastProjectId: result.selected }, result.changes.length ? result.changes.join(' · ') + '. Tu peux annuler cette action.' : 'Échange enregistré.')) return false;
+                setSelected(result.selected); if (result.slideshow) setProduction(true); return true;
+              } catch (error) { setNotice(error instanceof Error ? error.message : 'Réponse non enregistrée.'); return false; }
+            }} />
+            <Production key={project.id} project={project} open={production} onOpen={setProduction} />
+            <details className="atelier-memory"><summary>Ce que Le Phare retient de moi</summary><form onSubmit={event => {
+              event.preventDefault(); const profile = String(new FormData(event.currentTarget).get('profile'));
+              commit({ ...workspace, profile }, 'Préférences enregistrées. Tu peux les modifier à tout moment.');
+            }}><label htmlFor="profile">Mes goûts, ma façon de travailler, ce que je veux préserver</label><textarea key={workspace.profile || ''} id="profile" name="profile" defaultValue={workspace.profile || ''} maxLength={4000} rows={4} placeholder="Ex. Des paroles directes, garder mes expressions, avancer une proposition à la fois…" /><button disabled={blocked}>Garder ces repères</button><small>Cette mémoire est explicite et modifiable. Le Phare ne lit pas tes autres chats.</small></form></details>
+            <details className="atelier-library"><summary>Mes textes, mon cap et mes versions</summary>
             <p className="atelier-next"><strong>Prochain pas</strong><br/>{project.next || 'Choisir une première petite action.'}</p>
             <form key={`capture-${project.id}`} className="atelier-capture" onSubmit={event => {
               event.preventDefault(); const form = event.currentTarget;
@@ -160,13 +178,32 @@ export default function Atelier() {
             </div>
             <details className="atelier-delete"><summary>Effacer ce projet</summary><p>Les textes de ce projet seront retirés de ce navigateur. Exporte une sauvegarde avant de les effacer. Tu peux annuler la dernière action tant que cette page reste ouverte.</p>
               <button disabled={blocked || workspace.projects.length === 1} onClick={() => {
-                const next = { ...workspace, projects: workspace.projects.filter(p => p.id !== project.id) };
+                const next = { ...workspace, projects: workspace.projects.filter(p => p.id !== project.id), lastProjectId: workspace.projects.find(p => p.id !== project.id)!.id };
                 if (commit(next, 'Projet effacé. Tu peux annuler cette action.')) setSelected(next.projects[0].id);
               }}>Effacer « {project.title} »</button>{workspace.projects.length === 1 && <p>Conserve au moins un projet dans cet atelier.</p>}</details>
+            </details>
           </section>
         </div>
+        <details className="atelier-backups"><summary>Sauvegarde, restauration et annulation</summary><div className="atelier-tools">
+          <button onClick={() => download(JSON.stringify(workspace, null, 2), `le-phare-${new Date().toISOString().slice(0, 10)}.json`, 'application/json')}>Exporter la sauvegarde</button>
+          <button disabled={blocked} onClick={() => backupInput.current?.click()}>Restaurer une copie</button>
+          <input ref={backupInput} hidden type="file" accept=".json,application/json" aria-label="Sauvegarde à restaurer" onChange={async event => {
+            const file = event.target.files?.[0]; event.target.value = '';
+            if (!file) return;
+            try {
+              if (file.size > 2_000_000) throw new Error('Fichier trop volumineux (2 Mo maximum).');
+              const incoming = parseWorkspace(await file.text());
+              // Read current storage again: an import may finish after a different tab writes.
+              const current = parseWorkspace(snapshot.current ?? JSON.stringify(workspace));
+              commit(mergeWorkspace(current, incoming), 'Copie restaurée dans des projets séparés. Les projets présents sont conservés.');
+            } catch (error) { setNotice(error instanceof Error ? error.message : 'Sauvegarde illisible.'); }
+          }} />
+          <button disabled={!undo || blocked} onClick={() => {
+            if (undo && commit(undo, 'Dernière action annulée.', false)) { setSelected(undo.lastProjectId || undo.projects[0].id); setUndo(null); }
+          }}>Annuler la dernière action</button>
+        </div></details>
       </>}
-      <footer className="atelier-footer">Les textes enregistrés restent dans ce navigateur, sans compte ni synchronisation. Pense à exporter : effacer les données du navigateur efface aussi l’atelier. L’import ajoute une copie, sans remplacer tes projets. Aucune IA, dictée, connexion Drive ou production audio n’est branchée dans ce pilote.</footer>
+      <footer className="atelier-footer">Les textes enregistrés restent dans ce navigateur, sans compte ni synchronisation. Pense à exporter : effacer les données du navigateur efface aussi l’atelier. L’import ajoute une copie, sans remplacer tes projets. La conversation passe par une connexion IA personnelle après activation. La dictée dépend du navigateur. Le devis précède toute génération de musique ou de plans vidéo ; aucun abonnement ni calcul distant n’est lancé automatiquement. Les médias ne sont pas inclus dans cette sauvegarde de textes.</footer>
     </div>
   </main>;
 }
