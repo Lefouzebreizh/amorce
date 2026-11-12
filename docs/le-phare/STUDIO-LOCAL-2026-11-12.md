@@ -63,4 +63,9 @@ Le premier essai payant est rejeté : voix et style non conformes. Il ne sert pa
 
 Les fondus sont contrôlés dans les pixels du MP4 entre deux images rouge et bleue (présence simultanée des deux composantes), avec durée finale inchangée. Le test d’annulation lance et arrête un vrai worker ; il vérifie la conservation des sources. L’interface permet de prévisualiser et réordonner les visuels. La compilation pour petit ordinateur a été exercée avec un worker.
 
-Installation Windows isolée : `%LOCALAPPDATA%\LePhare\app`, bibliothèque séparée `%LOCALAPPDATA%\LePhare\MaMatiere`. L’ancien Centre de contrôle n’est pas modifié. L’installation, l’export et le raccourci sont en cours de contrôle sur le PC ; ne pas les présenter comme validés avant le compte rendu final.
+Installation Windows isolée : `%LOCALAPPDATA%\LePhare\app`, bibliothèque séparée `%LOCALAPPDATA%\LePhare\MaMatiere`. L’ancien Centre de contrôle n’est pas modifié. Installation Windows et raccourci vérifiés le 12 novembre 2026. Le raccourci a ouvert le serveur personnel sur `http://localhost:3010/phare/atelier` ; le Studio déverrouillé et la bibliothèque personnelle distincte des essais ont été contrôlés. Le serveur reste accessible uniquement sur ce PC.
+
+
+Contrôle Windows dans Chrome : import, master, paroles, deux visuels avec fondu contrôlé dans les pixels, rendu, décodage complet, téléchargement MP4, annulation et restauration réussis, sans exception JavaScript ni débordement à 390 px. Un clip **technique synthétique** de six secondes a été assemblé en 6,621 secondes (ceci ne mesure pas un morceau artistique complet). Détection de l’API de dictée positive ; microphone physique non testé. Gemini et les générations payantes sont désactivés.
+
+Rapports privés sur le PC : `%LOCALAPPDATA%\LePhare\ControleTechnique\controle-windows.json` et `%LOCALAPPDATA%\LePhare\controle-installation.json`. Les fichiers techniques restent dans `ControleTechnique`, séparés de `MaMatiere`. Le serveur de contrôle a été arrêté après validation ; le raccourci ouvre le serveur personnel.
