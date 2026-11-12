@@ -1,17 +1,17 @@
 # Cœur de calcul du Bilan Patrimoine — copie du lot 1
 
-Ces cinq fichiers (`modeles.ts`, `baremes.ts`, `valorisation.ts`, `constats.ts`,
-`redaction.ts`) sont une **copie** de `bilan-patrimoine/src/`, adaptée
+Ces six fichiers (`modeles.ts`, `baremes.ts`, `valorisation.ts`, `allocation.ts`,
+`constats.ts`, `redaction.ts`) sont une **copie** de `bilan-patrimoine/src/`, adaptée
 seulement pour que `agence/` (résolution de modules `bundler`, sans
 `allowImportingTsExtensions`) puisse les importer : les imports internes ont
 perdu leur suffixe `.ts`.
 
-**Trois sont figés, deux sont adaptés** — et la phrase « aucune logique n'a
+**Quatre sont figés, deux sont adaptés** — et la phrase « aucune logique n'a
 changé » qui figurait ici était fausse, mesurée le 03/09/2026 :
 
 | Fichier | État | Ce qui diffère |
 | --- | --- | --- |
-| `modeles.ts`, `baremes.ts`, `valorisation.ts` | **figés** | rien, hors imports et commentaires |
+| `modeles.ts`, `baremes.ts`, `valorisation.ts`, `allocation.ts` | **figés** | rien, hors imports et commentaires |
 | `constats.ts` | adapté | une variable morte du lot 1 n'a pas été recopiée |
 | `redaction.ts` | adapté | `premierGesteTexte` exporté au lieu de `premierGeste` interne, table des gestes hissée au module, `null` au lieu d'une chaîne vide |
 
@@ -23,7 +23,7 @@ projets (le moteur d'alertes du lot 4, `bilan-patrimoine/README.md` §6) dit
 « extrait, jamais réécrit » — extraction, pas dépendance vivante. C'est ce
 précédent que cette copie suit.
 
-**`bilan-patrimoine/` reste la source de vérité**, avec ses 55 tests.
+**`bilan-patrimoine/` reste la source de vérité**, avec ses 62 tests.
 
 **Et la resynchronisation à la main a désormais un garde-fou**, parce qu'elle a
 échoué dès son premier usage : la copie initiale avait perdu l'espace insécable
@@ -34,13 +34,13 @@ un téléphone de 393 px. Rien ne le signalait : les deux fichiers compilaient, 
 deux rendaient une chaîne, et l'écart tenait à un caractère invisible.
 
 `__tests__/sans-derive.test.ts` relit donc le voisin **en texte** : identité
-stricte pour les trois fichiers figés, égalité des **nombres exportés** pour les
+stricte pour les quatre fichiers figés, égalité des **nombres exportés** pour les
 deux adaptés, et un contrôle propre sur le point de code d'`INSECABLE` — celui-là
 tient même dans un projet client recopié du socle, où le voisin est absent.
 
 ## Comment resynchroniser après une mise à jour du lot 1
 
-1. Relire le diff de `bilan-patrimoine/src/{modeles,baremes,valorisation,constats,redaction}.ts`.
+1. Relire le diff de `bilan-patrimoine/src/{modeles,baremes,valorisation,allocation,constats,redaction}.ts`.
 2. Reporter les mêmes changements ici, fichier par fichier.
 3. Dans les imports internes de ce dossier seulement, ne pas réintroduire le
    suffixe `.ts` retiré à la copie initiale.

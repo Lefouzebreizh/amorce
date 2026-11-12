@@ -1,18 +1,18 @@
-# Bilan Patrimoine — le diagnostic, avant le site
+# Bilan Patrimoine — le moteur du diagnostic
 
 Le cœur du produit destiné aux particuliers : **quelqu'un dépose sa situation en
 deux minutes, et lit un bilan clair de ce qu'il possède et de ce qui lui coûte.**
 Sans jargon, sans tableau de bord à décoder, sans nom de contrat à vendre.
 
-Ce dossier est le **lot 1** : le calcul, les taux de référence et le texte. Pas
-encore de site — délibérément. Si le bilan n'est pas bon à lire, une belle
-interface ne le sauvera pas ; et il se juge plus vite dans un terminal que dans
-un navigateur.
+Ce dossier porte le **lot 1** : le calcul, les taux de référence et le texte.
+L'interface publique est dans `agence/` ; elle reprend ces règles pour le
+diagnostic et son comparateur de répartition. Le cœur reste éprouvable dans un
+terminal, sans réseau ni horloge.
 
 ```bash
 cd bilan-patrimoine
 npm install
-npm test        # 55 tests, aucun réseau, aucune horloge
+npm test        # 62 tests, aucun réseau, aucune horloge
 npm run exemple # trois bilans à lire, sur trois situations qui diffèrent
 ```
 
@@ -26,10 +26,11 @@ bilan-patrimoine/
 │   ├── modeles.ts        ✅ ce qui circule — `null` n'est jamais zéro
 │   ├── baremes.ts        ✅ les taux de référence, datés et sourcés
 │   ├── valorisation.ts   ✅ valeur nette, réserve de précaution
+│   ├── allocation.ts     ✅ écarts face à une cible choisie, versement simulé sans vente
 │   ├── constats.ts       ✅ les onze règles, chacune chiffrée ou muette
 │   ├── redaction.ts      ✅ le texte — c'est le produit
 │   └── exemple.ts        ✅ trois profils à regarder
-└── tests/                ✅ 55 tests
+└── tests/                ✅ 62 tests
 ```
 
 Zéro dépendance d'exécution. Le calcul entier tourne en TypeScript nu sous Node,
@@ -139,7 +140,7 @@ n'éteint que les règles qui en dépendent, et le bilan dit lesquelles.
 ## 5. Vérifier
 
 ```bash
-npm test          # 55 tests
+npm test          # 62 tests
 npx tsc --noEmit  # typage strict
 npm run exemple   # et surtout : lire
 ```
@@ -157,11 +158,19 @@ conseil qui contredisait son propre texte. `npm run exemple` est là pour ça.
 ## 6. Où en est le produit
 
 Ce dossier reste le moteur pur : il n'a ni site, ni compte, ni base de données.
-Le produit qui l'emploie vit dans `agence/` : l'interface publique du lot 2 y est
-en place et le bilan gratuit n'enregistre toujours rien. Le suivi FinancIA du
-lot 3 ajoute, après un geste explicite d'un utilisateur connecté, des
-instantanés privés datés et leur évolution. Les lignes sont isolées par RLS ;
-même un administrateur de l'application ne peut pas lire les montants.
+Le produit public vit dans `agence/` : son bilan rapide est sans compte ni
+enregistrement. Le résultat comprend désormais aussi un comparateur où la
+personne saisit la poche crypto manquante, définit elle-même ses cibles et
+simule un versement vers les poches sous-pondérées. Le calcul tourne dans
+l'onglet, sans sauvegarde, sans vente simulée et sans nommer de produit.
+
+Le suivi FinancIA ajoute, après un geste explicite d'un utilisateur connecté,
+des instantanés privés datés et leur évolution. Les lignes sont isolées par
+RLS ; même un administrateur de l'application ne peut pas lire les montants.
+Le conseiller Python de `conseiller-patrimoine/` reste un outil local distinct :
+ses fichiers et lecteurs personnels ne sont jamais exposés au site. Les règles
+pures d'allocation ont une seule source dans ce dossier TypeScript ; l'interface
+web en garde une copie dont les tests vérifient l'identité.
 
 Le lot suivant reste le suivi actif : alertes et révisions périodiques. Il doit
 extraire le moteur existant de `paper-manager/core/abonnements.py` plutôt que le
