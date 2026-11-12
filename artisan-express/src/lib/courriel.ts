@@ -16,6 +16,7 @@
 
 import type { Demande } from '@/lib/demande';
 import { offreParId } from '@/lib/offres';
+import { nomDuBesoin } from '@/lib/services';
 
 export type Reglages = {
   cle: string | undefined;
@@ -68,7 +69,8 @@ export function lienMailtoDemande(demande: Demande, destination: string): string
 export function construireCourriel(demande: Demande): { sujet: string; texte: string } {
   const offre = offreParId(demande.offre);
   const lignes = [
-    `Offre choisie : ${offre.nom} — ${offre.prix}`,
+    ...(demande.besoin ? [`Service souhaité : ${nomDuBesoin(demande.besoin)}`] : []),
+    ...(!demande.besoin || demande.besoin === 'site' ? [`Offre choisie : ${offre.nom} — ${offre.prix}`] : ['Périmètre et tarif à définir ensemble, sans commande ni activation.']),
     `Métier : ${demande.metier}`,
     `Ville : ${demande.ville}`,
     `Téléphone : ${demande.telephone}`,
@@ -78,7 +80,9 @@ export function construireCourriel(demande: Demande): { sujet: string; texte: st
   ];
 
   return {
-    sujet: `Site artisan ${offre.nom} ${offre.prix} — ${demande.nom} (${demande.metier}, ${demande.ville})`,
+    sujet: demande.besoin && demande.besoin !== 'site'
+      ? `Artisan Express — ${nomDuBesoin(demande.besoin)} — ${demande.nom} (${demande.metier}, ${demande.ville})`
+      : `Site artisan ${offre.nom} ${offre.prix} — ${demande.nom} (${demande.metier}, ${demande.ville})`,
     texte: lignes.join('\n'),
   };
 }

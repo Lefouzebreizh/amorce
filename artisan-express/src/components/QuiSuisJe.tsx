@@ -29,22 +29,22 @@ export function QuiSuisJe() {
           </div>
 
           <div className="artisan-erwann__copy order-2 md:order-1">
-            <p className="artisan-kicker"><span>06</span> Lefouzèbreizh Studio</p>
+            <p className="artisan-kicker">Lefouzèbreizh Studio</p>
             <h2 id="qui-suis-je-titre" className="mt-4 font-titre text-4xl font-bold tracking-tight text-encre sm:text-5xl">
               Moi, c’est Erwann.
             </h2>
             <div className="artisan-erwann__story">
               <p>
-                Basé en Bretagne, j’ai créé Lefouzèbreizh Studio avec une idée simple : aider les professionnels de terrain à être visibles en ligne sans devoir devenir experts du numérique.
+                Basé à Rennes, j’ai créé Lefouzèbreizh Studio pour aider les professionnels de terrain à utiliser le numérique là où il rend vraiment service.
               </p>
               <p>
-                Je sais qu’un artisan a mieux à faire que de passer ses soirées à comprendre les sites web, les réseaux ou les réglages techniques. Mon rôle est de transformer son savoir-faire en une présence claire, belle et utile : un site qui présente son travail et facilite les appels.
+                Après vingt ans sur la route, je connais les journées qui débordent et les appels auxquels on ne peut pas répondre. Aujourd’hui, je développe des outils pour simplifier le suivi des demandes, préparer les devis et rendre ton travail visible.
               </p>
               <p>
-                Ici, pas de discours compliqué, pas d’abonnement caché. On échange simplement, on construit quelque chose qui vous ressemble, et vous gardez la main sur votre activité.
+                On commence par ton besoin. Je t’explique ce qui est possible, ce que cela coûte et ce qui dépend d’un service externe. Tu décides, et tu gardes la main.
               </p>
               <p className="font-bold text-encre">
-                Votre métier mérite d’être trouvé aussi facilement qu’il est bien réalisé.
+                Moins de temps à gérer les outils. Plus de place pour ton métier.
               </p>
             </div>
             <dl className="artisan-erwann__facts">
@@ -52,7 +52,7 @@ export function QuiSuisJe() {
               <div><dt>1 seul</dt><dd>interlocuteur du début à la fin</dd></div>
             </dl>
             <a className={`${BOUTON_PRINCIPAL} mt-7`} href="#formulaire">
-              Parlons de votre activité
+              Parlons de ton activité
             </a>
           </div>
         </div>

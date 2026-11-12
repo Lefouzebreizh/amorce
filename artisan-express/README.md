@@ -1,4 +1,33 @@
-# Artisan Express — la page de vente du site à 300 €
+# Artisan Express — les outils du quotidien artisan
+
+Depuis le 20 octobre 2026, l’accueil présente les appels manqués, les devis par la voix et la présence locale. Les sites vitrines restent un complément, avec leurs six démonstrations et leurs trois formules existantes.
+
+## État du pivot
+
+- **Appels manqués** : simulateur interactif local, sans accès au téléphone ni envoi de SMS.
+- **Devis vocal** : dictée selon les capacités du navigateur, repli clavier, structuration locale explicitement simulée, édition et export d’un vrai PDF non contractuel. Aucun modèle IA ni tarif automatique.
+- **Présence locale et avis** : kit d’accompagnement et préparation d’un message neutre avec lien d’avis Google ; copie sans envoi ni accès au compte Google.
+- **Prise de contact** : le service choisi est transmis à la route de devis et au courriel, y compris au repli mailto. Les demandes d’outils ne prennent pas le prix d’une formule de site.
+
+Voir [PIVOT-OUTILS.md](PIVOT-OUTILS.md) pour l’architecture, les contrôles et les raccordements nécessaires. Les variables privées de production n’ont pas été lues ni modifiées. Aucune dépendance npm n’a été ajoutée à l’application.
+
+## Lancer et vérifier
+
+```bash
+npm ci
+cp .env.example .env.local
+npm run dev
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+Les textes ci-dessous sont l’historique de la première offre de site. Ils décrivent d’anciens états ; le code actuel et le document du pivot priment pour les nouveaux outils.
+
+---
+
+# Historique de la page de vente du site à 300 €
 
 Une page, un prix, un formulaire. Elle vend un site vitrine d'une page à un
 artisan du bâtiment : 300 € une fois, livré en 48 h, sans abonnement.

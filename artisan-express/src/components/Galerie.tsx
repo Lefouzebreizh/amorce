@@ -109,12 +109,12 @@ export function Galerie() {
     <section className={`${SECTION} artisan-galerie`} id="galerie">
       <div className="artisan-section-heading artisan-section-heading--split">
         <div>
-          <p className="artisan-kicker"><span>04</span> Des exemples à explorer</p>
+          <p className="artisan-kicker">La vitrine qui complète tes outils</p>
           <h2 className={TITRE_SECTION}>Six métiers.<br /><span>Six identités.</span></h2>
         </div>
         <p>
-          Même exigence, mais une couleur, des mots et un rythme adaptés à chaque activité.
-          Ouvre une carte : ce sont de vraies pages, pas des images de présentation.
+          Tes outils suivent les demandes. Une vitrine peut montrer tes réalisations et rassurer tes futurs clients.
+          Explore les vraies pages de démonstration de ton métier.
         </p>
       </div>
 

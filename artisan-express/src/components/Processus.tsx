@@ -3,21 +3,21 @@ import { SECTION, TITRE_SECTION } from '@/components/ui';
 const ETAPES = [
   {
     numero: '01',
-    titre: 'Tu m’envoies l’essentiel',
-    texte: 'Ton métier, ta ville, ton téléphone et quelques photos de chantiers. Pas de questionnaire interminable.',
-    detail: '15 minutes',
+    titre: 'Tu choisis ton irritant',
+    texte: 'Les appels pendant les interventions ? Les devis du soir ? Ta visibilité locale ? On part de ton quotidien.',
+    detail: 'un échange direct',
   },
   {
     numero: '02',
-    titre: 'Je construis ta vitrine',
-    texte: 'Je mets en valeur tes services, tes réalisations et les boutons qui permettent de t’appeler sans chercher.',
-    detail: 'création soignée',
+    titre: 'On vérifie ce qui est possible',
+    texte: 'Téléphone, outils existants et besoin réel : je précise le périmètre, l’installation et les éventuels frais récurrents avant ton accord.',
+    detail: 'un devis clair',
   },
   {
     numero: '03',
-    titre: 'Tu regardes, je finalise',
-    texte: 'Tu testes sur ton téléphone. Une modification est incluse, puis je te livre le site et son code.',
-    detail: 'sous 48 h*',
+    titre: 'Tu testes avant de t’en servir',
+    texte: 'On contrôle ensemble un appel, un message ou un document selon le service retenu. Tu sais ce qui se passe et comment reprendre la main.',
+    detail: 'une prise en main',
   },
 ] as const;
 
@@ -26,7 +26,7 @@ export function Processus() {
     <section className="artisan-processus">
       <div className={SECTION}>
         <div className="artisan-section-heading">
-          <p className="artisan-kicker"><span>02</span> Du premier échange à la mise en ligne</p>
+          <p className="artisan-kicker">De la démonstration à ton quotidien</p>
           <h2 className={TITRE_SECTION}>Simple pour toi.<br /><span>Soigné dans chaque détail.</span></h2>
           <p>
             Tu restes concentré sur ton métier. Je m’occupe du reste, sans jargon et avec un interlocuteur unique.
@@ -47,7 +47,7 @@ export function Processus() {
         </ol>
 
         <p className="artisan-processus__note">
-          * Le délai démarre après réception de tes textes, photos et informations, et après confirmation du créneau.
+          Les outils connectés sont proposés sur devis. Les coûts du numéro, des SMS et des services externes sont précisés avant toute activation. Aucun abonnement n’est souscrit depuis cette page.
         </p>
       </div>
     </section>

@@ -82,3 +82,10 @@ describe('normaliserTelephone', () => {
     assert.equal(normaliserTelephone('06 12 34 56 78'), '0612345678');
   });
 });
+
+it('conserve un besoin valide et ignore une valeur de service inventée', () => {
+  const bon = analyserDemande({ ...COMPLETE, besoin: 'appels' });
+  assert.equal(bon.statut === 'valide' && bon.demande.besoin, 'appels');
+  const autre = analyserDemande({ ...COMPLETE, besoin: '<script>' });
+  assert.equal(autre.statut === 'valide' && autre.demande.besoin, undefined);
+});

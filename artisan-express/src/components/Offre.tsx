@@ -13,15 +13,15 @@ export function Offre() {
     <section className="artisan-offre" id="offre">
       <div className={SECTION}>
         <div className="artisan-section-heading">
-          <p className="artisan-kicker"><span>05</span> Trois façons d’être visible</p>
-          <h2 className={TITRE_SECTION}>Ton métier mérite<br /><span>la bonne échelle.</span></h2>
-          <p>Chaque formule est un prix net, sans abonnement ni frais caché. Tu choisis le niveau qui correspond à ton activité aujourd’hui.</p>
+            <p className="artisan-kicker">En complément des outils</p>
+            <h2 className={TITRE_SECTION}>Un site utile,<br /><span>si tu en as besoin.</span></h2>
+            <p>Tu as déjà un site ? On le garde comme point de départ. Sinon, voici les formules de création. Ces prix ne comprennent pas les automatisations présentées plus haut.</p>
         </div>
 
         <div className="artisan-offre__stage" aria-label="Les trois formules Artisan Express">
           {OFFRES.map((offre, index) => (
             <article className={`artisan-offre__card artisan-offre__card--${offre.id}`} key={offre.id}>
-              {offre.id === 'metier' ? <p className="artisan-offre__badge">Le plus choisi</p> : null}
+              {offre.id === 'metier' ? <p className="artisan-offre__badge">Jusqu’à trois pages</p> : null}
               <div className="artisan-offre__card-head">
                 <span>0{index + 1}</span>
                 <p>{offre.repere}</p>

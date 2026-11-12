@@ -40,7 +40,7 @@ export function Hero() {
       <div className="mx-auto grid w-full max-w-7xl gap-10 px-5 pb-14 pt-10 sm:pt-16 md:grid-cols-[1.1fr_0.9fr] md:items-center md:gap-14 md:pb-20">
         <div className="artisan-hero__copy">
           <p className="artisan-hero__eyebrow">
-            <span aria-hidden="true" /> Sites pour artisans
+            <span aria-hidden="true" /> Les outils des artisans de terrain
           </p>
 
           {/*
@@ -50,26 +50,25 @@ export function Hero() {
             soleil doit savoir de quoi il s'agit avant d'avoir lu la ligne.
           */}
           <h1 className="artisan-hero__title">
-            Ton métier. <span>Ton style.</span><br />
-            Ton téléphone sonne.
+            Sur le chantier,<br /><span>pas dans la paperasse.</span>
           </h1>
 
           <p className="artisan-hero__price">
-            <strong>300&nbsp;€</strong> pour la création <span>· sans abonnement</span>
+            Des appels suivis. Des devis préparés. Des clients qui te trouvent.
           </p>
 
           <p className="artisan-hero__lead">
-            Tes photos, tes services et un moyen simple de te joindre, réunis dans
-            une page qui te ressemble. Nom de domaine en supplément.
+            Tu ne peux pas décrocher avec les mains prises. Et tes devis attendent le soir.
+            Essaie des outils pensés pour garder le contact et alléger ta journée.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <a className={BOUTON_PRINCIPAL} href="#offre">
-              Je parle de mon site
+            <a className={BOUTON_PRINCIPAL} href="#appels-manques">
+              Tester un appel manqué ↗
             </a>
             {aUnTelephone ? (
               <a className={BOUTON_CONTOUR} href={contact.telephoneLien}>
-                J’appelle&nbsp;{contact.telephoneAffiche}
+                En parler avec Erwann
               </a>
             ) : (
               <a className={BOUTON_CONTOUR} href="#formulaire">
@@ -84,9 +83,9 @@ export function Hero() {
           */}
           <dl className="artisan-hero__proofs">
             {[
-              ['Simple', 'tu envoies tes éléments'],
-              ['0 €', 'd’abonnement'],
-              ['1', 'modification offerte'],
+              ['Appels', 'un besoin prêt à rappeler'],
+              ['Devis', 'tes notes, bien rangées'],
+              ['Local', 'une présence qui rassure'],
             ].map(([chiffre, quoi]) => (
               <div key={chiffre}>
                 <dt>
@@ -101,9 +100,9 @@ export function Hero() {
         <div className="artisan-hero__scene px-6 pt-2 sm:px-12 md:px-0">
           <span className="artisan-hero__scene-orbit" aria-hidden="true" />
           <span className="artisan-hero__scene-beam" aria-hidden="true" />
-          <p className="artisan-hero__scene-caption"><span>01</span> Une vitrine qui tient dans une main</p>
-          <div className="artisan-hero__material artisan-hero__material--photos"><span>01</span><b>Photos</b><small>tes réalisations</small></div>
-          <div className="artisan-hero__material artisan-hero__material--contact"><span>03</span><b>Contact</b><small>appel direct</small></div>
+          <p className="artisan-hero__scene-caption"><span>AE</span> Ton métier passe en premier</p>
+          <div className="artisan-hero__material artisan-hero__material--photos"><span>CHANTIER</span><b>Tu restes concentré</b><small>sur ton intervention</small></div>
+          <div className="artisan-hero__material artisan-hero__material--contact"><span>SIMULATION SMS</span><b>« Je suis en intervention… »</b><small>le contact continue</small></div>
           <div className="artisan-hero__measure" aria-hidden="true"><span /> <span /></div>
           <div className="artisan-hero__frame overflow-hidden rounded-2xl border border-violet-trait/60 bg-panel p-2 shadow-[0_20px_55px_rgba(64,224,208,0.08)]">
             <Image
@@ -117,6 +116,7 @@ export function Hero() {
           </div>
         </div>
       </div>
+      <p className="pivot-hero-note">Démos sans compte · aucun SMS envoyé · installation réelle après étude de ton besoin</p>
     </header>
   );
 }

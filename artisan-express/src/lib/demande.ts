@@ -9,8 +9,10 @@
  */
 
 import { estOffreId, type OffreId } from '@/lib/offres';
+import { estBesoinId, type BesoinId } from '@/lib/services';
 
 export type Demande = {
+  besoin?: BesoinId;
   offre: OffreId;
   nom: string;
   metier: string;
@@ -20,7 +22,7 @@ export type Demande = {
   message: string;
 };
 
-export type ChampDemande = Exclude<keyof Demande, 'offre'>;
+export type ChampDemande = Exclude<keyof Demande, 'offre' | 'besoin'>;
 
 export type Analyse =
   | { statut: 'valide'; demande: Demande }
@@ -82,6 +84,7 @@ export function analyserDemande(brut: unknown): Analyse {
   }
 
   const demande: Demande = {
+    ...(estBesoinId(donnees.besoin) ? { besoin: donnees.besoin } : {}),
     offre: estOffreId(donnees.offre) ? donnees.offre : 'express',
     nom: texte(donnees.nom),
     metier: texte(donnees.metier),
