@@ -20,7 +20,8 @@
     "verify:images": "node scripts/verify-images.mjs",
     "verify:licence": "node scripts/verify-licence.mjs",
     "regarder": "node scripts/regarder-en-ligne.mjs",
-    "phare:local": "node scripts/phare-local/start.mjs"
+    "phare:local": "node scripts/phare-local/start.mjs",
+    "phare:raccourci": "node scripts/phare-local/install-windows.mjs"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.0.1",

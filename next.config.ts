@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
    * téléphone, l'indicateur est retiré.
    */
   devIndicators: false,
+  // Local Windows preparation on a small machine; hosted builds keep their defaults.
+  ...(process.env.PHARE_LOW_MEMORY === 'true' ? { experimental: { cpus: 1 } } : {}),
 };
 
 export default nextConfig;
