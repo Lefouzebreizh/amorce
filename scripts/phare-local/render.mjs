@@ -9,7 +9,7 @@ job.pid = process.pid;
 async function save() { job.updated = new Date().toISOString(); const tmp = path.join(dir, 'job.tmp'); await fs.writeFile(tmp, JSON.stringify(job)); await fs.rename(tmp, path.join(dir, 'job.json')); }
 let active;
 process.on('SIGTERM', () => { active?.kill('SIGTERM'); });
-function run(args) { return new Promise((resolve, reject) => { const p = spawn('ffmpeg', ['-hide_banner', '-y', '-threads', '2', '-filter_threads', '1', ...args], { cwd: dir, windowsHide: true }); active = p; let err = ''; p.stderr.on('data', b => { err = (err + b).slice(-3000); }); p.on('error', reject); p.on('close', code => code === 0 ? resolve() : reject(new Error(`FFmpeg (${code}) : ${err}`))); }); }
+function run(args) { return new Promise((resolve, reject) => { const p = spawn('ffmpeg', ['-hide_banner', '-y', '-threads', '2', '-filter_threads', '1', ...args.slice(0, -1), '-threads', '2', args.at(-1)], { cwd: dir, windowsHide: true }); active = p; let err = ''; p.stderr.on('data', b => { err = (err + b).slice(-3000); }); p.on('error', reject); p.on('close', code => code === 0 ? resolve() : reject(new Error(`FFmpeg (${code}) : ${err}`))); }); }
 try {
   job.state = 'running'; await save(); const { width: w, height: h, shots, media, edit } = manifest;
   for (let i = 0; i < shots.length; i++) {
