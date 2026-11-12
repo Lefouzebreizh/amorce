@@ -173,6 +173,31 @@ for (const { niche, outils } of aParcourir) {
 
   const cartes = await page.locator('#grille article').count();
   verifier('tous les outils affichés', cartes === outils.length, `${cartes}/${outils.length}`);
+  verifier(
+    'aucune promesse de tests non documentés dans l’en-tête',
+    !(await page.locator('header').innerText()).toLocaleLowerCase('fr-FR').includes('testé')
+  );
+  const choixBesoin = await page.locator('#filtres button').allTextContents();
+  verifier('filtres utilisables présentés comme des besoins',
+    choixBesoin.length === new Set(outils.map((o) => o.categorie)).size + 1
+    && choixBesoin.every((texte) => texte.trim().length > 0));
+  verifier('pas de notes agrégées non étayées dans les données structurées',
+    !(await page.locator('#donnees-structurees').textContent()).includes('aggregateRating'));
+  if (niche.id === 'generaliste') {
+    verifier('besoins généralistes formulés simplement',
+      choixBesoin.join(' ').includes('Écrire & relire')
+      && choixBesoin.join(' ').includes('Créer des visuels')
+      && choixBesoin.join(' ').includes('Chercher & vérifier'));
+    const liensAffiliesActifs = outils.filter((outil) => {
+      const adresse = typeof outil.lien_affiliation === 'string' ? outil.lien_affiliation.trim() : '';
+      return adresse !== '' && !/exemple-affiliation\.com/.test(adresse);
+    }).length;
+    const transparence = await page.locator('#transparence').innerText();
+    verifier('affiliation annoncée selon les liens réellement actifs',
+      liensAffiliesActifs > 0
+        ? transparence.includes('Certains liens peuvent être affiliés')
+        : transparence.includes('aucun lien affilié n’est actif'));
+  }
 
   /* Aucun lien mort visible, quel que soit l'état d'avancement des programmes.
 
@@ -232,7 +257,9 @@ for (const { niche, outils } of aParcourir) {
   await page.click(`button[data-outil="${premier.id}"]`);
   await page.waitForSelector('#modale:not(.hidden)');
   verifier('modale ouverte sans rechargement', (await page.textContent('#modale-titre')) === premier.nom);
-  verifier('avis tracé en sections', (await page.locator('#modale-corps h3').count()) >= 4);
+  verifier('fiche détaillée tracée en sections', (await page.locator('#modale-corps h3').count()) >= 4);
+  verifier('aucune note /5 affichée sans méthode publique',
+    !(await page.locator('#modale-meta').innerText()).includes('/5'));
   verifier('adresse profonde poussée', page.url().includes(`?niche=${niche.id}&outil=${premier.id}`));
   verifier('titre suit l’outil ouvert', (await page.title()).startsWith(premier.nom));
   /* Deux régimes, et le contrôle doit tenir les deux — sans quoi il devient

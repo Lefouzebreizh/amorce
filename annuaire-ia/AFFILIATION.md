@@ -5,9 +5,10 @@ restent en `exemple-affiliation.com`, le réseau publie, se référence, et ne
 rapporte rien. Chercher chaque programme soi-même est le genre de corvée qu'on
 repousse indéfiniment : tout ce qui pouvait être cherché à l'avance l'a donc été.
 
-Relevé le 27 août 2026, par recherche. **Les commissions et les conditions
-changent sans préavis** — la colonne « vérifié » dit ce qui a été lu à cette
-date et ce qui reste à confirmer au moment de l'inscription.
+Relevé le 27 août 2026, puis vérification des programmes généralistes le
+29 septembre 2026 sur les pages officielles des éditeurs. **Les commissions et
+les conditions changent sans préavis** — les liens ci-dessous permettent de
+recontrôler chaque offre avant de candidater ou d'annoncer un revenu.
 
 ## Comment s'en servir
 
@@ -54,18 +55,21 @@ sans validation manuelle, et public du réseau qui achète réellement ce produi
 | # | Programme | Commission | Inscription | Couvre | Vérifié |
 | --- | --- | --- | --- | --- | --- |
 | 1 | **Gamma** | **25 % la première année** | ✅ **Accepté le 06/09/2026** — lien posé dans les deux niches ; voir la note ci-dessous | Gamma (généraliste + éducation) | Taux lu dans le courriel d'acceptation |
-| 2 | **Synthesia** | 25 % récurrent pendant 12 mois | Programme public, page partenaires du site | Synthesia (généraliste) | Taux et durée lus |
-| 3 | **ElevenLabs** | 22 % récurrent, cookie 60 à 90 j | Programme public | ElevenLabs (généraliste) | Taux et cookie lus |
+| 2 | **Synthesia** | Jusqu'à 267 $ par client apporté | [Programme officiel](https://www.synthesia.io/partners/affiliates) — candidature requise | Synthesia (généraliste) | Page officielle relue le 29/09/2026 ; montant variable selon le client, modalités complètes à confirmer après acceptation |
+| 3 | **ElevenLabs** | 22 % des paiements pendant les 12 premiers mois | [Programme officiel](https://elevenlabs.io/affiliates) — inscription requise | ElevenLabs (généraliste) | Page officielle relue le 29/09/2026 ; cookie et seuil de paiement à vérifier dans le compte |
 | 4 | **Klaviyo** | 20 % récurrent pendant 12 mois, cookie 90 j | Programme partenaires Klaviyo | Klaviyo (e-commerce) | Taux, durée et cookie lus |
 | 5 | **Shopify Partners** | 20 % de parrainage | [shopify.com/partners](https://www.shopify.com/partners) — quelques minutes, sans dossier | Shopify Magic (e-commerce) | Inscription et taux lus |
 | 6 | **Gorgias** | 20 % récurrent | [gorgias.com/affiliate-program](https://www.gorgias.com/affiliate-program) — aussi sur PartnerStack | Gorgias (e-commerce) | Taux lu |
 | 7 | **Photoroom** | 20 % sur les abonnements, cookie 30 j | [photoroom.com/affiliates](https://www.photoroom.com/affiliates) — via **Awin** | Photoroom (e-commerce) | Taux, cookie et réseau lus |
-| 8 | **Descript** | 15 % récurrent | Programme public | Descript (généraliste) | Taux lu |
+| 8 | **Descript** | Conditions à confirmer : la page publique annonce 25 $ par nouvel abonné ; les conditions affichent 15 % récurrent pendant la première année | [Programme officiel](https://www.descript.com/affiliate) — candidature et validation requises | Descript (généraliste) | Contradiction entre la page et les conditions officielles ; ne pas prévoir de revenu avant confirmation dans le compte |
 | 9 | **Jasper** | 25 % récurrent 12 mois, 30 % au-delà de cent clients | Programme public | Jasper (e-commerce, en réserve) | Taux et palier lus |
 | 10 | **HeyGen** | Programme public, taux à confirmer | Page partenaires du site | HeyGen (généraliste, en réserve) | Existence lue, taux non lu |
 
-Les quatre premiers sont récurrents : une inscription qui reste payée douze
-mois vaut mieux qu'une prime unique plus élevée.
+Pour l'annuaire généraliste, Synthesia, ElevenLabs et Descript sont les
+candidatures prioritaires après Gamma. Les pages publiques confirment
+l'existence des programmes, mais aucune candidature n'est acceptée d'avance :
+un lien de suivi n'existe qu'après l'inscription et l'approbation du compte.
+Ne pas présenter une commission comme un revenu acquis.
 
 **Gamma est accepté — premier programme du réseau à l'être, le 06/09/2026.**
 Le courriel d'acceptation donne le lien, `https://try.gamma.app/1up6vnh79bvt`,
