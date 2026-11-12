@@ -69,3 +69,15 @@ Installation Windows isolée : `%LOCALAPPDATA%\LePhare\app`, bibliothèque sépa
 Contrôle Windows dans Chrome : import, master, paroles, deux visuels avec fondu contrôlé dans les pixels, rendu, décodage complet, téléchargement MP4, annulation et restauration réussis, sans exception JavaScript ni débordement à 390 px. Un clip **technique synthétique** de six secondes a été assemblé en 6,621 secondes (ceci ne mesure pas un morceau artistique complet). Détection de l’API de dictée positive ; microphone physique non testé. Gemini et les générations payantes sont désactivés.
 
 Rapports privés sur le PC : `%LOCALAPPDATA%\LePhare\ControleTechnique\controle-windows.json` et `%LOCALAPPDATA%\LePhare\controle-installation.json`. Les fichiers techniques restent dans `ControleTechnique`, séparés de `MaMatiere`. Le serveur de contrôle a été arrêté après validation ; le raccourci ouvre le serveur personnel.
+
+## Pilotage depuis Android sur le même Wi-Fi
+
+Le smartphone est le poste de commande. Le PC héberge la bibliothèque et FFmpeg ; il doit rester allumé, avec Le Phare ouvert. Aucun calcul lourd ni abonnement n’est demandé au téléphone.
+
+Le lanceur accepte un mode Wi-Fi explicite : `PHARE_LAN_IP` pour une adresse privée, ou un fichier `wifi.json` dans la bibliothèque contenant `{"interface":"Wi-Fi"}`. Dans ce dernier cas l’adresse est retrouvée sur cette interface au démarrage. La boucle locale reste disponible ; les mutations par le réseau sont limitées à l’hôte Wi-Fi exact et à son origine, avec le même cookie HttpOnly personnel. Aucun transfert de port du routeur ni tunnel public n’est créé. Une éventuelle autorisation du pare-feu doit être limitée au besoin ; sur le PC contrôlé, Node disposait déjà d’une autorisation entrante.
+
+Le lien personnel utilise un fragment pour déverrouiller puis retire le code de l’adresse. Ne pas publier ce lien. Sur le téléphone : ouvrir dans Chrome, puis ajouter à l’écran d’accueil si souhaité. Les imports du téléphone sont copiés sur le PC ; les rendus se téléchargent dans le téléphone.
+
+Le carnet commun est stocké sur le PC dans `workspace.json`, avec contrôle de révision. Les appareils connectés le retrouvent et rafraîchissent les changements ; une sauvegarde concurrente périmée est refusée. L’ancienne sauvegarde locale d’un navigateur contenant des notes est conservée avant sa première liaison et reste téléchargeable. Le changement d’onglet/projet ne doit pas être confondu avec une autorisation de réécrire un original.
+
+Sur un lien Wi-Fi HTTP, Android ne permet pas le micro Web Speech de la page. La dictée du clavier Android reste utilisable dans la saisie ; elle dépend du clavier installé. Ne pas prétendre avoir vérifié le microphone physique ou une conversation vocale Gemini. L’accès hors de ce Wi-Fi et le micro intégré à la page demandent un raccordement HTTPS ultérieur.

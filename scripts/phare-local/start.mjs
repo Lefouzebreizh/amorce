@@ -9,6 +9,9 @@ await fs.mkdir(root, { recursive: true, mode: 0o700 });
 const tokenPath = path.join(root, 'access-code');
 let token; try { token = (await fs.readFile(tokenPath, 'utf8')).trim(); } catch { token = randomBytes(24).toString('base64url'); await fs.writeFile(tokenPath, token, { mode: 0o600 }); }
 const port = process.env.PORT || '3010';
+let lan = process.env.PHARE_LAN_IP || '';
+if (!lan) { try { const settings = JSON.parse(await fs.readFile(path.join(root, 'wifi.json'), 'utf8')); lan = os.networkInterfaces()[settings.interface]?.find(a => a.family === 'IPv4' && !a.internal)?.address || ''; } catch {} }
+if (lan && !/^(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})$/.test(lan)) throw new Error('Adresse Wi-Fi privée invalide.');
 if (!/^\d{2,5}$/.test(port) || Number(port) > 65535) throw new Error('Port local invalide.');
 const url = `http://localhost:${port}/phare/atelier#studio=${token}`;
 function open() { if (process.env.PHARE_NO_OPEN === 'true') return; const child = process.platform === 'win32' ? spawn('explorer.exe', [url], { detached: true, stdio: 'ignore', windowsHide: true }) : process.platform === 'darwin' ? spawn('open', [url], { detached: true, stdio: 'ignore' }) : spawn('xdg-open', [url], { detached: true, stdio: 'ignore' }); child.on('error', () => console.log('Ouvre l’adresse locale affichée ci-dessus.')); child.unref(); }
@@ -18,7 +21,8 @@ else {
   let built = false; try { await fs.access('.next/BUILD_ID'); built = true; } catch {}
   const mode = built && process.env.PHARE_DEV !== 'true' ? 'start' : 'dev';
   console.log(`\nLe Phare : http://localhost:${port}/phare/atelier\nCode local : ${token}\nBibliothèque : ${root}\nMode ${mode === 'start' ? 'préparé' : 'développement'} · aucun fournisseur de génération activé.\n`);
-  const child = spawn(process.execPath, ['node_modules/next/dist/bin/next', mode, '--hostname', '127.0.0.1', '--port', port], { stdio: 'inherit', windowsHide: true, env: { ...process.env, PHARE_LOCAL_DATA_DIR: root, PHARE_LOCAL_TOKEN: token, PHARE_CHAT_ENABLED: 'false' } });
+  if (lan) console.log(`Lien mobile personnel : http://${lan}:${port}/phare/atelier#studio=${token}`);
+  const child = spawn(process.execPath, ['node_modules/next/dist/bin/next', mode, '--hostname', lan ? '0.0.0.0' : '127.0.0.1', '--port', port], { stdio: 'inherit', windowsHide: true, env: { ...process.env, PHARE_ALLOWED_LAN_HOST: lan ? `${lan}:${port}` : '', PHARE_LOCAL_DATA_DIR: root, PHARE_LOCAL_TOKEN: token, PHARE_CHAT_ENABLED: 'false' } });
   let opening = false;
   const timer = setInterval(async () => { if (!opening && await alreadyRunning()) { opening = true; clearInterval(timer); open(); } }, 1000);
   process.on('SIGINT', () => child.kill('SIGINT')); process.on('SIGTERM', () => child.kill('SIGTERM'));

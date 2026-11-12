@@ -17,19 +17,49 @@ export default function Atelier() {
   const [query, setQuery] = useState('');
   const [title, setTitle] = useState('');
   const [production, setProduction] = useState(false);
+  const [beforeShared, setBeforeShared] = useState('');
+  const sharedRevision = useRef<number | null>(null);
+  const sharedPending = useRef(false);
+  const sharedStopped = useRef(false);
+  const sharedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sharedWrites = useRef(Promise.resolve());
   const snapshot = useRef<string | null>(null);
   const latestWorkspace = useRef<Workspace | null>(null);
   const backupInput = useRef<HTMLInputElement>(null);
 
+  async function connectShared() {
+    if (!latestWorkspace.current || sharedPending.current || sharedStopped.current) return;
+    const before = snapshot.current;
+    try {
+      const response = await fetch('/api/phare/local/workspace', { cache: 'no-store' }); if (!response.ok) return;
+      let data = await response.json();
+      if (snapshot.current !== before || sharedPending.current) return;
+      if (data.revision === sharedRevision.current) return;
+      if (!data.workspace) {
+        const created = await fetch('/api/phare/local/workspace', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Phare-Local': '1' }, body: JSON.stringify({ revision: 0, workspace: latestWorkspace.current }) });
+        data = await created.json(); if (!created.ok) throw new Error(data.error || 'Liaison interrompue.');
+      }
+      const value = parseWorkspace(JSON.stringify(data.workspace));
+      if (snapshot.current !== before || sharedPending.current) return;
+      const raw = JSON.stringify(value), prior = latestWorkspace.current;
+      if (raw !== before && (prior.conversation?.length || prior.profile || prior.projects.some(p => p.entries.length)) && !localStorage.getItem(PHARE_KEY + '-avant-partage')) {
+        const backup = JSON.stringify(prior); localStorage.setItem(PHARE_KEY + '-avant-partage', backup); setBeforeShared(backup);
+      }
+      localStorage.setItem(PHARE_KEY, raw); snapshot.current = raw; sharedRevision.current = data.revision;
+      latestWorkspace.current = value; setWorkspace(value); setSelected(current => value.projects.some(p => p.id === current) ? current : value.lastProjectId || value.projects[0].id);
+      setNotice('Atelier commun retrouvé sur le PC. Tes notes et projets suivent tes appareils sur ce Wi-Fi.');
+    } catch (e) { setNotice(`Liaison avec le PC interrompue : ${(e as Error).message}. Les notes de ce navigateur sont conservées.`); }
+  }
   useEffect(() => {
     try {
       const raw = localStorage.getItem(PHARE_KEY);
+      // Client-only hydration from the browser backup.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setBeforeShared(localStorage.getItem(PHARE_KEY + '-avant-partage') || '');
       snapshot.current = raw;
       const value = raw === null ? initialWorkspace() : parseWorkspace(raw);
       // Stable project IDs are needed before the first media session is saved.
       if (raw === null) { const first = JSON.stringify(value); localStorage.setItem(PHARE_KEY, first); snapshot.current = first; }
-      // One-time hydration from browser storage: never read localStorage during SSR.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       latestWorkspace.current = value; setWorkspace(value); setSelected(value.lastProjectId || value.projects[0].id);
       setNotice(raw === null ? 'Choisis un morceau et apporte tes premiers mots.' : 'Ton atelier a été retrouvé dans ce navigateur.');
     } catch {
@@ -42,8 +72,26 @@ export default function Atelier() {
       }
     };
     window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    const connected = () => void connectShared(); window.addEventListener('phare-connected', connected);
+    const poll = setInterval(() => { if (sharedRevision.current !== null && !sharedPending.current && !sharedStopped.current) void connectShared(); }, 5000);
+    return () => { window.removeEventListener('storage', onStorage); window.removeEventListener('phare-connected', connected); clearInterval(poll); if (sharedTimer.current) clearTimeout(sharedTimer.current); };
   }, []);
+
+  function scheduleShared(next: Workspace) {
+    if (sharedRevision.current === null || sharedStopped.current) return;
+    sharedPending.current = true;
+    if (sharedTimer.current) clearTimeout(sharedTimer.current);
+    const raw = JSON.stringify(next);
+    sharedTimer.current = setTimeout(() => {
+      sharedWrites.current = sharedWrites.current.then(async () => {
+        if (sharedStopped.current) return;
+        const response = await fetch('/api/phare/local/workspace', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Phare-Local': '1' }, body: JSON.stringify({ revision: sharedRevision.current, workspace: next }) });
+        const data = await response.json(); if (!response.ok) throw new Error(data.error || 'PC indisponible.');
+        sharedRevision.current = data.revision;
+        if (snapshot.current === raw) { sharedPending.current = false; setNotice('Enregistré sur le PC — tu peux retrouver cet atelier depuis ton téléphone.'); }
+      }).catch(e => { sharedStopped.current = true; setBlocked(true); setNotice(`Sauvegarde commune suspendue : ${e.message}. Tes notes locales sont conservées ; exporte-les avant de recharger.`); });
+    }, 350);
+  }
 
   function commit(next: Workspace, message: string, remember = true) {
     if (blocked) return false;
@@ -57,7 +105,7 @@ export default function Atelier() {
       localStorage.setItem(PHARE_KEY, raw);
       snapshot.current = raw;
       if (remember) setUndo(workspace);
-      latestWorkspace.current = next; setWorkspace(next); setNotice(message);
+      latestWorkspace.current = next; setWorkspace(next); setNotice(message); scheduleShared(next);
       return true;
     } catch (error) {
       setNotice(error instanceof Error ? `Non enregistré : ${error.message}` : 'Non enregistré : stockage indisponible. Exporte une sauvegarde.');
@@ -88,6 +136,7 @@ export default function Atelier() {
         <p>Parle au Phare. On écrit, on choisit, on prépare le clip. Tes mots et tes versions restent dans ton atelier.</p>
       </section>
       <p role="status" className={`atelier-notice${blocked ? ' atelier-warning' : ''}`}>{notice}</p>
+      {beforeShared && <button onClick={() => download(beforeShared, 'phare-notes-avant-liaison.json', 'application/json')}>Télécharger les anciennes notes de ce navigateur</button>}
       {workspace && project && <>
         <div className="atelier-layout">
           <aside className="atelier-projects" aria-label="Mes morceaux">
@@ -205,7 +254,7 @@ export default function Atelier() {
           }}>Annuler la dernière action</button>
         </div></details>
       </>}
-      <footer className="atelier-footer">Les textes enregistrés restent dans ce navigateur, sans compte ni synchronisation. Pense à exporter : effacer les données du navigateur efface aussi l’atelier. L’import ajoute une copie, sans remplacer tes projets. La conversation passe par une connexion IA personnelle après activation. La dictée dépend du navigateur. Le devis précède toute génération de musique ou de plans vidéo ; aucun abonnement ni calcul distant n’est lancé automatiquement. Les médias ne sont pas inclus dans cette sauvegarde de textes.</footer>
+      <footer className="atelier-footer">En mode Wi-Fi connecté, les projets et les textes sont sauvegardés sur le PC. Une copie reste dans ce navigateur ; sans connexion au PC, elle reste locale. Pense à exporter et à sauvegarder la bibliothèque du PC. L’import ajoute une copie, sans remplacer tes projets. La conversation passe par une connexion IA personnelle après activation. La dictée dépend du navigateur. Le devis précède toute génération de musique ou de plans vidéo ; aucun abonnement ni calcul distant n’est lancé automatiquement. Les médias ne sont pas inclus dans cette sauvegarde de textes.</footer>
     </div>
   </main>;
 }

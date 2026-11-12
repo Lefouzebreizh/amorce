@@ -6,6 +6,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { handleLocal, readLocal } from '../../../../server/phare-local.ts';
+import { initialWorkspace } from '../../../../lib/phare.ts';
 import { newLocalEdit } from '../../../../lib/phare-local.ts';
 test('private local import, seek, conflict, actual render and original preservation', { timeout: 120000 }, async () => {
  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'phare-local-test-')); const originalEnv = { ...process.env }; process.env.PHARE_LOCAL_DATA_DIR = dir; process.env.PHARE_LOCAL_TOKEN = 'test-private-code'; delete process.env.VERCEL;
@@ -15,6 +16,12 @@ test('private local import, seek, conflict, actual render and original preservat
   assert.equal((await handleLocal(new Request(url + 'state'), ['state'])).status, 401);
   assert.equal((await request('edit', 'PUT', '{}', { origin: 'https://intruder.invalid' })).status, 403);
   assert.equal((await request('unlock', 'POST', JSON.stringify({ code: 'bad' }))).status, 401);
+  process.env.PHARE_ALLOWED_LAN_HOST = '192.168.1.171:3010';
+  assert.equal((await request('unlock','POST',JSON.stringify({code:'test-private-code'}),{host:'192.168.1.171:3010',origin:'http://192.168.1.171:3010'})).status,200);
+  assert.equal((await request('unlock','POST',JSON.stringify({code:'test-private-code'}),{host:'192.168.1.172:3010',origin:'http://192.168.1.172:3010'})).status,403);
+  const common = initialWorkspace(); const firstSave = await request('workspace','PUT',JSON.stringify({revision:0,workspace:common})); assert.equal(firstSave.status,200);
+  assert.equal((await (await request('workspace')).json()).workspace.projects[0].id, common.projects[0].id);
+  assert.equal((await request('workspace','PUT',JSON.stringify({revision:0,workspace:common}))).status,400);
   const wave = path.join(dir, 'fixture.wav'), pic = path.join(dir, 'fixture.png');
   assert.equal(spawnSync('ffmpeg', ['-v','error','-f','lavfi','-i','sine=frequency=440:duration=6','-y',wave]).status, 0);
   assert.equal(spawnSync('ffmpeg', ['-v','error','-f','lavfi','-i','color=c=red:s=640x360','-frames:v','1','-threads','1','-y',pic]).status, 0);

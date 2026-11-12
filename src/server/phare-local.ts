@@ -3,6 +3,7 @@ import path from 'node:path';
 import { randomUUID, createHash, timingSafeEqual } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { Readable } from 'node:stream';
+import { parseWorkspace } from '../lib/phare.ts';
 import { emptyLocalState, validateLocalEdit, buildLocalTimeline, makeLocalAss } from '../lib/phare-local.ts';
 import type { LocalState, LocalMedia } from '../lib/phare-local.ts';
 
@@ -18,7 +19,7 @@ export async function changeLocal<T>(fn: (s: LocalState) => T | Promise<T>): Pro
 }
 function equal(a: string, b: string) { const x = createHash('sha256').update(a).digest(), y = createHash('sha256').update(b).digest(); return timingSafeEqual(x, y); }
 export function authorized(req: Request) { const cookie = req.headers.get('cookie')?.split(';').map(s => s.trim()).find(s => s.startsWith('phare_local='))?.slice(12) || ''; return equal(cookie, process.env.PHARE_LOCAL_TOKEN || randomUUID()); }
-function originOK(req: Request) { const host = req.headers.get('host') || ''; if (!/^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(host)) return false; const origin = req.headers.get('origin'); if (!origin) return req.headers.get('x-phare-local') === '1'; try { const parsed = new URL(origin); return parsed.host === host && ['http:', 'https:'].includes(parsed.protocol); } catch { return false; } }
+function originOK(req: Request) { const host = req.headers.get('host') || ''; if (!/^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(host) && host !== process.env.PHARE_ALLOWED_LAN_HOST) return false; const origin = req.headers.get('origin'); if (!origin) return req.headers.get('x-phare-local') === '1'; try { const parsed = new URL(origin); return parsed.host === host && ['http:', 'https:'].includes(parsed.protocol); } catch { return false; } }
 const reply = (v: unknown, status = 200) => Response.json(v, { status, headers: { 'Cache-Control': 'no-store' } });
 async function probe(file: string) { return new Promise<{ streams: { codec_type: string; width?: number; height?: number }[]; format: { duration?: string } }>((resolve, reject) => { const p = spawn('ffprobe', ['-v', 'error', '-show_streams', '-show_format', '-of', 'json', file], { windowsHide: true }); let out = ''; p.stdout.on('data', b => { if (out.length < 200000) out += b; }); p.on('error', reject); p.on('close', code => { try { if (code) throw new Error('Fichier audio/visuel illisible par FFmpeg.'); resolve(JSON.parse(out)); } catch (e) { reject(e); } }); }); }
 export async function handleLocal(req: Request, parts: string[]): Promise<Response> {
@@ -27,6 +28,20 @@ export async function handleLocal(req: Request, parts: string[]): Promise<Respon
     if (req.method !== 'GET' && req.method !== 'HEAD' && !originOK(req)) return reply({ error: 'Origine refusée.' }, 403);
     if (parts[0] === 'unlock' && req.method === 'POST') { const body = await req.json(); if (!equal(String(body.code || ''), process.env.PHARE_LOCAL_TOKEN!)) return reply({ error: 'Code incorrect.' }, 401); return Response.json({ ok: true }, { headers: { 'Set-Cookie': `phare_local=${process.env.PHARE_LOCAL_TOKEN}; HttpOnly; SameSite=Strict; Path=/api/phare/local; Max-Age=43200`, 'Cache-Control': 'no-store' } }); }
     if (!authorized(req)) return reply({ error: 'Déverrouille le Studio avec le code du lanceur.' }, 401);
+    if (parts[0] === 'workspace' && req.method === 'GET') {
+      try { return reply(JSON.parse(await fs.readFile(path.join(localRoot(), 'workspace.json'), 'utf8'))); }
+      catch (e) { if ((e as NodeJS.ErrnoException).code === 'ENOENT') return reply({ revision: 0, workspace: null }); throw e; }
+    }
+    if (parts[0] === 'workspace' && req.method === 'PUT') {
+      const raw = await req.text(); if (raw.length > 2100000) throw new Error('Sauvegarde trop volumineuse.');
+      const input = JSON.parse(raw), workspace = parseWorkspace(JSON.stringify(input.workspace));
+      if (!Number.isInteger(input.revision) || input.revision < 0) throw new Error('Révision invalide.');
+      return reply(await changeLocal(async () => {
+        let revision = 0; try { revision = JSON.parse(await fs.readFile(path.join(localRoot(), 'workspace.json'), 'utf8')).revision; } catch (e) { if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e; }
+        if (revision !== input.revision) throw new Error('La sauvegarde commune a changé sur un autre appareil. Tes notes locales sont conservées.');
+        const next = { workspace, revision: revision + 1 }; const target = path.join(localRoot(), 'workspace.json'); const temp = target + '.' + randomUUID() + '.tmp'; await fs.writeFile(temp, JSON.stringify(next), { mode: 0o600 }); await fs.rename(temp, target); return next;
+      }));
+    }
     if (parts[0] === 'state' && req.method === 'GET') {
       const state = await readLocal(); state.jobs = await Promise.all(state.jobs.map(async j => { try { const saved = JSON.parse(await fs.readFile(path.join(localRoot(), 'jobs', j.id, 'job.json'), 'utf8')); if (saved.state === 'running' || (saved.state === 'queued' && Date.now() - Date.parse(saved.created) > 10000)) { try { process.kill(saved.pid, 0); } catch { saved.state = 'interrupted'; saved.stage = 'Rendu interrompu. Relance-le depuis les sources conservées.'; } } return saved; } catch { return j; } })); return reply(state);
     }
