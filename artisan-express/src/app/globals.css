@@ -657,3 +657,14 @@ main {
   outline: 3px solid var(--color-accent);
   outline-offset: 2px;
 }
+
+/* Plan d'atelier : le premier écran annonce l'échelle du projet avant le scroll. */
+.artisan-hero__offer-rail { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.55rem; max-width:39rem; margin:1.55rem 0 0; }
+.artisan-hero__offer-rail span { display:grid; gap:.45rem; padding:.8rem .75rem; border:1px solid rgb(255 255 255 / .12); border-radius:.9rem; background:rgb(8 14 22 / .48); transition:transform .3s ease,border-color .3s ease,background .3s ease; }
+.artisan-hero__offer-rail span:hover { transform:translateY(-.25rem); border-color:rgb(64 224 208 / .62); background:rgb(20 55 62 / .55); }
+.artisan-hero__offer-rail span.is-featured { border-color:rgb(64 224 208 / .68); background:linear-gradient(145deg,rgb(25 78 80 / .68),rgb(27 23 52 / .72)); box-shadow:0 0 2rem rgb(64 224 208 / .1); transform:translateY(-.35rem); }
+.artisan-hero__offer-rail b { color:var(--color-ardoise); font-size:.66rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+.artisan-hero__offer-rail strong { color:var(--color-encre); font:800 clamp(1.18rem,2.2vw,1.65rem)/1 var(--font-titre); letter-spacing:-.045em; }
+.artisan-hero__offer-rail .is-featured strong { color:var(--color-accent); }
+@media (max-width:520px) { .artisan-hero__offer-rail { gap:.35rem; } .artisan-hero__offer-rail span { padding:.65rem .5rem; } .artisan-hero__offer-rail b { font-size:.56rem; } .artisan-hero__offer-rail strong { font-size:1rem; } }
+@media (prefers-reduced-motion:reduce) { .artisan-hero__offer-rail span,.artisan-hero__offer-rail span.is-featured { transform:none; transition:none; } }
