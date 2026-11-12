@@ -233,3 +233,6 @@ visual_library/**/*.mp4
 # Liste des artisans démarchés (export), mêmes coordonnées de tiers que
 # prospects.md dont elle est extraite : reste locale pour la même raison.
 /artisan-express/demarches.md
+
+# Bibliothèque privée du Phare et code d’accès local
+/.phare-local/

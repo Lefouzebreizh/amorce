@@ -34,7 +34,7 @@ export function routeLocalCommand(workspace: Workspace, selected: string, text: 
     const matches = projects.flatMap(p => searchEntries(p, search[2]).map(e => ({ p, e }))).slice(0, 8);
     return result(matches.length ? matches.map(({p,e}) => `« ${p.title} » · ${e.origin} · ${e.source}\n${e.text.slice(0, 1200)}`).join('\n\n') : `Aucun résultat dans ${search[1] ? 'tes projets enregistrés' : `« ${project.title} »`}. Aucune autre source n’a été consultée.`);
   }
-  if (/^(?:prépare|preparer|préparer|chiffre|chiffrer|ouvre)\s+(?:(?:le|mon|un)\s+)?(?:clip|devis|diaporama)(?:\s+vidéo)?[.!?]?$/i.test(text.trim())) return result(`J’ouvre la préparation du clip de « ${project.title} ». Tu peux choisir les paroles, la durée et les variantes, puis télécharger le chiffrage. Aucune génération ni dépense n’est lancée.`, workspace, selected, true);
+  if (/^(?:prépare|preparer|préparer|chiffre|chiffrer|ouvre)\s+(?:(?:le|mon|un)\s+)?(?:clip|devis|diaporama)(?:\s+vidéo)?[.!?]?$/i.test(text.trim())) return result(`J’ouvre la préparation du clip de « ${project.title} ». Dans le lanceur local, importe ton master et tes visuels, cale tes paroles et lance le montage. Aucune génération ni dépense n’est lancée.`, workspace, selected, true);
   if (/^(?:aide|capacités|que peux.tu faire|qu.est.ce que tu peux faire)[.!?]?$/i.test(text.trim())) return result(CAPABILITIES.map(c => `${c.name} : ${c.state}. ${c.excludes}`).join('\n\n'));
   return null;
 }

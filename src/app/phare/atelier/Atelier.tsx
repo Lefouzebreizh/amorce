@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Conversation from './Conversation';
-import Production from './Production';
+import StudioLocal from './StudioLocal';
 import { applyAssistantActions } from '@/lib/phare-assistant';
 import { useEffect, useRef, useState } from 'react';
 import { PHARE_KEY, ORIGINS, SECTIONS, addEntry, initialWorkspace, mergeWorkspace, parseWorkspace, searchEntries, uid } from '@/lib/phare';
@@ -26,6 +26,8 @@ export default function Atelier() {
       const raw = localStorage.getItem(PHARE_KEY);
       snapshot.current = raw;
       const value = raw === null ? initialWorkspace() : parseWorkspace(raw);
+      // Stable project IDs are needed before the first media session is saved.
+      if (raw === null) { const first = JSON.stringify(value); localStorage.setItem(PHARE_KEY, first); snapshot.current = first; }
       // One-time hydration from browser storage: never read localStorage during SSR.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       latestWorkspace.current = value; setWorkspace(value); setSelected(value.lastProjectId || value.projects[0].id);
@@ -132,7 +134,7 @@ export default function Atelier() {
                 setSelected(result.selected); if (result.slideshow) setProduction(true); return true;
               } catch (error) { setNotice(error instanceof Error ? error.message : 'Réponse non enregistrée.'); return false; }
             }} />
-            <Production key={project.id} project={project} open={production} onOpen={setProduction} />
+            <StudioLocal key={project.id} project={project} open={production} onOpen={setProduction} />
             <details className="atelier-memory"><summary>Ce que Le Phare retient de moi</summary><form onSubmit={event => {
               event.preventDefault(); const profile = String(new FormData(event.currentTarget).get('profile'));
               commit({ ...workspace, profile }, 'Préférences enregistrées. Tu peux les modifier à tout moment.');
