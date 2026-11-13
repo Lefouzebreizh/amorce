@@ -63,11 +63,15 @@ Ces rôles sont des rôles à construire, pas des agents déjà actifs. Le contr
 4. Ajouter capture multimodale, caméra, cartes et création audio/vidéo après raccordement et vérification des capacités réelles.
 5. Ouvrir progressivement les espaces sensibles — Jardin Secret, Sanctuaire, Salon des Proches et Forge — avec consentements séparés, contrôles d’accès et tests de suppression/export.
 
-## État vérifié au 13 novembre 2026
+## État vérifié dans le dépôt au 13 novembre 2026
 
-- La PR #1047 est un contrat d’orchestration en brouillon, empilé sur la PR #1045.
-- À la dernière vérification, les contrôles « Amorce », « Tests Python » et « Cohérence du dépôt » étaient réussis ; le parcours navigateur tournait encore.
-- Aucun des douze espaces n’est déclaré opérationnel par ce document.
+- La PR #1047 contient un contrat typé d’orchestration en brouillon ; elle ne lance pas de vrais agents ni ne persiste les tâches.
+- Le studio possède déjà des briques locales de montage : import de médias dans un projet avec URL objet et vignettes (`src/lib/media.ts`), mixage audio hors ligne (`src/lib/audioHorsLigne.ts`) et encodage vidéo image par image (`src/lib/exportHorsLigne.ts`). Ce n’est pas encore une banque générale indexant tout un disque.
+- Le registre `src/lib/phare-capabilities.ts` décrit la voix via Web Speech et speechSynthesis comme dépendante du navigateur/de la connexion ; ce n’est donc pas une voix locale garantie. Il décrit aussi la production générative complète comme « à connecter » : le plan/devis ne lance pas une génération.
+- Le détecteur de visage (`src/lib/detection.ts`) utilise un modèle facultatif téléchargé au premier usage puis mis en cache ; ce n’est pas une preuve que tous les modèles sont installés ou disponibles hors réseau dès l’installation.
+- La génération locale de musique, d’images et de vidéo, l’indexation sémantique multimédia, la séparation de pistes, la voix locale et l’entraînement LoRA ne sont pas établis comme capacités complètes dans le registre.
+- Les douze espaces restent une organisation produit ; la présence d’une brique de studio ne rend pas à elle seule un espace entier opérationnel.
+- À la dernière vérification de la PR #1047, les contrôles « Amorce », « Tests Python » et « Cohérence du dépôt » étaient réussis ; le parcours navigateur tournait encore.
 - Les données d’un espace ne sont jamais supposées accessibles aux autres sans règle explicite.
 
 ## Concordance avec le Prompt Maître intégral
@@ -120,17 +124,17 @@ Le montage classique, l’organisation des assets, les métadonnées, les timeli
 
 Ordre conseillé :
 
-1. Construire la bibliothèque multimédia locale et le montage non destructif, sans modèle génératif.
+1. Consolider l’import média par projet, la timeline et l’export hors ligne déjà présents ; étendre ensuite vers une bibliothèque locale indexable, sans modèle génératif.
 2. Ajouter l’analyse locale des médias, la recherche et des transformations réversibles ; vérifier chaque outil sur des fichiers de référence.
 3. Ajouter séparation audio et générations locales ciblées, avec rendu, licences et limites documentés.
 4. Ajouter génération vidéo locale et adaptations personnelles après tests de compatibilité, de qualité, de temps et d’espace disque.
 5. Vérifier le mode avion sur une installation complète : bloquer le réseau, effectuer une création, sauvegarder et exporter, puis confirmer qu’aucun appel distant n’a été requis.
 
-**État actuel :** cette chaîne est une exigence de conception. La PR #1048 n’ajoute ni bibliothèque multimédia, ni moteur audio/vidéo, ni indexeur, ni entraînement local.
+**État actuel :** le dépôt contient déjà un studio de montage local et des imports médias par projet, mais pas le pipeline complet décrit ici. La PR #1048 ajoute uniquement le cadrage ; elle n’ajoute ni indexeur général, ni génération locale de musique/images/vidéo, ni séparation de pistes, ni voix locale, ni entraînement.
 
 ### Voix locale et extension connectée à la demande
 
-La voix fait partie du socle local visé : reconnaissance vocale hors ligne, transcription, commandes, synthèse vocale et interruption de la lecture. Une activation vocale permanente éventuelle doit être facultative, visible et conçue pour limiter les ressources ; l’enregistrement continu n’est pas activé par défaut.
+La voix locale fait partie du socle visé : reconnaissance vocale hors ligne, transcription, commandes, synthèse vocale et interruption de la lecture. Le registre actuel indique que la voix Web Speech dépend du navigateur et de la connexion ; il faut donc intégrer et vérifier un chemin vocal local dédié avant de présenter cette fonction comme hors ligne. Une activation vocale permanente éventuelle doit être facultative, visible et conçue pour limiter les ressources ; l’enregistrement continu n’est pas activé par défaut.
 
 La reproduction ou conversion de la voix personnelle est une fonction distincte. Elle demande un consentement spécifique, des références dont l’utilisateur détient les droits nécessaires, et une indication claire lorsqu’une voix synthétique est utilisée. Les enregistrements originaux restent séparés des rendus générés.
 
