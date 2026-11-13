@@ -18,3 +18,6 @@
 .studio-actions{display:flex;flex-wrap:wrap;gap:.8rem;margin:1rem 0}.studio-cues{padding-left:1.5rem}.studio-cues li{display:flex;flex-wrap:wrap;gap:.7rem;margin:1rem 0}.studio-cues span{flex:1 0 100%}.studio-cues label{max-width:8rem}.studio-job{border-top:1px solid #31515b;margin-top:1.5rem;padding-top:1rem}
 
 .studio-media .studio-thumbnail{width:144px;height:81px;object-fit:contain;max-height:81px;margin:0;background:#080f17}.studio-order{padding-left:1.4rem}.studio-order li{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.8rem 0}.studio-order li>span{flex:1 1 12rem;overflow-wrap:anywhere}
+
+.studio-media-tabs{display:flex;flex-wrap:wrap;gap:.6rem;margin:1rem 0}.studio-media-tabs button{flex:1 1 8rem;text-align:center}.studio-media-tabs button[aria-pressed=true]{border-color:#a2dbcc;background:#274b56}
+@media(max-width:760px){.atelier-work .studio-media-tabs button{width:auto;flex:1 1 8rem}}
