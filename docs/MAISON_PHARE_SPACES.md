@@ -169,3 +169,11 @@ Le Phare peut proposer une capacité transversale de prototypage : transformer u
 Le code généré est une entrée non fiable. L’aperçu doit s’exécuter dans un bac à sable isolé, sans accès par défaut au système de fichiers de l’hôte, aux secrets, aux comptes connectés ou au réseau. Les dépendances sont limitées à une liste contrôlée ; les scripts d’installation arbitraires sont refusés. Temps, mémoire et taille sont bornés. Toute connexion à des données réelles, tout appel réseau, déploiement ou publication demande une étape de consentement distincte.
 
 Un prompt ne peut pas assurer ces frontières : le bac à sable et les permissions doivent les appliquer techniquement. La première version devrait générer des prototypes statiques exportables ; les applications avec serveur, authentification ou base de données viendront après la mise en place d’une infrastructure d’exécution et de déploiement vérifiée.
+
+### Améliorer une application existante
+
+L’utilisateur peut demander de nouvelles fonctions ou une amélioration visuelle/fonctionnelle. Le Phare inspecte le projet autorisé, résume le changement prévu, produit un patch versionné, construit un aperçu isolé et affiche le diff ainsi que les vérifications disponibles. L’utilisateur peut accepter, corriger ou annuler ; l’état précédent reste récupérable.
+
+Pour un petit projet créé dans Le Phare, ce cycle peut être guidé dans l’interface : demande → plan → modifications → aperçu → validation → export. Pour le code du Phare ou une application connectée à un dépôt, le cycle passe par une branche ou une révision isolée, avec compilation et contrôles automatisés avant toute intégration. Les identifiants, secrets, données réelles et variables de production ne sont jamais exposés au code généré.
+
+L’amélioration en production n’est pas une mutation invisible de l’application : publier, modifier une base réelle, installer une dépendance ou changer une permission nécessite l’accord correspondant. Les outils d’auto-réparation peuvent ouvrir une proposition et montrer le diagnostic ; ils ne remplacent pas le contrôle de version, les permissions ni la possibilité de revenir en arrière.
