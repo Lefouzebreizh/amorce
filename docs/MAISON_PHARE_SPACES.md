@@ -69,3 +69,22 @@ Ces rôles sont des rôles à construire, pas des agents déjà actifs. Le contr
 - À la dernière vérification, les contrôles « Amorce », « Tests Python » et « Cohérence du dépôt » étaient réussis ; le parcours navigateur tournait encore.
 - Aucun des douze espaces n’est déclaré opérationnel par ce document.
 - Les données d’un espace ne sont jamais supposées accessibles aux autres sans règle explicite.
+
+## Concordance avec le Prompt Maître intégral
+
+Le Hall du Phare est la couche d’accueil et de navigation : il ouvre l’une des **douze pièces** listées dans le tableau. Il ne constitue pas une treizième pièce. Les ateliers sont des contextes d’usage ; ils n’impliquent pas à eux seuls qu’un moteur, un agent ou une capacité soit installé.
+
+Le prompt maître exprime une direction produit. Il ne peut pas, à lui seul, garantir la confidentialité, autoriser une caméra, imposer un délai d’annulation ou rendre un moteur local disponible. Ces garanties doivent être appliquées par le code, les permissions du système, le stockage, les connecteurs et des contrôles vérifiés.
+
+### Résoudre les règles de routage et de création
+
+- **Local d’abord, si disponible et adapté.** Le Phare ne prétend pas exécuter localement une capacité sans moteur installé et vérifié.
+- **Pas de changement silencieux de fournisseur ni de mode.** Si le moteur local est absent ou échoue, expliquer les options disponibles. Un passage vers le cloud exige l’accord préalable requis, avec fournisseur, données envoyées et coût connu lorsqu’il peut être estimé.
+- **Pas de fallback silencieux inverse.** Si un service distant échoue, proposer un moteur local seulement s’il existe ; signaler le changement et les différences possibles de capacité ou de résultat. Si aucun chemin fiable n’existe, afficher une erreur explicite.
+- **Aucune analyse permanente par défaut.** Capture, transcription, vision et enregistrement demandent une activation claire. Les données retenues pour personnaliser un modèle sont montrées à la personne et peuvent être retirées ; le profil créatif ne s’entraîne pas automatiquement sur chaque interaction.
+- **Le modèle local est une option vérifiée, pas une promesse générique.** L’installation peut demander un téléchargement initial. Avant de recommander ou distribuer un pack, vérifier licences, taille, matériel requis, conditions d’usage, mises à jour et fonctionnement réel sans réseau.
+- **Les confirmations critiques sont des contrôles applicatifs.** Une phrase dans le prompt ne suffit pas à garantir les dix secondes d’annulation, la corbeille de trente jours ou la validation d’une opération. Ces règles doivent être implémentées et vérifiées dans les chemins d’exécution.
+- **Biométrie et voix ne sont pas interchangeables.** L’accès sensible doit s’appuyer sur l’authentification de la plateforme ou un mécanisme sécurisé. Une phrase vocale ne doit pas être traitée seule comme une preuve d’identité ou un mot de passe inviolable.
+- **La sécurité ne dépend pas du secret du prompt.** Les clés, données et permissions sont protégées par l’architecture et le contrôle d’accès. L’assistant peut expliquer les capacités et limites du produit sans divulguer secrets, identifiants ou configurations sensibles.
+
+Les affirmations « 100 % local », « zéro fuite », « toujours disponible », « qualité professionnelle » et « entraînement LoRA automatique » ne peuvent être affichées qu’après tests et mesures qui les définissent précisément. L’interface doit décrire le mode réellement utilisé pour chaque tâche.
