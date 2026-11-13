@@ -127,3 +127,13 @@ Ordre conseillé :
 5. Vérifier le mode avion sur une installation complète : bloquer le réseau, effectuer une création, sauvegarder et exporter, puis confirmer qu’aucun appel distant n’a été requis.
 
 **État actuel :** cette chaîne est une exigence de conception. La PR #1048 n’ajoute ni bibliothèque multimédia, ni moteur audio/vidéo, ni indexeur, ni entraînement local.
+
+### Voix locale et extension connectée à la demande
+
+La voix fait partie du socle local visé : reconnaissance vocale hors ligne, transcription, commandes, synthèse vocale et interruption de la lecture. Une activation vocale permanente éventuelle doit être facultative, visible et conçue pour limiter les ressources ; l’enregistrement continu n’est pas activé par défaut.
+
+La reproduction ou conversion de la voix personnelle est une fonction distincte. Elle demande un consentement spécifique, des références dont l’utilisateur détient les droits nécessaires, et une indication claire lorsqu’une voix synthétique est utilisée. Les enregistrements originaux restent séparés des rendus générés.
+
+Si une machine ne peut pas exécuter une capacité localement, l’application peut proposer une extension connectée : l’utilisateur choisit le fournisseur ou le site, voit quelles données seront transmises et le coût connu avant l’envoi. Le média ne part qu’après accord. Le retour au local après échec est lui aussi annoncé ; le résultat peut différer ou la tâche peut être refusée si aucun moteur local adéquat n’est installé.
+
+L’ambition « tout à portée de la main » signifie que les espaces, les projets, les outils disponibles et leurs limites sont présentés dans une même interface. Elle ne signifie pas que chaque modèle est préinstallé ou que chaque capacité est illimitée sur toute machine.
