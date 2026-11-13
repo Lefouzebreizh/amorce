@@ -24,6 +24,7 @@ export type AgentPermission =
   | 'read_local_knowledge'
   | 'network'
   | 'provider_call'
+  | 'transmit_data'
   | 'write_draft'
   | 'write_project'
   | 'send_external'
