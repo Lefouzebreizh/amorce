@@ -26,7 +26,7 @@ export default function Conversation({ workspace, selected, blocked, save, local
     const w = window as SpeechWindow;
     // Capability detection is intentionally client-only.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSupport(!!(w.SpeechRecognition || w.webkitSpeechRecognition));
+    setSupport(window.isSecureContext && !!(w.SpeechRecognition || w.webkitSpeechRecognition));
     try {
       const hash = new URLSearchParams(location.hash.slice(1));
       const key = hash.get('acces');
@@ -40,7 +40,7 @@ export default function Conversation({ workspace, selected, blocked, save, local
   function dictate() {
     if (voice) { recognition.current?.stop(); return; }
     const Constructor = (window as SpeechWindow).SpeechRecognition || (window as SpeechWindow).webkitSpeechRecognition;
-    if (!Constructor) return;
+    if (!Constructor || !window.isSecureContext) return;
     const r = new Constructor(); recognition.current = r;
     r.lang = 'fr-FR'; r.continuous = true; r.interimResults = true;
     r.onresult = event => {
@@ -84,7 +84,7 @@ export default function Conversation({ workspace, selected, blocked, save, local
   }
   return <section className="phare-conversation" aria-label="Conversation avec Le Phare">
     <div className="conversation-heading"><div><p className="atelier-kicker">Un seul fil pour créer</p><h2>On fait quoi, ensemble ?</h2></div><span>Projet · {project.title}</span></div>
-    <div className="conversation-starters"><button disabled={busy || voice || blocked} onClick={() => setDraft(`Reprends ${project.title}`)}>Reprendre mon morceau</button><button disabled={busy || voice || blocked} onClick={() => setDraft('Aide-moi à écrire les paroles. Fais une première proposition à partir de mon projet.')}>Écrire avec moi</button><button disabled={busy || voice || blocked} onClick={() => { openProduction(); setDraft('Prépare le clip de ce morceau : direction visuelle, déroulé des plans et chiffrage avant toute dépense.'); }}>Préparer mon clip</button></div>
+    <div className="conversation-starters"><button disabled={busy || voice || blocked} onClick={() => setDraft(`Reprends ${project.title}`)}>Reprendre mon morceau</button><button disabled={busy || voice || blocked} onClick={() => setDraft(ready ? 'Aide-moi à écrire les paroles. Fais une première proposition à partir de mon projet.' : 'note : ')}>{ready ? 'Écrire avec moi' : 'Garder une idée'}</button><button disabled={busy || voice || blocked} onClick={() => { openProduction(); setDraft('prépare mon clip'); }}>Préparer mon clip</button></div>
     <div className="conversation-messages" role="log" aria-label="Notre échange" aria-live="polite" aria-relevant="additions text">
       {!messages.length && <div className="conversation-welcome"><p>Dis-moi ce que tu veux créer. Tu peux écrire, ou dicter puis relire avant d’envoyer.</p><p>Essaie « note : mon idée », « reprends Le Phare », « cherche : un mot » ou « prépare mon clip ».</p></div>}
       {messages.map(m => <article key={m.id} className={`conversation-message conversation-${m.role}`}><header><strong>{m.role === 'user' ? 'Toi' : 'Le Phare'}</strong><small>{workspace.projects.find(p => p.id === m.projectId)?.title || 'Projet archivé'}</small></header><p>{m.text}</p>{m.sources?.length ? <ul>{m.sources.map(s => <li key={s.uri}><a href={s.uri} target="_blank" rel="noopener noreferrer">{s.title}</a></li>)}</ul> : null}{m.role === 'assistant' && <button onClick={() => read(m)}>Écouter cette réponse</button>}</article>)}<div ref={end} />
@@ -94,9 +94,10 @@ export default function Conversation({ workspace, selected, blocked, save, local
     <details className="conversation-capabilities"><summary>Ce que je peux faire ici</summary>{CAPABILITIES.map(c => <p key={c.id}><strong>{c.name} · {c.state}</strong><br/>{c.proof}<br/><small>{c.cost}. {c.excludes}</small></p>)}</details>
     <form className="conversation-compose" onSubmit={e => { e.preventDefault(); void send(); }}>
       <label htmlFor="phare-message">Parle-moi de ton idée</label><textarea id="phare-message" value={draft} onChange={e => setDraft(e.target.value)} rows={3} maxLength={10000} disabled={busy || voice} placeholder="On reprend Le Phare. Aide-moi à…" onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); void send(); } }} />
+      {!support && <p className="conversation-status">Pour parler depuis Android : touche la zone de saisie, puis le micro du clavier de ton téléphone. Tu relis la dictée avant de l’envoyer.</p>}
       {interim && <p className="conversation-interim">{interim}</p>}
       <div className="conversation-controls"><button type="button" aria-pressed={voice} disabled={!support || busy || blocked} onClick={dictate}>{voice ? 'Arrêter la dictée' : '● Dicter'}</button><button className="atelier-primary" disabled={busy || voice || blocked || !draft.trim()}>{busy ? 'Le Phare prépare sa réponse…' : 'Envoyer au Phare'}</button>{busy && <button type="button" onClick={() => controller.current?.abort()}>Arrêter l’envoi</button>}</div>
-      <details><summary>Recherche web et voix</summary><button type="button" disabled={busy || voice || blocked || !draft.trim() || !ready || !unlocked} onClick={() => void send(true)}>Chercher cette demande sur le web</button><button type="button" onClick={() => window.speechSynthesis?.cancel()}>Arrêter la lecture</button><p>La recherche renvoie ses sources et ne change pas ton projet. {support ? 'La dictée peut utiliser le service vocal de ton navigateur.' : 'Dictée indisponible ici : essaie Chrome ou la dictée du clavier de ton téléphone.'}</p></details>
+      <details><summary>Recherche web et voix</summary><button type="button" disabled={busy || voice || blocked || !draft.trim() || !ready || !unlocked} onClick={() => void send(true)}>Chercher cette demande sur le web</button><button type="button" onClick={() => window.speechSynthesis?.cancel()}>Arrêter la lecture</button><p>La recherche renvoie ses sources et ne change pas ton projet. {support ? 'La dictée peut utiliser le service vocal de ton navigateur.' : 'Pour dicter sur ce lien Wi-Fi, touche la zone de texte puis le micro du clavier Android. Le micro intégré à la page nécessite HTTPS.'}</p></details>
       <small>Tu relis la dictée avant l’envoi. Les commandes internes ne contactent aucun fournisseur. Pour un échange IA, Gemini reçoit ce message, les 12 derniers messages, tes préférences et des extraits utiles de tes projets. Aucune image ni piste audio n’est envoyée par ce chat. Les 100 derniers messages sont conservés : exporte régulièrement.</small>
       {error && <p role="alert" className="conversation-error">{error}</p>}
     </form>

@@ -10,7 +10,13 @@ export type Entry = {
 };
 export type PhareProject = { id: string; title: string; intention: string; next: string; entries: Entry[] };
 export type Workspace = { version: 1; projects: PhareProject[]; conversation?: ChatMessage[]; profile?: string; lastProjectId?: string };
-export const uid = () => crypto.randomUUID();
+export const uid = (): string => {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  // Android over the private Wi-Fi link exposes getRandomValues, but not randomUUID.
+  const bytes = crypto.getRandomValues(new Uint8Array(16)); bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128;
+  const h = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+};
 export function initialWorkspace(): Workspace {
   return { version: 1, projects: ['Le Phare', 'Ça va', 'Les coups de mou'].map(title => ({
     id: uid(), title, intention: '', next: 'Choisir les premières phrases de ce morceau.', entries: [],

@@ -17,6 +17,7 @@ test('internal search changes scope only when asked and production command never
   assert.match(routeLocalCommand(w, w.projects[0].id, 'cherche : ancre')!.reply, /Aucun résultat/);
   assert.match(routeLocalCommand(w, w.projects[0].id, 'cherche dans mes projets : ancre')!.reply, /Ça va[\s\S]*Mes mots[\s\S]*Carnet/);
   const production = routeLocalCommand(w, w.projects[0].id, 'prépare mon clip')!;
+  assert.equal(routeLocalCommand(w, w.projects[0].id, 'fais mon clip')!.production, true);
   assert.equal(production.production, true); assert.equal(production.workspace, w); assert.match(production.reply, /Aucune génération/);
   assert.equal(routeLocalCommand(w, w.projects[0].id, 'Écris toute la chanson'), null);
   assert.ok(CAPABILITIES.filter(c => ['produce','devices','assistant'].includes(c.id)).every(c => c.state === 'À connecter'));

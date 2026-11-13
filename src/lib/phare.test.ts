@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { addEntry, initialWorkspace, mergeWorkspace, parseWorkspace, searchEntries } from './phare.ts';
+import { addEntry, uid, initialWorkspace, mergeWorkspace, parseWorkspace, searchEntries } from './phare.ts';
 
 test('variant preserves original, provenance and project boundaries', () => {
   const workspace = initialWorkspace();
@@ -33,4 +33,11 @@ test('search ignores accents and keeps rejected entries retrievable', () => {
   project.entries[0].status = 'Écarté';
   assert.equal(searchEntries(project, 'ecouter ecarte').length, 1);
   assert.equal(searchEntries(project, 'autre').length, 0);
+});
+
+test('IDs remain cryptographically random on a private HTTP mobile link', () => {
+  const descriptor = Object.getOwnPropertyDescriptor(crypto, 'randomUUID');
+  Object.defineProperty(crypto, 'randomUUID', { value: undefined, configurable: true });
+  try { const ids = new Set(Array.from({ length: 100 }, () => uid())); assert.equal(ids.size, 100); for (const id of ids) assert.match(id, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/); }
+  finally { if (descriptor) Object.defineProperty(crypto, 'randomUUID', descriptor); else Reflect.deleteProperty(crypto, 'randomUUID'); }
 });

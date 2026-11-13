@@ -78,6 +78,12 @@ jobs:
         if: ${{ !cancelled() }}
         run: npm run lint
 
+      # Le Studio local exerce un vrai rendu, sans remplacer FFmpeg par un mock.
+      - name: Installer FFmpeg pour le Studio local
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+
       - name: Tester
         if: ${{ !cancelled() }}
         run: npm test
