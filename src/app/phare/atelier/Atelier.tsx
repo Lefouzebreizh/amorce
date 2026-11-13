@@ -122,13 +122,13 @@ export default function Atelier() {
               setSelected(result.selected); if (result.production) setProduction(true); return true;
             }} save={(message, answer) => {
               try {
-                const declinedMemory = /\\b(?:ne\\s+)?(?:mémorise pas|enregistre pas|garde pas en mémoire|ne me le rappelle pas)\\b/i.test(message);
-                const explicitMemoryRequest = !declinedMemory && /\\b(?:mémorise|mémoriser|souviens[- ]toi|garde .{0,80}en mémoire|enregistre .{0,80}comme préférence|ajoute .{0,80}à mes préférences|n['’]oublie pas de retenir)\\b/i.test(message);
+                const declinedMemory = /\b(?:ne\s+)?(?:mémorise pas|enregistre pas|garde pas en mémoire|ne me le rappelle pas)\b/i.test(message);
+                const explicitMemoryRequest = !declinedMemory && /\b(?:mémorise|mémoriser|souviens[- ]toi|garde .{0,80}en mémoire|enregistre .{0,80}comme préférence|ajoute .{0,80}à mes préférences|n['’]oublie pas de retenir)\b/i.test(message);
                 const withheldMemory = answer.actions.some(action => action.kind === 'remember') && !explicitMemoryRequest;
                 const approvedActions = answer.actions.filter(action => action.kind !== 'remember' || explicitMemoryRequest);
                 const result = applyAssistantActions(workspace, project.id, approvedActions);
                 const assistantReply = withheldMemory
-                  ? answer.reply + '\\n\\nJe n’ai pas modifié tes préférences. Demande-moi explicitement de les retenir si tu le souhaites.'
+                  ? answer.reply + '\n\nJe n’ai pas modifié tes préférences. Demande-moi explicitement de les retenir si tu le souhaites.'
                   : answer.reply;
                 const created = new Date().toISOString();
                 const conversation = [...(workspace.conversation || []),
