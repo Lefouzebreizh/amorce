@@ -88,3 +88,42 @@ Le prompt maître exprime une direction produit. Il ne peut pas, à lui seul, ga
 - **La sécurité ne dépend pas du secret du prompt.** Les clés, données et permissions sont protégées par l’architecture et le contrôle d’accès. L’assistant peut expliquer les capacités et limites du produit sans divulguer secrets, identifiants ou configurations sensibles.
 
 Les affirmations « 100 % local », « zéro fuite », « toujours disponible », « qualité professionnelle » et « entraînement LoRA automatique » ne peuvent être affichées qu’après tests et mesures qui les définissent précisément. L’interface doit décrire le mode réellement utilisé pour chaque tâche.
+
+## Atelier multimédia local : matière, analyse et recomposition
+
+L’objectif est que l’utilisateur puisse créer et monter localement à partir de ses propres images, vidéos, enregistrements, prises de voix et pistes instrumentales. Cette capacité se construit comme un pipeline de production, pas comme un entraînement unique qui rendrait l’application capable de « tout faire ».
+
+### Distinguer quatre opérations
+
+1. **Inventorier et indexer la matière.** Lire les fichiers depuis l’espace local choisi, calculer empreintes et métadonnées, créer des vignettes, formes d’onde, transcriptions ou descriptions lorsque les outils locaux disponibles le permettent. L’index conserve le chemin, la provenance, la date, les droits déclarés et le lien avec l’original. Les analyses sont des suggestions révisables.
+2. **Découper et caractériser.** Repérer scènes, plans, silences, tempo, sections, voix et éléments sonores. La séparation de sources audio produit des estimations avec artefacts possibles ; une piste séparée ne doit pas être présentée comme la prise isolée originale si elle ne l’est pas.
+3. **Réutiliser et transformer.** Composer une banque de médias, boucles, prises, instruments et plans recherchables. L’utilisateur peut demander de retrouver, comparer, recadrer, nettoyer, assembler ou remixer les éléments sélectionnés. L’édition doit préserver les originaux et enregistrer les modifications comme des versions ou opérations non destructives.
+4. **Générer et monter.** Utiliser les moteurs locaux installés pour les transformations ou générations réellement prises en charge, puis assembler sur une timeline avec aperçu et export local. La génération d’image, de musique ou de vidéo est une capacité distincte de l’indexation et du montage ; chaque moteur a ses propres limites, coûts matériels, droits et niveaux de qualité.
+
+### Rôle de l’apprentissage personnalisé
+
+L’application peut apprendre le profil créatif à partir de préférences confirmées, de productions choisies et de corrections explicites. Cela ne nécessite pas automatiquement un LoRA. Un adaptateur ou LoRA n’est entraîné qu’après opt-in, sélection/aperçu des données, contrôle de licence, mesure du matériel et possibilité de supprimer ou reconstruire le profil. Les modèles de base restent distincts des données et adaptations personnelles.
+
+### Chaîne locale attendue
+
+- Import depuis les dossiers choisis ; aucune exploration globale du disque par défaut.
+- Analyse en arrière-plan contrôlable, avec progression, pause, reprise et annulation.
+- Bibliothèque locale consultable par type, projet, personne, instrument, ambiance, date et texte transcrit lorsque disponible.
+- Sélection explicite de la matière source ; aucune réutilisation automatique de médias privés dans un nouveau projet.
+- Projet de montage non destructif, historique des opérations et versions ; originaux conservés.
+- Export sur l’appareil avec format, résolution, durée, espace disque estimé et limites annoncés.
+- Mode hors ligne vérifié après téléchargement des moteurs ; les modèles doivent être présents localement, licenciés pour l’usage prévu et compatibles avec la machine.
+
+### Réalisme matériel et ordre de construction
+
+Le montage classique, l’organisation des assets, les métadonnées, les timelines et certains traitements déterministes peuvent tourner localement avec des besoins modestes à moyens. L’analyse multimodale est plus coûteuse ; la génération vidéo et l’entraînement de modèles peuvent demander beaucoup de mémoire, de stockage, de temps et de puissance graphique. Le Phare doit mesurer les capacités disponibles et proposer une qualité ou une résolution réaliste, plutôt que promettre une fluidité identique sur toutes les machines.
+
+Ordre conseillé :
+
+1. Construire la bibliothèque multimédia locale et le montage non destructif, sans modèle génératif.
+2. Ajouter l’analyse locale des médias, la recherche et des transformations réversibles ; vérifier chaque outil sur des fichiers de référence.
+3. Ajouter séparation audio et générations locales ciblées, avec rendu, licences et limites documentés.
+4. Ajouter génération vidéo locale et adaptations personnelles après tests de compatibilité, de qualité, de temps et d’espace disque.
+5. Vérifier le mode avion sur une installation complète : bloquer le réseau, effectuer une création, sauvegarder et exporter, puis confirmer qu’aucun appel distant n’a été requis.
+
+**État actuel :** cette chaîne est une exigence de conception. La PR #1048 n’ajoute ni bibliothèque multimédia, ni moteur audio/vidéo, ni indexeur, ni entraînement local.
