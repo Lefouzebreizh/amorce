@@ -122,11 +122,18 @@ export default function Atelier() {
               setSelected(result.selected); if (result.production) setProduction(true); return true;
             }} save={(message, answer) => {
               try {
-                const result = applyAssistantActions(workspace, project.id, answer.actions);
+                const declinedMemory = /\\b(?:ne\\s+)?(?:mémorise pas|enregistre pas|garde pas en mémoire|ne me le rappelle pas)\\b/i.test(message);
+                const explicitMemoryRequest = !declinedMemory && /\\b(?:mémorise|mémoriser|souviens[- ]toi|garde .{0,80}en mémoire|enregistre .{0,80}comme préférence|ajoute .{0,80}à mes préférences|n['’]oublie pas de retenir)\\b/i.test(message);
+                const withheldMemory = answer.actions.some(action => action.kind === 'remember') && !explicitMemoryRequest;
+                const approvedActions = answer.actions.filter(action => action.kind !== 'remember' || explicitMemoryRequest);
+                const result = applyAssistantActions(workspace, project.id, approvedActions);
+                const assistantReply = withheldMemory
+                  ? answer.reply + '\\n\\nJe n’ai pas modifié tes préférences. Demande-moi explicitement de les retenir si tu le souhaites.'
+                  : answer.reply;
                 const created = new Date().toISOString();
                 const conversation = [...(workspace.conversation || []),
                   { id: uid(), role: 'user' as const, text: message, created, projectId: project.id },
-                  { id: uid(), role: 'assistant' as const, text: answer.reply, created, projectId: result.selected, ...(answer.sources?.length ? { sources: answer.sources } : {}) },
+                  { id: uid(), role: 'assistant' as const, text: assistantReply, created, projectId: result.selected, ...(answer.sources?.length ? { sources: answer.sources } : {}) },
                 ].slice(-100);
                 if (!commit({ ...result.workspace, conversation, lastProjectId: result.selected }, result.changes.length ? result.changes.join(' · ') + '. Tu peux annuler cette action.' : 'Échange enregistré.')) return false;
                 setSelected(result.selected); if (result.slideshow) setProduction(true); return true;
