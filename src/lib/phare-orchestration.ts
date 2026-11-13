@@ -232,6 +232,20 @@ export function validateOrchestrationPlan(
   ) {
     throw new Error('Estimation de coût invalide.');
   }
+  if (!plan.mayCost && plan.estimatedCostMinor !== null && plan.estimatedCostMinor > 0) {
+    throw new Error('Le plan indique un coût sans le déclarer.');
+  }
+  if (plan.currency !== null && !/^[A-Z]{3}$/.test(plan.currency)) {
+    throw new Error('Code de devise invalide.');
+  }
+  if (plan.mayCost && plan.estimatedCostMinor !== null && !plan.currency) {
+    throw new Error('La devise du coût estimé est obligatoire.');
+  }
+  for (const ceiling of [task.costCeilingMinor, task.approval.costCeilingMinor]) {
+    if (ceiling !== null && ceiling !== undefined && (!Number.isSafeInteger(ceiling) || ceiling < 0)) {
+      throw new Error('Plafond de coût invalide.');
+    }
+  }
   if (
     plan.estimatedCostMinor !== null &&
     task.costCeilingMinor !== null &&
@@ -253,13 +267,11 @@ export function assertPlanExecutable(
 
   const agents = new Map(definitions.map((agent) => [agent.id, agent]));
   const requiredApprovalScopes = new Set<AgentPermission>();
-  let usesRemote = false;
 
   for (const step of plan.steps) {
     const agent = agents.get(step.agentId);
     if (!agent) throw new Error('Agent introuvable.');
     const remote = isRemoteAgent(agent, step);
-    usesRemote ||= remote;
 
     if (remote) {
       requiredApprovalScopes.add('transmit_data');
@@ -276,7 +288,9 @@ export function assertPlanExecutable(
     }
 
     for (const permission of step.permissions) {
-      if (HIGH_IMPACT_PERMISSIONS.includes(permission)) requiredApprovalScopes.add(permission);
+      if (REMOTE_PERMISSIONS.includes(permission) || HIGH_IMPACT_PERMISSIONS.includes(permission)) {
+        requiredApprovalScopes.add(permission);
+      }
     }
   }
 
