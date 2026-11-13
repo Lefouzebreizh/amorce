@@ -151,3 +151,21 @@ Un futur plan IA devrait référencer uniquement les identifiants d’assets imp
 Ne pas exécuter directement du texte généré comme commande FFmpeg ou shell. Si FFmpeg est envisagé ultérieurement pour une version native, le construire à partir d’un plan validé, avec arguments échappés, liste de fichiers autorisés et vérification de licence. Un JSON de montage n’est pas en soi une preuve de sécurité ni une création magique : il orchestre ce que le moteur installé sait réellement rendre.
 
 Des boucles audio ou visuelles préinstallées peuvent enrichir l’assemblage léger, sous réserve de droits de redistribution vérifiés et d’une attribution conservée. La composition MIDI avec banque de sons produit un rendu synthétisé ; elle ne remplace pas une prise réelle ni une génération audio chantée. Les banques et modèles doivent afficher leur licence, leur taille et leurs exigences matérielles.
+
+## Création de petits sites et outils par la conversation
+
+Le Phare peut proposer une capacité transversale de prototypage : transformer une demande en petite application web, page ou outil interactif, afficher un aperçu, recevoir des corrections, conserver les versions et exporter le projet. Elle peut être utilisée depuis le Quartier Général, l’Atelier des Rêves ou un projet dédié, sans créer une nouvelle pièce obligatoire.
+
+### Premier périmètre réaliste
+
+- Générer des sites statiques et petits outils (page de présentation, formulaire local, comparateur, quiz, tableau de bord simple).
+- Montrer les fichiers créés et un aperçu isolé ; laisser l’utilisateur demander des changements et comparer les versions.
+- Exporter un dossier ou une archive réutilisable ; garder le projet éditable et la provenance des propositions.
+- Permettre une IA locale si elle est installée, ou une IA distante choisie après indication du fournisseur, des données transmises et du coût connu.
+- Distinguer prototype local, application nécessitant un serveur, et site réellement publié.
+
+### Exécution sûre
+
+Le code généré est une entrée non fiable. L’aperçu doit s’exécuter dans un bac à sable isolé, sans accès par défaut au système de fichiers de l’hôte, aux secrets, aux comptes connectés ou au réseau. Les dépendances sont limitées à une liste contrôlée ; les scripts d’installation arbitraires sont refusés. Temps, mémoire et taille sont bornés. Toute connexion à des données réelles, tout appel réseau, déploiement ou publication demande une étape de consentement distincte.
+
+Un prompt ne peut pas assurer ces frontières : le bac à sable et les permissions doivent les appliquer techniquement. La première version devrait générer des prototypes statiques exportables ; les applications avec serveur, authentification ou base de données viendront après la mise en place d’une infrastructure d’exécution et de déploiement vérifiée.
