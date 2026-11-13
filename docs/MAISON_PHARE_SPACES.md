@@ -141,3 +141,13 @@ La reproduction ou conversion de la voix personnelle est une fonction distincte.
 Si une machine ne peut pas exécuter une capacité localement, l’application peut proposer une extension connectée : l’utilisateur choisit le fournisseur ou le site, voit quelles données seront transmises et le coût connu avant l’envoi. Le média ne part qu’après accord. Le retour au local après échec est lui aussi annoncé ; le résultat peut différer ou la tâche peut être refusée si aucun moteur local adéquat n’est installé.
 
 L’ambition « tout à portée de la main » signifie que les espaces, les projets, les outils disponibles et leurs limites sont présentés dans une même interface. Elle ne signifie pas que chaque modèle est préinstallé ou que chaque capacité est illimitée sur toute machine.
+
+### Plan de montage structuré plutôt que commandes libres
+
+Le code du studio possède déjà des objets typés pour les médias sources (`MediaAsset`), les clips et transitions (`Clip`), les projets et la timeline (`src/lib/types.ts`, `src/lib/timeline.ts`). L’assistant peut préparer un plan structuré correspondant à ces objets, puis le faire valider avant de l’appliquer.
+
+Un futur plan IA devrait référencer uniquement les identifiants d’assets importés dans le projet et des opérations autorisées : points d’entrée/sortie, vitesse, transition, mouvement, volume, sous-titres et pistes. Un validateur borne les durées, tailles, transitions et chemins avant le rendu. Les exports locaux existants utilisent le mixage hors ligne et l’encodage image par image par les API du navigateur (`src/lib/audioHorsLigne.ts`, `src/lib/exportHorsLigne.ts`).
+
+Ne pas exécuter directement du texte généré comme commande FFmpeg ou shell. Si FFmpeg est envisagé ultérieurement pour une version native, le construire à partir d’un plan validé, avec arguments échappés, liste de fichiers autorisés et vérification de licence. Un JSON de montage n’est pas en soi une preuve de sécurité ni une création magique : il orchestre ce que le moteur installé sait réellement rendre.
+
+Des boucles audio ou visuelles préinstallées peuvent enrichir l’assemblage léger, sous réserve de droits de redistribution vérifiés et d’une attribution conservée. La composition MIDI avec banque de sons produit un rendu synthétisé ; elle ne remplace pas une prise réelle ni une génération audio chantée. Les banques et modèles doivent afficher leur licence, leur taille et leurs exigences matérielles.
