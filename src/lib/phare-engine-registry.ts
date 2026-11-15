@@ -105,7 +105,7 @@ export function validateEngineRegistry(engines: readonly EngineManifest[]): void
     memory(engine.minimumVramMiB, 'VRAM requise', true);
     memory(engine.modelSizeMiB, 'Taille du modèle', true);
     strings(engine.locales, 'Langues');
-    if (engine.locales.some(locale => !LOCALE.test(locale))) throw new Error('Langue moteur invalide.');
+    if (engine.locales.some((locale: string) => !LOCALE.test(locale))) throw new Error('Langue moteur invalide.');
     const q = engine.qualification;
     if (!q || !['tested', 'untested'].includes(q.status)) throw new Error('Qualification moteur invalide.');
     if (q.testedAt !== undefined && (typeof q.testedAt !== 'string' || !Number.isFinite(Date.parse(q.testedAt)))) {
