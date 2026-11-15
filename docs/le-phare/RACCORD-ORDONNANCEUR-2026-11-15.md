@@ -47,6 +47,10 @@ PHARE_SCHEDULER_REFERENCE=/chemin/prive/ordonnanceur.py python3 -m unittest disc
 
 La première vérification de ce lot a été exécutée sous Linux cloud avec la copie byte-identique privée : six tests TypeScript, dont soumission/attente/relecture réelles et deuxième soumission dédupliquée, et neuf tests Python réussis, sans test ignoré. Cette preuve n’est pas un essai Windows de ce nouveau pont ; l’exécution Windows antérieure du pipeline voisin ne lui est pas attribuée. Le raccord n’est accessible par aucun bouton du produit.
 
+## Contrôle Windows supplémentaire
+
+Les fichiers du commit `67fe7236fe79f2f734e41696320a4a3cf4c481b3` ont ensuite été récupérés dans un dossier temporaire isolé sur Windows et testés avec la source locale de l’ordonnanceur : empreinte identique à la référence épinglée. Les six tests TypeScript passent, dont soumission réelle et déduplication. Les neuf tests Python du pont donnent huit réussites et un test ignoré : le cas FIFO ne s’applique pas à cette plateforme et reste vérifié sous Linux. Aucun service ni fichier applicatif en cours n’a été changé. Ce contrôle complète la première preuve Linux ; il ne constitue pas une intégration à l’interface.
+
 ## Ce qui reste à intégrer
 
 Ce lot reste isolé : pas de bouton, transport applicatif, authentification native, corpus personnel ou modèle activé. Les paramètres JSON d’un pack n’accordent aucun droit. Pour élargir les capacités, réutiliser l’ordonnanceur et ajouter des handlers relus, leurs ressources et leurs preuves, un contrôle des dépendances et une politique persistante de récupération. Ne pas annoncer ces futures capacités comme disponibles à partir de l’audit synthétique.

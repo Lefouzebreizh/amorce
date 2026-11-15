@@ -80,6 +80,10 @@ python3 scripts/phare-evaluation-fr/evaluation_fr.py run-ollama \
 
 Métadonnées conservées : hash canonique du corpus, hash du prompt système, version de normalisation, modèle demandé et rapporté, révision déclarée, version runtime déclarée, matériel déclaré avec valeurs inconnues explicites, paramètres, début/fin UTC, durée monotone par cas et compteurs Ollama disponibles. Le contenu de réflexion du modèle n’est pas enregistré. Les sorties réelles restent dans un dossier privé choisi par l’opérateur et ne doivent pas être publiées avec des données ou chemins personnels.
 
+## Contrôle Windows et fermeture des erreurs HTTP
+
+Le banc a aussi été exécuté sous Windows sur une copie isolée. Un avertissement de nettoyage d’erreur HTTP y a révélé une réponse à fermer explicitement : le transport ferme désormais les erreurs HTTP et un test contrôle la fermeture du corps, l’unique appel et les cas suivants laissés manquants. Le test direct de refus de redirection ferme également son objet d’erreur. La suite comporte désormais 23 tests ; aucun moteur n’est appelé par ces tests.
+
 ## Comparer base et adaptateur
 
 Conserver exactement le même corpus, prompt système, normalisation, paramètres et protocole. Relever les versions et le matériel pour chaque condition. Garder les erreurs et les cas manquants. Ne pas changer les attendus après avoir lu la réponse d’un candidat. Présenter les résultats par cas et catégorie avant toute synthèse ; un gain global peut masquer une régression sur citations ou abstention.

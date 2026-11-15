@@ -220,8 +220,26 @@ class EvaluationFrTests(unittest.TestCase):
 
     def test_redirects_are_refused_without_following_remote_location(self):
         request = bench.urlrequest.Request("http://127.0.0.1:11434/api/generate")
-        with self.assertRaises(HTTPError):
+        with self.assertRaises(HTTPError) as refused:
             bench.NoRedirect().redirect_request(request, None, 302, "Moved", {}, "http://example.com/")
+        refused.exception.close()
+
+    def test_http_error_closes_response_body_and_stops_the_series(self):
+        body = io.BytesIO(b"synthetic error body")
+        failure = HTTPError("http://127.0.0.1:11434/api/generate", 503, "fixture", {}, body)
+        class ErrorOpener:
+            calls = 0
+            def open(self, request, timeout):
+                self.calls += 1
+                raise failure
+        fake = ErrorOpener()
+        args = argparse.Namespace(allow_loopback=True, local_model_only=True, endpoint="http://127.0.0.1:11434", model="fixture-local:1", model_revision="fixture", runtime_version="fixture", hardware_json="unused", label="MOCK ONLY", timeout=1)
+        with patch.object(bench, "read_json", return_value={"source": "fixture"}), patch.object(bench.urlrequest, "build_opener", return_value=fake):
+            run = bench.run_ollama(self.corpus, args)
+        self.assertTrue(body.closed)
+        self.assertEqual(fake.calls, 1)
+        self.assertEqual(run["records"][0]["status"], "error")
+        self.assertEqual(bench.score(self.corpus, run)["statuses"]["missing"], 14)
 
 
 if __name__ == "__main__":

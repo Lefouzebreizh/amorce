@@ -295,6 +295,8 @@ def run_ollama(corpus: dict, args) -> dict:
                 raise ValueError("Modèle rapporté différent du modèle demandé ou absent ; aucune attribution de réussite.")
             record.update(status="ok", response=output["response"], model_reported=output.get("model"), runtime_metrics={k: output[k] for k in ("total_duration", "load_duration", "prompt_eval_count", "eval_count", "eval_duration") if k in output})
         except (OSError, ValueError) as exc:
+            if isinstance(exc, urlerror.HTTPError):
+                exc.close()
             record.update(status="error", error=f"{type(exc).__name__}: {str(exc)[:400]}")
         record["duration_ms"] = round((time.perf_counter() - started) * 1000, 3)
         run["records"].append(record)
