@@ -1,0 +1,10 @@
+{
+  "source": "exemple à remplacer par le relevé de la machine qui exécute le moteur",
+  "cpu": null,
+  "ram_total_mib": null,
+  "ram_free_mib_before_run": null,
+  "gpu": null,
+  "vram_total_mib": null,
+  "os": null,
+  "other_workloads": null
+}

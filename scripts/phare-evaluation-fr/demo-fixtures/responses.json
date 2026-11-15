@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "run_kind": "fixture_demo",
+  "corpus_sha256": "9c85f89db9efba5c4cbb73efd443464a1e729c07eef464be4de41f2b5c076560",
+  "metadata": {
+    "label": "Sorties fabriquées pour éprouver le scorer ; aucun moteur ni aucune durée mesurés."
+  },
+  "records": [
+    {
+      "id": "comprehension-01",
+      "status": "ok",
+      "response": {
+        "answer": "5",
+        "abstain": false,
+        "citations": []
+      },
+      "duration_ms": null
+    },
+    {
+      "id": "comprehension-02",
+      "status": "ok",
+      "response": {
+        "answer": "Maël",
+        "abstain": false,
+        "citations": []
+      },
+      "duration_ms": null
+    },
+    {
+      "id": "comprehension-03",
+      "status": "ok",
+      "response": {
+        "answer": "cahier ; enveloppe",
+        "abstain": false,
+        "citations": []
+      },
+      "duration_ms": null
+    },
+    {
+      "id": "citation-01",
+      "status": "ok",
+      "response": {
+        "answer": "9 h 30",
+        "abstain": false,
+        "citations": [
+          {
+            "source_id": "S99",
+            "quote": "Citation inventée."
+          }
+        ]
+      },
+      "duration_ms": null
+    },
+    {
+      "id": "citation-02",
+      "status": "error",
+      "error": "FIXTURE : moteur absent, aucun appel effectué.",
+      "duration_ms": null
+    },
+    {
+      "id": "citation-03",
+      "status": "ok",
+      "response": "FIXTURE : pas du JSON.",
+      "duration_ms": null
+    },
+    {
+      "id": "consignes-01",
+      "status": "unknown",
+      "response": null,
+      "duration_ms": null
+    }
+  ]
+}
