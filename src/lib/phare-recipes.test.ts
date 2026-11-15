@@ -70,8 +70,8 @@ test('format, schema version, method revision and externally allowed capabilitie
   assert.throws(() => importRecipe('{', capabilities), /JSON/);
 });
 
-test('executable fields, endpoint URLs, secrets, model IDs and inline input values cannot enter a pack', () => {
-  for (const extra of [{ code: 'throw new Error()' }, { endpoint: 'https://example.invalid/run' }, { model: 'model-id' }, { permissions: ['network'] }, { token: 'private' }, { project: { text: 'private' } }]) {
+test('executable fields, endpoints, secrets, model IDs and inline input values cannot enter a pack', () => {
+  for (const extra of [{ code: 'throw new Error()' }, { endpoint: '/fixture-endpoint' }, { model: 'model-id' }, { permissions: ['network'] }, { token: 'private' }, { project: { text: 'private' } }]) {
     assert.throws(() => validateRecipe({ ...recipe(), ...extra }, capabilities), /Champ/);
     const method = recipe();
     method.steps[0] = { ...method.steps[0], ...extra };
