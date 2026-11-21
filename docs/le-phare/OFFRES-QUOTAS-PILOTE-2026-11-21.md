@@ -1,0 +1,75 @@
+# Offre hybride — pilote non activé
+
+Décision autorisée dans la conversation du 21 novembre : gratuit utile pour écrire,
+organiser, préparer paroles/scénarios et récupérer ses fichiers ; petit essai de
+production musique/vidéo puis offre Création avec enveloppe et recharges choisies.
+Le quota suspend les nouvelles générations concernées, jamais tout le Phare.
+Pas de prix, nombre de crédits, renouvellement ni durée d'essai publiés ici.
+L'essai connecté doit être distinct du socle local sans compte ni transfert.
+
+## Code livré dans cette branche
+
+- `scripts/phare-production/credits.py` : registre SQLite persistant, crédits
+  attribués par événement idempotent, réservations atomiques et isolation par compte.
+- `worker.py` : contrôle avant fournisseur derrière
+  `PHARE_CREATION_QUOTAS_ENABLED=true`. Les garde-fous de budget existants restent.
+- Le conteneur embarque le registre. Aucune activation/dépense/déploiement exécuté.
+- Échec fournisseur ou délai dépassé : réservation maintenue pour réconciliation
+  par opérateur. Une réservation maintenue n'est pas une dette supplémentaire.
+  Seul un opérateur peut la libérer après vérification ; ne jamais la libérer
+  automatiquement après un timeout. Le pilote ne facture aucune recharge automatique.
+- L'identifiant de production lie le compte, le tarif et l'empreinte du plan +
+  dossier de sortie. Une production consommée ne se relance pas sous le même ID.
+
+## Configuration privée, réservée au serveur
+
+`PHARE_CREDITS_DB` doit viser une base sur disque local persistant, accessible au
+seul utilisateur du worker. SQLite n'est pas destiné ici à plusieurs machines ni
+à un partage réseau. `PHARE_JOB_CREDIT_UNITS` est un entier positif décidé par un
+ordonnanceur de confiance pour ce travail ; ce n'est pas un coût fournisseur ni
+un tarif client. `--credit-account` vient de l'identité vérifiée, `--credit-job`
+est un identifiant stable fourni par le serveur. Ne jamais exposer ces options
+comme des champs libres du navigateur.
+
+Les méthodes `grant` et `finish(..., 'released')` sont privées : aucun endpoint
+public n'est ajouté. Une attribution de crédits doit provenir d'un événement de
+paiement vérifié ou d'une décision opérateur, jamais d'une déclaration client.
+Le registre ne gère pas encore annulation d'abonnement, expiration, remboursements
+ou recharges commerciales : ne pas ouvrir la vente avant ce raccord.
+
+## Prérequis avant activation
+
+1. Retrouver la version actuellement utilisée sur Windows et sur le serveur.
+   Cette branche part de `codex/phare-parcours-portables-20261115`, commit
+   `8d157ce74ac0a084373df9565b25dd45e674d6c5`, pas d'une copie récente du Cocon.
+2. Raccorder authentification, offre et catalogue de prix côté serveur. Ne pas
+   confondre l'ancienne licence Amorce à achat unique avec une offre Phare.
+3. Afficher solde et coût avant confirmation, garder l'accès gratuit aux projets.
+4. Ajouter le catalogue de capacités et l'écran de choix d'offre dans la version
+   réellement livrée, en marquant indisponibles les fonctions non raccordées.
+5. Couvrir les lancements distants alternatifs : le flag de ce worker ne prouve
+   pas que tout autre point d'entrée utilise le registre.
+6. Mesurer coûts réels, marges, support et limites fournisseur ; tarifs du devis
+   historique du 11 novembre non revérifiés. Ne pas en déduire une enveloppe rentable.
+7. Raccorder facturation en mode test, vérifier webhooks et parcours d'annulation,
+   puis faire une recette réelle sans fournisseur payant avant mise en service.
+8. Conserver les droits acquis et établir la durée de conservation des médias
+   distants ; pas d'effacement silencieux après expiration.
+
+## Vérification
+
+`python3 -m unittest discover -s scripts/phare-production -p 'test_*.py'`
+
+Cas couverts : concurrence, double attribution, reprise, solde insuffisant,
+isolation entre comptes, réservations incertaines, valeurs invalides et refus du
+worker avant tout appel fournisseur lorsque le compte n'a pas de crédits.
+Pas de génération fournisseur, paiement, interface ou conteneur déployé testé.
+
+Sources de comparaison consultées le 21 novembre :
+- https://suno.com/pricing
+- https://help.runwayml.com/hc/en-us/articles/50404627334547-Free-plan-details
+- https://www.capcut.com/pricing
+
+Suno : crédits gratuits renouvelés et capacités payantes distinctes. Runway :
+crédits découverte uniques. CapCut : outils de base gratuits et offre premium.
+Ces exemples ne garantissent pas la conversion des utilisateurs du Phare.
