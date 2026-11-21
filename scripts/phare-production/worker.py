@@ -20,6 +20,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from credits import Ledger, CreditError
 
 API = 'https://generativelanguage.googleapis.com/v1beta/interactions'
 DATE = '2026-11-11'
@@ -238,6 +239,9 @@ def main():
     parser.add_argument('--assets', type=Path, help='JSON: audio and clips (local paths relative to this JSON). No provider call.')
     parser.add_argument('--allow-paid', action='store_true')
     parser.add_argument('--budget-usd', type=float)
+    # Trusted worker arguments, never values copied from an unauthenticated client.
+    parser.add_argument('--credit-account')
+    parser.add_argument('--credit-job')
     args = parser.parse_args()
     data = json.loads(args.plan.read_text(encoding='utf-8'))
     plan = validate(data.get('plan', data))
@@ -273,6 +277,21 @@ def main():
             key = os.environ.get('GEMINI_API_KEY')
             if not key or not plan['musicDirection'].strip() or not plan['visualDirection'].strip():
                 raise ValueError('Clé privée et directions musicale/visuelle requises.')
+            ledger_path = os.environ.get('PHARE_CREDITS_DB')
+            credit_ledger = None
+            if os.environ.get('PHARE_CREATION_QUOTAS_ENABLED') == 'true':
+                # An operator sets the integer price of this job; do not derive it
+                # from stale supplier estimates or accept it from browser JSON.
+                units = os.environ.get('PHARE_JOB_CREDIT_UNITS', '')
+                if not ledger_path or not args.credit_account or not args.credit_job or not units.isdecimal():
+                    raise CreditError('Compte vérifié, production et tarif serveur en crédits requis.')
+                credit_ledger = Ledger(ledger_path)
+                fingerprint = hashlib.sha256((plan_hash + '\n' + str(args.output.resolve())).encode()).hexdigest()
+                status = credit_ledger.reserve(args.credit_job, args.credit_account, int(units), fingerprint)
+                if status == 'consumed':
+                    raise CreditError('Production déjà comptabilisée. Utiliser les résultats conservés.')
+                # Any exception below deliberately leaves the reservation held:
+                # a timeout does not prove that the provider did not charge us.
             # A rough-cut run generates the quoted variants; all are retained for review.
             audios = [generate_media(key, {'model': 'lyria-3.5', 'input': f"Crée une chanson en français, environ {plan['duration']} secondes. {plan['musicDirection']}\nParoles de l’auteur à respecter :\n{plan['lyrics']}"}, 'audio', f'music-{take}.mp3', args.output, state) for take in range(plan['takes'])]
             audio = audios[0]
@@ -281,6 +300,8 @@ def main():
                 variants = [generate_media(key, {'model': 'gemini-omni-1.2-flash', 'input': f"Direction commune : {plan['visualDirection']}\n{scene['prompt']}\nAucun texte ni sous-titre incrusté.", 'response_format': {'type': 'video', 'aspect_ratio': plan['aspect'], 'resolution': plan['resolution'], 'duration': f"{scene['duration']}s"}}, 'video', f'scene-{i:03}-take-{take}.mp4', args.output, state) for take in range(plan['takes'])]
                 clips.append(variants[0])
             write_json(args.output / 'selection-premier-montage.json', {'audio': audio.name, 'clips': [p.name for p in clips], 'selection': 'Premières variantes, à revoir. Toutes les autres prises sont conservées.'})
+            if credit_ledger is not None:
+                credit_ledger.finish(args.credit_job, args.credit_account, 'consumed')
         print(str(render(audio, clips, args.output, plan)))
 
 
