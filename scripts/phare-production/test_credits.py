@@ -66,10 +66,6 @@ class CreditsTests(unittest.TestCase):
             with self.assertRaises(CreditError):
                 self.db.reserve('bad', 'alice', value, 'plan')
 
-
-if __name__ == '__main__':
-    unittest.main()
-
 class WorkerQuotaTests(unittest.TestCase):
     def test_exhausted_balance_prevents_provider_call(self):
         import worker
@@ -87,3 +83,49 @@ class WorkerQuotaTests(unittest.TestCase):
                 with self.assertRaises(CreditError):
                     worker.main()
                 generate.assert_not_called()
+
+    def test_success_consumes_once_and_render_failure_does_not_refund_generation(self):
+        self._completed_generation(render_fails=False)
+        self._completed_generation(render_fails=True)
+
+    def _completed_generation(self, render_fails):
+        import worker, json
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = root / 'plan.json'
+            plan.write_text(json.dumps(dict(version=1, title='Test', lyrics='Mes mots', musicDirection='Acoustique', visualDirection='Mer', duration=30, takes=1, aspect='16:9', resolution='1080p', scenes=[])))
+            ledger = Ledger(root / 'credits.sqlite')
+            ledger.grant('payment-fixture', 'alice', 10)
+            env = dict(PHARE_PAID_GENERATION_ENABLED='true', GEMINI_API_KEY='fake-key', PHARE_CREATION_QUOTAS_ENABLED='true', PHARE_CREDITS_DB=ledger.path, PHARE_JOB_CREDIT_UNITS='5')
+            argv = ['worker', str(plan), '--allow-paid', '--budget-usd', '100', '--output', str(root / 'output'), '--credit-account', 'alice', '--credit-job', 'job']
+            with patch.dict('os.environ', env), patch('sys.argv', argv), patch.object(worker, 'generate_media', return_value=root / 'fixture.mp4') as generate, patch.object(worker, 'render', side_effect=RuntimeError('render failed') if render_fails else None, return_value=root / 'final.mp4'), patch('builtins.print'):
+                if render_fails:
+                    with self.assertRaises(RuntimeError): worker.main()
+                else:
+                    worker.main()
+                self.assertGreater(generate.call_count, 0)
+                self.assertEqual(ledger.balance('alice'), 5)
+                generate.reset_mock()
+                with self.assertRaises(CreditError): worker.main()
+                generate.assert_not_called()
+
+    def test_uncertain_provider_error_keeps_reservation(self):
+        import worker, json
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = root / 'plan.json'
+            plan.write_text(json.dumps(dict(version=1, title='Test', lyrics='Mes mots', musicDirection='Acoustique', visualDirection='Mer', duration=30, takes=1, aspect='16:9', resolution='1080p', scenes=[])))
+            ledger = Ledger(root / 'credits.sqlite')
+            ledger.grant('trial', 'alice', 5)
+            env = dict(PHARE_PAID_GENERATION_ENABLED='true', GEMINI_API_KEY='fake-key', PHARE_CREATION_QUOTAS_ENABLED='true', PHARE_CREDITS_DB=ledger.path, PHARE_JOB_CREDIT_UNITS='5')
+            argv = ['worker', str(plan), '--allow-paid', '--budget-usd', '100', '--output', str(root / 'output'), '--credit-account', 'alice', '--credit-job', 'job']
+            with patch.dict('os.environ', env), patch('sys.argv', argv), patch.object(worker, 'generate_media', side_effect=TimeoutError('uncertain')) as generate:
+                with self.assertRaises(TimeoutError): worker.main()
+                self.assertEqual(generate.call_count, 1)
+                self.assertEqual(ledger.balance('alice'), 0)
+
+
+if __name__ == '__main__':
+    unittest.main()
