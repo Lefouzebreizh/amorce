@@ -10,7 +10,7 @@ import subprocess
 from pathlib import Path
 
 def build(manifest_path, output):
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
     scenes = manifest.get("scenes", [])
     if not scenes:
         raise ValueError("At least one scene is required")
