@@ -73,3 +73,23 @@ Sources de comparaison consultées le 21 novembre :
 Suno : crédits gratuits renouvelés et capacités payantes distinctes. Runway :
 crédits découverte uniques. CapCut : outils de base gratuits et offre premium.
 Ces exemples ne garantissent pas la conversion des utilisateurs du Phare.
+
+### Essai privé du paiement unique de l'application
+
+Depuis `scripts/phare-production`, `checkout_pilote.py` permet à l'opérateur de
+préparer une session Stripe en mode test pour un compte fictif et de vérifier
+ensuite le règlement directement auprès de Stripe. Le minimum de 1 000 centimes
+et la suggestion de 2 000 centimes reprennent l'hypothèse de lancement du
+19 novembre pour cet essai uniquement. Le montant se choisit avant Checkout.
+La commande renvoie une URL et un identifiant de session. Réutiliser le même
+UUID et les mêmes paramètres lors d'une reprise.
+
+    python checkout_pilote.py --compte compte-essai --produit PRODUIT_TEST commander --commande UUID --centimes 1000 --retour https://example.org/merci
+    python checkout_pilote.py --compte compte-essai --produit PRODUIT_TEST verifier --session SESSION_TEST --base-test achats-test.sqlite
+
+Renseigner le véritable produit test et la page de retour du pilote avant un
+essai réseau. La clé se fournit via STRIPE_TEST_SECRET_KEY. La vérification
+inscrit un droit simulé dans une base de recette uniquement. Elle ne distribue
+ni téléchargement ni crédits et ne gère pas les remboursements. Les entrées
+opérateur doivent être remplacées par un compte authentifié et un catalogue
+serveur avant une intégration publique. Aucun branchement sur la licence Amorce.
