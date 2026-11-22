@@ -89,8 +89,8 @@ UUID et les mêmes paramètres lors d'une reprise.
 
 Renseigner le véritable produit test et la page de retour du pilote avant un
 essai réseau. La clé se fournit via STRIPE_TEST_SECRET_KEY. La vérification
-inscrit un droit simulé dans une base de recette uniquement. Elle ne distribue
-ni téléchargement ni crédits et ne gère pas les remboursements. Les entrées
+inscrit un droit simulé dans une base de recette uniquement. La commande de vérification ne livre pas de fichier. Le pilote ne gère
+ni crédits de production ni remboursements. Les entrées
 opérateur doivent être remplacées par un compte authentifié et un catalogue
 serveur avant une intégration publique. Aucun branchement sur la licence Amorce.
 
@@ -99,3 +99,19 @@ session payée pour le même UUID déclenche un conflit à examiner avant toute
 remise supplémentaire. L'opérateur peut revérifier la première session autant
 de fois que nécessaire. Pour une base de recette créée avant ce contrôle,
 revérifier les anciennes sessions pour associer leurs UUID aux accès existants.
+
+Une fois la session vérifiée, la commande opérateur `livrer` lit le registre
+de test, contrôle l'association session/compte/produit et copie les octets
+uniquement si leur SHA-256 correspond au manifeste privé de l'édition.
+Le fichier de destination doit être nouveau et sur un volume permettant les
+liens physiques. L'ouverture du registre est en lecture seule.
+
+    python checkout_pilote.py --compte compte-essai --produit PRODUIT_TEST livrer --session SESSION_TEST --base-test achats-test.sqlite --manifeste edition-test.json --destination recu.txt
+
+Le manifeste et son fichier sont choisis par l'opérateur. Un exemple de recette
+synthétique se trouve dans `fixtures/edition-test` à côté du script. Son produit
+fictif permet au test automatisé d'exercer la remise locale. Pour un essai avec
+Stripe test, préparer à part un manifeste avec l'identifiant de son produit
+de test et le fichier correspondant. Le compte est saisi par l'opérateur.
+Le compte authentifié, le contrôle des remboursements, l'archive installable
+et sa distribution au client restent à raccorder avant toute vente.

@@ -1,9 +1,13 @@
 """Parcours privé de recette de l'achat unique du Phare. Stripe test uniquement."""
 import argparse
+import hashlib
 import json
 import os
 import sqlite3
 import sys
+import tempfile
+from contextlib import closing
+from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, quote, urlsplit
 from urllib.request import Request, urlopen
@@ -79,6 +83,34 @@ def verifier_acces(appeler, db, produit, compte, session_id):
     return "acces_de_test_attribue"
 
 
+def livrer_edition(db, produit, compte, session_id, manifeste, destination):
+    droit = db.execute("""SELECT 1 FROM achats_test JOIN commandes_test USING (session)
+                          WHERE session=? AND compte=? AND produit=?""",
+                       (session_id, compte, produit)).fetchone()
+    if droit is None:
+        raise ValueError("Aucun droit de test pour cette session, ce compte et ce produit.")
+    edition = json.loads(manifeste.read_text(encoding="utf-8"))
+    if edition["produit"] != produit:
+        raise ValueError("Le produit acheté ne correspond pas à cette édition.")
+    source = manifeste.parent / edition["fichier"]
+    if source.resolve().parent != manifeste.parent.resolve() or not source.is_file():
+        raise ValueError("Fichier de l'édition indisponible dans le dossier du manifeste.")
+    empreinte = hashlib.sha256()
+    sortie = tempfile.NamedTemporaryFile(dir=destination.parent, delete=False)
+    temporaire = Path(sortie.name)
+    try:
+        with sortie, source.open("rb") as entree:
+            while bloc := entree.read(1024 * 1024):
+                empreinte.update(bloc)
+                sortie.write(bloc)
+        if empreinte.hexdigest() != edition["sha256"]:
+            raise ValueError("L'empreinte du fichier diffère de celle de l'édition.")
+        os.link(temporaire, destination)
+    finally:
+        temporaire.unlink(missing_ok=True)
+    return empreinte.hexdigest()
+
+
 def stripe_test(methode, chemin, champs, cle_rejeu):
     secret = os.environ.get("STRIPE_TEST_SECRET_KEY", "")
     if not secret.startswith("sk_test_"):
@@ -108,10 +140,19 @@ def main():
     verifier = sous.add_parser("verifier")
     verifier.add_argument("--session", required=True)
     verifier.add_argument("--base-test", required=True)
+    livrer = sous.add_parser("livrer", help="Copier une édition de recette après vérification")
+    livrer.add_argument("--session", required=True)
+    livrer.add_argument("--base-test", type=Path, required=True)
+    livrer.add_argument("--manifeste", type=Path, required=True)
+    livrer.add_argument("--destination", type=Path, required=True)
     a = p.parse_args()
     if a.action == "commander":
         session = creer_session(stripe_test, a.produit, a.compte, a.commande, a.centimes, a.retour)
         print(json.dumps({"session": session["id"], "url": session["url"]}))
+    elif a.action == "livrer":
+        with closing(sqlite3.connect(a.base_test.resolve().as_uri() + "?mode=ro", uri=True)) as db:
+            empreinte = livrer_edition(db, a.produit, a.compte, a.session, a.manifeste, a.destination)
+            print(json.dumps({"fichier": str(a.destination), "sha256": empreinte}))
     else:
         with sqlite3.connect(a.base_test) as db:
             print(verifier_acces(stripe_test, db, a.produit, a.compte, a.session))
@@ -120,5 +161,5 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except (ValueError, KeyError, HTTPError, URLError, sqlite3.Error) as erreur:
+    except (ValueError, KeyError, OSError, HTTPError, URLError, sqlite3.Error) as erreur:
         sys.exit(str(erreur))

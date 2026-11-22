@@ -1,4 +1,9 @@
+import json
+import hashlib
+import shutil
 import sqlite3
+import subprocess
+import sys
 import unittest
 from unittest.mock import Mock, patch
 from uuid import uuid4
@@ -108,3 +113,52 @@ class AchatPilote(unittest.TestCase):
         self.assertEqual(self.db.execute("SELECT COUNT(*) FROM achats_test").fetchone(), (1,))
         liaison = self.db.execute("SELECT commande, session FROM commandes_test").fetchone()
         self.assertEqual(liaison, (self.session["metadata"]["phare_commande"], self.session["id"]))
+
+
+    def test_livraison_depuis_la_commande_operateur(self):
+        ici = Path(__file__).resolve().parent
+        with TemporaryDirectory() as dossier:
+            racine = Path(dossier)
+            fichiers = racine / "edition"
+            shutil.copytree(ici / "fixtures/edition-test", fichiers)
+            manifeste = fichiers / "edition-test.json"
+            edition = json.loads(manifeste.read_text())
+            produit = edition["produit"]
+            source = fichiers / edition["fichier"]
+            destination = racine / "recu.txt"
+            base = racine / "achats.sqlite"
+            self.session["line_items"]["data"][0]["price"]["product"] = produit
+
+            def livrer(compte="compte-a", article=produit):
+                return subprocess.run([
+                    sys.executable, str(ici / "checkout_pilote.py"), "--produit", article,
+                    "--compte", compte, "livrer", "--session", self.session["id"],
+                    "--base-test", str(base), "--manifeste", str(manifeste),
+                    "--destination", str(destination)], capture_output=True, text=True)
+
+            db = sqlite3.connect(base)
+            try:
+                verifier_acces(self.api, db, produit, "compte-a", self.session["id"])
+            finally:
+                db.close()
+
+            for refus in (livrer(compte="compte-b"), livrer(article="prod_album")):
+                self.assertNotEqual(refus.returncode, 0)
+                self.assertIn("Aucun droit", refus.stderr)
+                self.assertFalse(destination.exists())
+
+            contenu = source.read_bytes()
+            source.write_bytes(contenu + b"?")
+            corrompu = livrer()
+            self.assertNotEqual(corrompu.returncode, 0)
+            self.assertIn("empreinte", corrompu.stderr)
+            self.assertFalse(destination.exists())
+            source.write_bytes(contenu)
+
+            accord = livrer()
+            self.assertEqual(accord.returncode, 0, accord.stderr)
+            self.assertEqual(destination.read_bytes(), contenu)
+            self.assertEqual(json.loads(accord.stdout)["sha256"], hashlib.sha256(contenu).hexdigest())
+            destination.write_bytes(b"copie personnelle")
+            self.assertNotEqual(livrer().returncode, 0)
+            self.assertEqual(destination.read_bytes(), b"copie personnelle")
