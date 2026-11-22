@@ -12,7 +12,7 @@ from tempfile import TemporaryDirectory
 from threading import Barrier
 from pathlib import Path
 
-from checkout_pilote import creer_session, verifier_acces, stripe_test
+from checkout_pilote import creer_session, livrer_edition, verifier_acces, stripe_test
 
 
 class AchatPilote(unittest.TestCase):
@@ -25,6 +25,9 @@ class AchatPilote(unittest.TestCase):
                         "payment_status": "paid", "amount_total": 1000, "currency": "eur",
                         "line_items": {"has_more": False, "data": [
                             {"price": {"product": "prod_phare"}, "quantity": 1, "amount_total": 1000}]}}
+        self.debit = {"livemode": False, "paid": True, "currency": "eur",
+                      "amount_captured": 1000, "amount_refunded": 0}
+        self.session["payment_intent"] = {"latest_charge": self.debit}
         self.api = Mock(return_value=self.session)
 
     def verifier(self, compte="compte-a"):
@@ -162,3 +165,57 @@ class AchatPilote(unittest.TestCase):
             destination.write_bytes(b"copie personnelle")
             self.assertNotEqual(livrer().returncode, 0)
             self.assertEqual(destination.read_bytes(), b"copie personnelle")
+            self.debit["amount_refunded"] = 1000
+            with sqlite3.connect(base) as db:
+                self.assertEqual(verifier_acces(self.api, db, produit, "compte-a", self.session["id"]),
+                                 "acces_de_test_rembourse")
+            destination.unlink()
+            self.assertIn("Aucun droit", livrer().stderr)
+            self.assertFalse(destination.exists())
+
+    def test_remboursement_total_avant_attribution_et_rejeu(self):
+        self.debit["amount_refunded"] = 1000
+        self.assertEqual(self.verifier(), "acces_de_test_rembourse")
+        self.debit["amount_refunded"] = 0
+        self.assertEqual(self.verifier(), "acces_de_test_rembourse")
+
+    def test_remboursement_partiel_et_isolation_des_comptes(self):
+        self.debit["amount_refunded"] = 300
+        self.assertEqual(self.verifier(), "acces_de_test_attribue")
+        self.debit["amount_refunded"] = 1000
+        with self.assertRaises(ValueError):
+            self.verifier("compte-b")
+        self.assertEqual(self.db.execute("SELECT centimes FROM remboursements_test").fetchone(), (300,))
+        self.assertEqual(self.verifier(), "acces_de_test_rembourse")
+
+    def test_remboursement_inconnu_ne_valide_pas(self):
+        self.session["payment_intent"] = "pi_incomplet"
+        with self.assertRaisesRegex(ValueError, "Débit"):
+            self.verifier()
+        self.assertEqual(self.db.execute("SELECT COUNT(*) FROM sqlite_master").fetchone(), (0,))
+
+    def test_remboursement_entre_copie_et_publication(self):
+        manifeste = Path(__file__).resolve().parent / "fixtures/edition-test/edition-test.json"
+        produit = json.loads(manifeste.read_text())["produit"]
+        identifiant = self.session["id"]
+        self.session["line_items"]["data"][0]["price"]["product"] = produit
+        with TemporaryDirectory() as dossier:
+            base = Path(dossier) / "recette.sqlite"
+            destination = Path(dossier) / "livre.txt"
+            rembourseur = sqlite3.connect(base)
+            livreur = sqlite3.connect(base)
+            try:
+                verifier_acces(self.api, rembourseur, produit, "compte-a", identifiant)
+
+                def anticiper_verrou(instruction):
+                    if instruction == "BEGIN IMMEDIATE":
+                        self.debit["amount_refunded"] = 1000
+                        verifier_acces(self.api, rembourseur, produit, "compte-a", identifiant)
+
+                livreur.set_trace_callback(anticiper_verrou)
+                with self.assertRaisesRegex(ValueError, "Aucun droit"):
+                    livrer_edition(livreur, produit, "compte-a", identifiant, manifeste, destination)
+                self.assertFalse(destination.exists())
+            finally:
+                livreur.close()
+                rembourseur.close()

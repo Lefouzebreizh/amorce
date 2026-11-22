@@ -42,7 +42,7 @@ def verifier_acces(appeler, db, produit, compte, session_id):
     if not session_id.startswith("cs_test_") or not compte.strip():
         raise ValueError("Session et compte de test requis.")
     session = appeler("GET", "/checkout/sessions/" + quote(session_id, safe=""),
-                      {"expand[]": "line_items"}, None)
+                      {"expand[0]": "line_items", "expand[1]": "payment_intent.latest_charge"}, None)
     if (session.get("id") != session_id or session.get("livemode") is not False
             or session.get("mode") != "payment" or session.get("client_reference_id") != compte):
         raise ValueError("Cette session ne correspond pas au compte ou au mode de recette.")
@@ -59,6 +59,15 @@ def verifier_acces(appeler, db, produit, compte, session_id):
             or session.get("currency") != "eur" or type(montant) is not int
             or montant < PLANCHER_CENTIMES or article.get("amount_total") != montant):
         raise ValueError("Offre ou montant différent du pilote.")
+    paiement = session.get("payment_intent")
+    debit = paiement.get("latest_charge") if isinstance(paiement, dict) else None
+    if (not isinstance(debit, dict) or debit.get("livemode") is not False
+            or debit.get("paid") is not True or debit.get("amount_captured") != montant
+            or debit.get("currency") != "eur"):
+        raise ValueError("Débit de test non vérifié.")
+    rembourse = debit.get("amount_refunded")
+    if type(rembourse) is not int or not 0 <= rembourse <= montant:
+        raise ValueError("Montant remboursé non vérifié.")
     commande_brute = (session.get("metadata") or {}).get("phare_commande")
     if not isinstance(commande_brute, str):
         raise ValueError("La commande Phare est absente de la session payée.")
@@ -80,15 +89,29 @@ def verifier_acces(appeler, db, produit, compte, session_id):
                              (session_id,)).fetchone()
         if facture != (compte, produit, montant):
             raise ValueError("Session déjà attribuée avec des informations différentes.")
+        db.execute("""CREATE TABLE IF NOT EXISTS remboursements_test (
+            session TEXT PRIMARY KEY, centimes INTEGER NOT NULL)""")
+        db.execute("""INSERT INTO remboursements_test VALUES (?, ?)
+                      ON CONFLICT(session) DO UPDATE SET centimes=MAX(centimes, excluded.centimes)""",
+                   (session_id, rembourse))
+        constate = db.execute("SELECT centimes FROM remboursements_test WHERE session=?",
+                              (session_id,)).fetchone()[0]
+    if constate == montant:
+        return "acces_de_test_rembourse"
     return "acces_de_test_attribue"
 
 
 def livrer_edition(db, produit, compte, session_id, manifeste, destination):
-    droit = db.execute("""SELECT 1 FROM achats_test JOIN commandes_test USING (session)
-                          WHERE session=? AND compte=? AND produit=?""",
-                       (session_id, compte, produit)).fetchone()
-    if droit is None:
-        raise ValueError("Aucun droit de test pour cette session, ce compte et ce produit.")
+    def verifier_droit():
+        droit = db.execute("""SELECT 1 FROM achats_test JOIN commandes_test USING (session)
+                              JOIN remboursements_test USING (session)
+                              WHERE session=? AND compte=? AND produit=?
+                              AND remboursements_test.centimes < achats_test.centimes""",
+                           (session_id, compte, produit)).fetchone()
+        if droit is None:
+            raise ValueError("Aucun droit de test pour cette session, ce compte et ce produit.")
+
+    verifier_droit()
     edition = json.loads(manifeste.read_text(encoding="utf-8"))
     if edition["produit"] != produit:
         raise ValueError("Le produit acheté ne correspond pas à cette édition.")
@@ -105,7 +128,11 @@ def livrer_edition(db, produit, compte, session_id, manifeste, destination):
                 sortie.write(bloc)
         if empreinte.hexdigest() != edition["sha256"]:
             raise ValueError("L'empreinte du fichier diffère de celle de l'édition.")
-        os.link(temporaire, destination)
+        # Sérialiser la remise finale avec une révocation concurrente.
+        with db:
+            db.execute("BEGIN IMMEDIATE")
+            verifier_droit()
+            os.link(temporaire, destination)
     finally:
         temporaire.unlink(missing_ok=True)
     return empreinte.hexdigest()
@@ -150,7 +177,7 @@ def main():
         session = creer_session(stripe_test, a.produit, a.compte, a.commande, a.centimes, a.retour)
         print(json.dumps({"session": session["id"], "url": session["url"]}))
     elif a.action == "livrer":
-        with closing(sqlite3.connect(a.base_test.resolve().as_uri() + "?mode=ro", uri=True)) as db:
+        with closing(sqlite3.connect(a.base_test.resolve().as_uri() + "?mode=rw", uri=True)) as db:
             empreinte = livrer_edition(db, a.produit, a.compte, a.session, a.manifeste, a.destination)
             print(json.dumps({"fichier": str(a.destination), "sha256": empreinte}))
     else:

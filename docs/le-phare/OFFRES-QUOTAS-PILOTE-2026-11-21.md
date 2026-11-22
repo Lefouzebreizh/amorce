@@ -89,8 +89,7 @@ UUID et les mêmes paramètres lors d'une reprise.
 
 Renseigner le véritable produit test et la page de retour du pilote avant un
 essai réseau. La clé se fournit via STRIPE_TEST_SECRET_KEY. La vérification
-inscrit un droit simulé dans une base de recette uniquement. La commande de vérification ne livre pas de fichier. Le pilote ne gère
-ni crédits de production ni remboursements. Les entrées
+inscrit un droit simulé dans une base de recette uniquement. La commande de vérification ne livre pas de fichier. Le pilote n'attribue aucun crédit de production. Les entrées
 opérateur doivent être remplacées par un compte authentifié et un catalogue
 serveur avant une intégration publique. Aucun branchement sur la licence Amorce.
 
@@ -104,7 +103,7 @@ Une fois la session vérifiée, la commande opérateur `livrer` lit le registre
 de test, contrôle l'association session/compte/produit et copie les octets
 uniquement si leur SHA-256 correspond au manifeste privé de l'édition.
 Le fichier de destination doit être nouveau et sur un volume permettant les
-liens physiques. L'ouverture du registre est en lecture seule.
+liens physiques. La remise prend un verrou bref sur le registre au moment de créer le fichier final.
 
     python checkout_pilote.py --compte compte-essai --produit PRODUIT_TEST livrer --session SESSION_TEST --base-test achats-test.sqlite --manifeste edition-test.json --destination recu.txt
 
@@ -113,5 +112,14 @@ synthétique se trouve dans `fixtures/edition-test` à côté du script. Son pro
 fictif permet au test automatisé d'exercer la remise locale. Pour un essai avec
 Stripe test, préparer à part un manifeste avec l'identifiant de son produit
 de test et le fichier correspondant. Le compte est saisi par l'opérateur.
-Le compte authentifié, le contrôle des remboursements, l'archive installable
+Le compte authentifié, le suivi automatique des remboursements, l'archive installable
 et sa distribution au client restent à raccorder avant toute vente.
+
+Relancer `verifier` pour relire le montant remboursé du dernier débit Stripe
+de test. Dès qu'un remboursement intégral est constaté, les remises suivantes
+sont bloquées, y compris après une réponse antérieure rejouée. Dans ce pilote
+uniquement, un remboursement partiel conserve l'accès. Une copie déjà remise
+reste sur le disque du destinataire. Les bases plus anciennes doivent repasser
+par `verifier` avant une livraison. La commande ne déclenche aucun
+remboursement. Une mise à jour automatique par événement fournisseur et la
+politique commerciale définitive restent à intégrer.
