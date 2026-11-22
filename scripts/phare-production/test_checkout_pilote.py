@@ -1,4 +1,8 @@
+import base64
 import json
+import zipfile
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 import hashlib
 import shutil
 import sqlite3
@@ -219,3 +223,61 @@ class AchatPilote(unittest.TestCase):
             finally:
                 livreur.close()
                 rembourseur.close()
+
+    def test_telechargement_http_du_paquet_depuis_la_cli(self):
+        ici = Path(__file__).resolve().parent
+        with TemporaryDirectory() as dossier:
+            racine = Path(dossier)
+            archive = racine / "edition-test.zip"
+            with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as z:
+                z.writestr("LIRE-MOI.txt", "Édition de recette synthétique.")
+                z.write(ici / "fixtures/edition-test/edition-test.txt", "edition-test.txt")
+            empreinte = hashlib.sha256(archive.read_bytes()).hexdigest()
+            manifeste = racine / "edition.json"
+            manifeste.write_text(json.dumps({"produit": "prod_phare", "fichier": archive.name,
+                                             "sha256": empreinte}))
+            base = racine / "achats.sqlite"
+            with sqlite3.connect(base) as db:
+                self.assertEqual(verifier_acces(self.api, db, "prod_phare", "compte-a", self.session["id"]),
+                                 "acces_de_test_attribue")
+
+            def demarrer(compte):
+                processus = subprocess.Popen([sys.executable, str(ici / "checkout_pilote.py"),
+                    "--produit", "prod_phare", "--compte", compte, "telecharger",
+                    "--session", self.session["id"], "--base-test", str(base), "--manifeste", str(manifeste)],
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                self.addCleanup(processus.stderr.close)
+                self.addCleanup(processus.stdout.close)
+                self.addCleanup(processus.wait, 5)
+                self.addCleanup(processus.kill)
+                return processus, json.loads(processus.stdout.readline())
+
+            def requete(acces, compte):
+                auth = (compte + ":" + acces["mot_de_passe_temporaire"]).encode("ascii")
+                return Request(acces["url"], headers={"Authorization": "Basic " + base64.b64encode(auth).decode()})
+
+            autre_processus, autre = demarrer("compte-b")
+            with self.assertRaises(HTTPError) as refuse:
+                urlopen(requete(autre, "compte-b"), timeout=5)
+            self.assertEqual(refuse.exception.code, 403)
+            autre_processus.terminate()
+
+            processus, acces = demarrer("compte-a")
+            with self.assertRaises(HTTPError) as sans_acces:
+                urlopen(acces["url"], timeout=5)
+            self.assertEqual(sans_acces.exception.code, 401)
+            with self.assertRaises(HTTPError) as mauvais_compte:
+                urlopen(requete(acces, "compte-b"), timeout=5)
+            self.assertEqual(mauvais_compte.exception.code, 401)
+            recu = racine / "recu.zip"
+            with urlopen(requete(acces, "compte-a"), timeout=5) as reponse:
+                self.assertEqual(reponse.status, 200)
+                self.assertIn(archive.name, reponse.headers["Content-Disposition"])
+                recu.write_bytes(reponse.read())
+            self.assertEqual(hashlib.sha256(recu.read_bytes()).hexdigest(), empreinte)
+            with zipfile.ZipFile(recu) as z:
+                self.assertIsNone(z.testzip())
+                self.assertEqual(z.read("LIRE-MOI.txt").decode(), "Édition de recette synthétique.")
+            sortie, erreurs = processus.communicate(timeout=5)
+            self.assertEqual(processus.returncode, 0, erreurs)
+            self.assertEqual(json.loads(sortie)["sha256"], empreinte)

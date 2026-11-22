@@ -172,10 +172,20 @@ def main():
     livrer.add_argument("--base-test", type=Path, required=True)
     livrer.add_argument("--manifeste", type=Path, required=True)
     livrer.add_argument("--destination", type=Path, required=True)
+    servir = sous.add_parser("telecharger", help="Remettre une édition de recette au navigateur local")
+    servir.add_argument("--session", required=True)
+    servir.add_argument("--base-test", type=Path, required=True)
+    servir.add_argument("--manifeste", type=Path, required=True)
     a = p.parse_args()
     if a.action == "commander":
         session = creer_session(stripe_test, a.produit, a.compte, a.commande, a.centimes, a.retour)
         print(json.dumps({"session": session["id"], "url": session["url"]}))
+    elif a.action == "telecharger":
+        from livraison_locale_test import servir_edition
+
+        empreinte = servir_edition(livrer_edition, a.base_test, a.produit, a.compte,
+                                   a.session, a.manifeste)
+        print(json.dumps({"sha256": empreinte}))
     elif a.action == "livrer":
         with closing(sqlite3.connect(a.base_test.resolve().as_uri() + "?mode=rw", uri=True)) as db:
             empreinte = livrer_edition(db, a.produit, a.compte, a.session, a.manifeste, a.destination)

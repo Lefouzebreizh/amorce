@@ -123,3 +123,18 @@ reste sur le disque du destinataire. Les bases plus anciennes doivent repasser
 par `verifier` avant une livraison. La commande ne déclenche aucun
 remboursement. Une mise à jour automatique par événement fournisseur et la
 politique commerciale définitive restent à intégrer.
+
+### Télécharger dans un navigateur pendant la recette locale
+
+    python checkout_pilote.py --compte compte-essai --produit PRODUIT_TEST telecharger --session SESSION_TEST --base-test achats-test.sqlite --manifeste edition-test.json
+
+Après la vérification du paiement test, cette commande démarre une remise
+unique sur la boucle locale du poste. Ouvrir l'adresse affichée, puis saisir
+le compte fictif et le mot de passe temporaire du terminal dans la boîte du
+navigateur. Le serveur relit le droit et l'empreinte avant de retourner le
+fichier, puis s'arrête à l'issue du transfert. L'accès expire après cinq
+minutes. Le mot de passe est réservé à ce transfert de recette ; il ne
+constitue pas la connexion permanente du client. L'essai automatisé lance la
+commande complète dans un autre processus, télécharge une véritable archive
+ZIP synthétique et relit ses fichiers. Il vérifie aussi les refus pour un
+autre compte et pour un client sans identifiants.
