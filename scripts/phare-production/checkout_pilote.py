@@ -55,9 +55,21 @@ def verifier_acces(appeler, db, produit, compte, session_id):
             or session.get("currency") != "eur" or type(montant) is not int
             or montant < PLANCHER_CENTIMES or article.get("amount_total") != montant):
         raise ValueError("Offre ou montant différent du pilote.")
+    commande_brute = (session.get("metadata") or {}).get("phare_commande")
+    if not isinstance(commande_brute, str):
+        raise ValueError("La commande Phare est absente de la session payée.")
+    commande = str(UUID(commande_brute))
     with db:
         db.execute("""CREATE TABLE IF NOT EXISTS achats_test (
             session TEXT PRIMARY KEY, compte TEXT NOT NULL, produit TEXT NOT NULL, centimes INTEGER NOT NULL)""")
+        db.execute("""CREATE TABLE IF NOT EXISTS commandes_test (
+            commande TEXT PRIMARY KEY, session TEXT NOT NULL UNIQUE)""")
+        db.execute("INSERT INTO commandes_test VALUES (?, ?) ON CONFLICT DO NOTHING",
+                   (commande, session_id))
+        liaison = db.execute("SELECT session FROM commandes_test WHERE commande=?",
+                             (commande,)).fetchone()
+        if liaison != (session_id,):
+            raise ValueError("Conflit commande/session : vérifier les règlements de test.")
         db.execute("INSERT INTO achats_test VALUES (?,?,?,?) ON CONFLICT(session) DO NOTHING",
                    (session_id, compte, produit, montant))
         facture = db.execute("SELECT compte, produit, centimes FROM achats_test WHERE session=?",

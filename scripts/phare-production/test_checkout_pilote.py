@@ -2,6 +2,10 @@ import sqlite3
 import unittest
 from unittest.mock import Mock, patch
 from uuid import uuid4
+from concurrent.futures import ThreadPoolExecutor
+from tempfile import TemporaryDirectory
+from threading import Barrier
+from pathlib import Path
 
 from checkout_pilote import creer_session, verifier_acces, stripe_test
 
@@ -12,6 +16,7 @@ class AchatPilote(unittest.TestCase):
         self.addCleanup(self.db.close)
         self.session = {"id": "cs_test_commande", "livemode": False, "mode": "payment",
                         "client_reference_id": "compte-a", "status": "complete",
+                        "metadata": {"phare_commande": str(uuid4())},
                         "payment_status": "paid", "amount_total": 1000, "currency": "eur",
                         "line_items": {"has_more": False, "data": [
                             {"price": {"product": "prod_phare"}, "quantity": 1, "amount_total": 1000}]}}
@@ -55,3 +60,51 @@ class AchatPilote(unittest.TestCase):
     def test_cle_de_production_refusee(self):
         with patch.dict("os.environ", {"STRIPE_TEST_SECRET_KEY": "sk_live_fictive"}), self.assertRaises(ValueError):
             stripe_test("GET", "/checkout/sessions/x", {}, None)
+
+    def test_deux_sessions_payees_pour_une_commande_concurrente(self):
+        depart = Barrier(2)
+        with TemporaryDirectory() as dossier:
+            chemin = Path(dossier) / "recette.sqlite"
+
+            def verifier_session(session_id):
+                session = dict(self.session, id=session_id)
+                db = sqlite3.connect(chemin)
+                try:
+                    depart.wait(timeout=5)
+                    return verifier_acces(Mock(return_value=session), db, "prod_phare", "compte-a", session_id)
+                except ValueError as erreur:
+                    return str(erreur)
+                finally:
+                    db.close()
+
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                resultats = list(pool.map(verifier_session, ["cs_test_a", "cs_test_b"]))
+            self.assertCountEqual(resultats, ["acces_de_test_attribue",
+                                  "Conflit commande/session : vérifier les règlements de test."])
+            db = sqlite3.connect(chemin)
+            try:
+                self.assertEqual(db.execute("SELECT COUNT(*) FROM achats_test").fetchone(), (1,))
+            finally:
+                db.close()
+
+    def test_session_sans_commande_ou_reaffectee(self):
+        metadata = self.session.pop("metadata")
+        with self.assertRaises(ValueError):
+            self.verifier()
+        self.assertEqual(self.db.execute("SELECT COUNT(*) FROM sqlite_master").fetchone(), (0,))
+        self.session["metadata"] = metadata
+        self.verifier()
+        self.session["metadata"] = {"phare_commande": str(uuid4())}
+        with self.assertRaisesRegex(ValueError, "Conflit"):
+            self.verifier()
+
+    def test_reprise_achat_inscrit_avant_liaison_des_commandes(self):
+        self.db.execute("""CREATE TABLE achats_test (session TEXT PRIMARY KEY, compte TEXT NOT NULL,
+                         produit TEXT NOT NULL, centimes INTEGER NOT NULL)""")
+        self.db.execute("INSERT INTO achats_test VALUES (?, ?, ?, ?)",
+                        (self.session["id"], "compte-a", "prod_phare", 1000))
+        self.db.commit()
+        self.verifier()
+        self.assertEqual(self.db.execute("SELECT COUNT(*) FROM achats_test").fetchone(), (1,))
+        liaison = self.db.execute("SELECT commande, session FROM commandes_test").fetchone()
+        self.assertEqual(liaison, (self.session["metadata"]["phare_commande"], self.session["id"]))

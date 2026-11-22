@@ -93,3 +93,9 @@ inscrit un droit simulé dans une base de recette uniquement. Elle ne distribue
 ni téléchargement ni crédits et ne gère pas les remboursements. Les entrées
 opérateur doivent être remplacées par un compte authentifié et un catalogue
 serveur avant une intégration publique. Aucun branchement sur la licence Amorce.
+
+Une commande de recette correspond à une seule session payée. Une seconde
+session payée pour le même UUID déclenche un conflit à examiner avant toute
+remise supplémentaire. L'opérateur peut revérifier la première session autant
+de fois que nécessaire. Pour une base de recette créée avant ce contrôle,
+revérifier les anciennes sessions pour associer leurs UUID aux accès existants.
