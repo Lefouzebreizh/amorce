@@ -18,3 +18,7 @@
 .studio-actions{display:flex;flex-wrap:wrap;gap:.8rem;margin:1rem 0}.studio-cues{padding-left:1.5rem}.studio-cues li{display:flex;flex-wrap:wrap;gap:.7rem;margin:1rem 0}.studio-cues span{flex:1 0 100%}.studio-cues label{max-width:8rem}.studio-job{border-top:1px solid #31515b;margin-top:1.5rem;padding-top:1rem}
 
 .studio-media .studio-thumbnail{width:144px;height:81px;object-fit:contain;max-height:81px;margin:0;background:#080f17}.studio-order{padding-left:1.4rem}.studio-order li{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.8rem 0}.studio-order li>span{flex:1 1 12rem;overflow-wrap:anywhere}
+.studio-exposure{margin:1.2rem 0}
+.studio-exposure fieldset{min-width:0;margin:1rem 0;padding:1rem;border:1px solid var(--edge)}
+.studio-exposure select{width:100%;min-width:0}
+.studio-exposure canvas:not([hidden]){display:block;max-width:100%;max-height:60vh;margin:1rem auto;object-fit:contain}

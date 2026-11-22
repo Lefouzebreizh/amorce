@@ -1,5 +1,6 @@
 'use client';
 import Image from 'next/image';
+import DoubleExposure from './DoubleExposure';
 import { useEffect, useRef, useState } from 'react';
 import { lyricLines, newLocalEdit } from '@/lib/phare-local';
 import type { LocalEdit, LocalState } from '@/lib/phare-local';
@@ -43,6 +44,11 @@ export default function StudioLocal({ project, open, onOpen }: { project: PhareP
       <label htmlFor="local-search">Retrouver un fichier</label><input id="local-search" type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Nom du fichier" />
       <ul className="studio-media">{state.media.filter(m => m.name.toLocaleLowerCase('fr').includes(query.toLocaleLowerCase('fr'))).map(m => <li key={m.id}><strong>{m.name}</strong>{m.kind === 'image' && <Image src={base + 'media/' + m.id} alt={m.name} width={144} height={81} unoptimized className="studio-thumbnail" />}{m.kind === 'video' && <video className="studio-thumbnail" controls preload="none" playsInline src={base + 'media/' + m.id} />}<span>{m.kind} · {(m.bytes / 1048576).toFixed(1)} Mo{m.duration ? ` · ${m.duration.toFixed(1)} s` : ''}</span>{m.kind === 'audio' ? <button aria-pressed={edit.audioId === m.id} disabled={busy} onClick={() => { change({ audioId: m.id, cues: [], position: 0 }); setTap(null); }}>{edit.audioId === m.id ? 'Master choisi' : 'Choisir comme master'}</button> : <label><input type="checkbox" checked={edit.visualIds.includes(m.id)} disabled={busy} onChange={e => change({ visualIds: e.target.checked ? [...edit.visualIds, m.id] : edit.visualIds.filter(id => id !== m.id) })} /> Utiliser ce visuel</label>}</li>)}</ul>
       {!state.media.length && <p>La bibliothèque est vide. Ajoute d’abord ton vrai morceau et un visuel.</p>}
+      <DoubleExposure images={state.media.filter(m => m.kind === 'image')} mediaUrl={id => base + 'media/' + id}
+        save={async (png, name) => {
+          await api('media', { method: 'PUT', headers: { 'X-File-Name': encodeURIComponent(name) }, body: png });
+          await refresh(false);
+        }} />
       <h4>2 · Écouter et caler les paroles</h4>
       {master && <><p>Master : <strong>{master.name}</strong></p><audio key={master.id} ref={audio} src={base + 'media/' + master.id} controls preload="metadata" onLoadedMetadata={() => { if (audio.current) audio.current.currentTime = edit.position; }} /></>}
       <label htmlFor="local-lyrics">Paroles originales · le texte reste tel que tu l’écris</label><textarea id="local-lyrics" rows={6} value={edit.lyrics} maxLength={30000} disabled={busy} onChange={e => { change({ lyrics: e.target.value, cues: [] }); setTap(null); }} />
