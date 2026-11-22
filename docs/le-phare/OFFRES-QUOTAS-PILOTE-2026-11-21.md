@@ -73,3 +73,68 @@ Sources de comparaison consultées le 21 novembre :
 Suno : crédits gratuits renouvelés et capacités payantes distinctes. Runway :
 crédits découverte uniques. CapCut : outils de base gratuits et offre premium.
 Ces exemples ne garantissent pas la conversion des utilisateurs du Phare.
+
+### Essai privé du paiement unique de l'application
+
+Depuis `scripts/phare-production`, `checkout_pilote.py` permet à l'opérateur de
+préparer une session Stripe en mode test pour un compte fictif et de vérifier
+ensuite le règlement directement auprès de Stripe. Le minimum de 1 000 centimes
+et la suggestion de 2 000 centimes reprennent l'hypothèse de lancement du
+19 novembre pour cet essai uniquement. Le montant se choisit avant Checkout.
+La commande renvoie une URL et un identifiant de session. Réutiliser le même
+UUID et les mêmes paramètres lors d'une reprise.
+
+    python checkout_pilote.py --compte compte-essai --produit PRODUIT_TEST commander --commande UUID --centimes 1000 --retour https://example.org/merci
+    python checkout_pilote.py --compte compte-essai --produit PRODUIT_TEST verifier --session SESSION_TEST --base-test achats-test.sqlite
+
+Renseigner le véritable produit test et la page de retour du pilote avant un
+essai réseau. La clé se fournit via STRIPE_TEST_SECRET_KEY. La vérification
+inscrit un droit simulé dans une base de recette uniquement. La commande de vérification ne livre pas de fichier. Le pilote n'attribue aucun crédit de production. Les entrées
+opérateur doivent être remplacées par un compte authentifié et un catalogue
+serveur avant une intégration publique. Aucun branchement sur la licence Amorce.
+
+Une commande de recette correspond à une seule session payée. Une seconde
+session payée pour le même UUID déclenche un conflit à examiner avant toute
+remise supplémentaire. L'opérateur peut revérifier la première session autant
+de fois que nécessaire. Pour une base de recette créée avant ce contrôle,
+revérifier les anciennes sessions pour associer leurs UUID aux accès existants.
+
+Une fois la session vérifiée, la commande opérateur `livrer` lit le registre
+de test, contrôle l'association session/compte/produit et copie les octets
+uniquement si leur SHA-256 correspond au manifeste privé de l'édition.
+Le fichier de destination doit être nouveau et sur un volume permettant les
+liens physiques. La remise prend un verrou bref sur le registre au moment de créer le fichier final.
+
+    python checkout_pilote.py --compte compte-essai --produit PRODUIT_TEST livrer --session SESSION_TEST --base-test achats-test.sqlite --manifeste edition-test.json --destination recu.txt
+
+Le manifeste et son fichier sont choisis par l'opérateur. Un exemple de recette
+synthétique se trouve dans `fixtures/edition-test` à côté du script. Son produit
+fictif permet au test automatisé d'exercer la remise locale. Pour un essai avec
+Stripe test, préparer à part un manifeste avec l'identifiant de son produit
+de test et le fichier correspondant. Le compte est saisi par l'opérateur.
+Le compte authentifié, le suivi automatique des remboursements, l'archive installable
+et sa distribution au client restent à raccorder avant toute vente.
+
+Relancer `verifier` pour relire le montant remboursé du dernier débit Stripe
+de test. Dès qu'un remboursement intégral est constaté, les remises suivantes
+sont bloquées, y compris après une réponse antérieure rejouée. Dans ce pilote
+uniquement, un remboursement partiel conserve l'accès. Une copie déjà remise
+reste sur le disque du destinataire. Les bases plus anciennes doivent repasser
+par `verifier` avant une livraison. La commande ne déclenche aucun
+remboursement. Une mise à jour automatique par événement fournisseur et la
+politique commerciale définitive restent à intégrer.
+
+### Télécharger dans un navigateur pendant la recette locale
+
+    python checkout_pilote.py --compte compte-essai --produit PRODUIT_TEST telecharger --session SESSION_TEST --base-test achats-test.sqlite --manifeste edition-test.json
+
+Après la vérification du paiement test, cette commande démarre une remise
+unique sur la boucle locale du poste. Ouvrir l'adresse affichée, puis saisir
+le compte fictif et le mot de passe temporaire du terminal dans la boîte du
+navigateur. Le serveur relit le droit et l'empreinte avant de retourner le
+fichier, puis s'arrête à l'issue du transfert. L'accès expire après cinq
+minutes. Le mot de passe est réservé à ce transfert de recette ; il ne
+constitue pas la connexion permanente du client. L'essai automatisé lance la
+commande complète dans un autre processus, télécharge une véritable archive
+ZIP synthétique et relit ses fichiers. Il vérifie aussi les refus pour un
+autre compte et pour un client sans identifiants.
